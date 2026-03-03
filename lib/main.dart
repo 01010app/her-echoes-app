@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
+import 'dart:convert';
 
 void main() {
   runApp(const MyApp());
@@ -54,6 +56,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  List<dynamic> todaysWomen = [];
   int _counter = 0;
 
   void _incrementCounter() {
@@ -66,6 +69,44 @@ class _MyHomePageState extends State<MyHomePage> {
       _counter++;
     });
   }
+
+  @override
+  void initState() {
+    super.initState();
+    print(DateTime.now());
+
+    final now = DateTime.now();
+    final formattedDate =
+        "${now.month.toString().padLeft(2, '0')}/${now.day.toString().padLeft(2, '0')}";
+    print("FORMATTED DATE: $formattedDate");
+
+    print("INIT STATE RUNNING");
+    loadJson();
+  }
+
+  Future<void> loadJson() async {
+    final String data =
+        await rootBundle.loadString('assets/data/her_echoes.json');
+    final List<dynamic> jsonResult = jsonDecode(data);
+
+    final now = DateTime.now();
+    final formattedDate =
+        "${now.month.toString().padLeft(2, '0')}/${now.day.toString().padLeft(2, '0')}";
+
+    final List<dynamic> matches = [];
+
+    for (var item in jsonResult) {
+      if (item["event_date"] == formattedDate &&
+          item["full_name"] != "") {
+        matches.add(item);
+      }
+    }
+
+    setState(() {
+      todaysWomen = matches;
+    });
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -104,11 +145,14 @@ class _MyHomePageState extends State<MyHomePage> {
           // wireframe for each widget.
           mainAxisAlignment: .center,
           children: [
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
+            for (var woman in todaysWomen)
+                Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Text(
+                        woman["full_name"],
+                        style: Theme.of (context).textTheme.headlineMedium,
+                    ),
+                ),
           ],
         ),
       ),
