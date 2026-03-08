@@ -65,3 +65,114 @@ Provide:
 - Latest Excel file
 
 The system must resume without loss of structure.
+
+
+## HOME SCREEN WORKFLOW
+
+1. User opens Home tab
+2. App randomly selects one portrait from Home images folder
+3. App checks subscription state
+
+Subscription state determines banner behavior.
+
+FREE
+→ show "Inspírate diariamente" banner
+→ tap opens subscription modal
+
+PRO Individual
+→ show "Inspiración para tu familia" banner
+→ tap opens family upgrade modal
+
+PRO Family
+→ banner hidden
+
+Suggested women cards load below banner.
+
+
+## SHOW ALL WORKFLOW
+
+1. User opens Show All tab
+
+2. App loads full dataset from JSON
+
+3. vertical_card_pager displays all cards
+
+4. App checks subscription state
+
+FREE user:
+• cards appear locked
+• tap triggers subscription modal
+
+PRO user:
+• cards fully interactive
+• tap opens Detail View
+
+
+## CARD INTERACTION WORKFLOW
+
+When a user taps a card:
+
+Step 1
+Check subscription state.
+
+If PRO
+→ open Detail View.
+
+If FREE
+→ check if card is locked.
+
+Unlocked card
+→ open Detail View.
+
+Locked card
+→ open Subscription Modal.
+
+---
+
+## DETAIL VIEW WORKFLOW
+
+Detail view loads data from the card object.
+
+Displayed sections:
+
+Header Image
+Tags
+Full Name
+
+Tab Navigation:
+Biography
+Legacy
+
+---
+
+Biography Tab shows:
+
+Event date
+Historical event
+Birth date
+Birth place
+Bio text paragraphs
+Death date
+Death place
+
+---
+
+Legacy Tab shows:
+
+Quote
+Legacy description
+Share button
+Add to Favorites button
+
+
+---
+
+### Si se retoma el trabajo:
+
+1. No modificar layout.
+2. No modificar estilos.
+3. Implementar motor Daily Suggestions Engine.
+4. Validar:
+   - 3 + hasta 7
+   - Sin duplicados
+   - Orden consistente

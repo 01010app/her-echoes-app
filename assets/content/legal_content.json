@@ -1,0 +1,25 @@
+{
+  "terms": {
+    "es": {
+      "title": "Términos y Condiciones",
+      "content": [
+        {
+          "type": "h2",
+          "text": "Lorem ipsum dolor sit amet"
+        },
+        {
+          "type": "p",
+          "text": "Lorem ipsum dolor sit amet..."
+        }
+      ]
+    },
+    "en": {
+      "title": "Terms and Conditions",
+      "content": [...]
+    }
+  },
+  "about": {
+    "es": {...},
+    "en": {...}
+  }
+}
