@@ -15,7 +15,8 @@ class WomanCardWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String imageUrl = (woman["image_card_ID"] ?? "").toString();
+    final String rawId = (woman["image_card_ID"] ?? "").toString();
+    final String imageUrl = rawId.startsWith("http") ? rawId : "https://raw.githubusercontent.com/01010app/her-echoes-app/main/images/cards/$rawId.webp";
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
