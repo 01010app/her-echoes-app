@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:vertical_card_pager/vertical_card_pager.dart';
+import 'package:provider/provider.dart';
+
+import '../../core/subscription_provider.dart';
+import '../../widgets/cards/pro_badge.dart';
+import '../../widgets/modals/upsell_modal_free.dart';
 import '../card_detail/card_detail_screen.dart';
 
 class ShowAllScreen extends StatefulWidget {
@@ -18,8 +23,22 @@ class ShowAllScreen extends StatefulWidget {
 class _ShowAllScreenState extends State<ShowAllScreen> {
   int _focusedIndex = 0;
 
+  void _showUpsell(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => const UpsellModalFree(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final userIsPro = context.watch<SubscriptionProvider>().isPro;
+
     final women = widget.allWomen
         .where((w) => (w['image_card_ID'] ?? '').toString().isNotEmpty)
         .toList();
@@ -32,14 +51,14 @@ class _ShowAllScreenState extends State<ShowAllScreen> {
       final imageUrl = rawId.startsWith('http')
           ? rawId
           : "https://raw.githubusercontent.com/01010app/her-echoes-app/main/images/cards/$rawId.webp";
-      final isPro = w['is_free'] != "VERDADERO";
+      final isContentPro = w['is_free'] != "VERDADERO";
+      final isPro = isContentPro && !userIsPro;
       final isFocused = index == _focusedIndex;
 
       return Stack(
         fit: StackFit.expand,
         children: [
 
-          // IMAGEN
           ClipRRect(
             borderRadius: BorderRadius.circular(20),
             child: Image.network(
@@ -49,7 +68,6 @@ class _ShowAllScreenState extends State<ShowAllScreen> {
             ),
           ),
 
-          // GRADIENTE
           ClipRRect(
             borderRadius: BorderRadius.circular(20),
             child: Container(
@@ -66,7 +84,6 @@ class _ShowAllScreenState extends State<ShowAllScreen> {
             ),
           ),
 
-          // NOMBRE
           Positioned(
             left: 24,
             right: 24,
@@ -88,26 +105,11 @@ class _ShowAllScreenState extends State<ShowAllScreen> {
             ),
           ),
 
-          // PRO BADGE
           if (isPro)
-            Positioned(
+            const Positioned(
               top: 16,
               right: 16,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF70F3D),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Text(
-                  "PRO",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
+              child: ProBadge(),
             ),
         ],
       );
@@ -128,18 +130,10 @@ class _ShowAllScreenState extends State<ShowAllScreen> {
           },
           onSelectedItem: (index) {
             final woman = women[index];
-            final isPro = woman['is_free'] != "VERDADERO";
-            if (isPro) {
-              showModalBottomSheet(
-                context: context,
-                builder: (_) => Container(
-                  padding: const EdgeInsets.all(32),
-                  child: const Text(
-                    "Upsell modal — próximamente",
-                    style: TextStyle(fontSize: 18),
-                  ),
-                ),
-              );
+            final isContentPro = woman['is_free'] != "VERDADERO";
+            final blocked = isContentPro && !userIsPro;
+            if (blocked) {
+              _showUpsell(context);
             } else {
               Navigator.push(
                 context,

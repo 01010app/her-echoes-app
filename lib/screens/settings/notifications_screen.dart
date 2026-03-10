@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:provider/provider.dart';
 
+import '../../core/language_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../widgets/settings/settings_list_container.dart';
 
@@ -18,14 +20,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   @override
   Widget build(BuildContext context) {
     final topPadding = MediaQuery.of(context).padding.top;
+    final isEnglish = context.watch<LanguageProvider>().isEnglish;
 
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Column(
         children: [
-
           Container(height: topPadding, color: Colors.white),
-
           Container(
             height: 48,
             color: Colors.white,
@@ -54,7 +55,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 Expanded(
                   child: Center(
                     child: Text(
-                      "Notificaciones",
+                      isEnglish ? "Notifications" : "Notificaciones",
                       style: GoogleFonts.inter(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
@@ -69,9 +70,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               ],
             ),
           ),
-
           const SizedBox(height: 24),
-
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -83,7 +82,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                       children: [
                         Expanded(
                           child: Text(
-                            "Recibir notificaciones",
+                            isEnglish ? "Receive notifications" : "Recibir notificaciones",
                             style: GoogleFonts.inter(
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
@@ -94,9 +93,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                           ),
                         ),
                         GestureDetector(
-                          onTap: () => setState(() {
-                            _notificationsEnabled = !_notificationsEnabled;
-                          }),
+                          onTap: () => setState(
+                            () => _notificationsEnabled = !_notificationsEnabled,
+                          ),
                           child: PhosphorIcon(
                             _notificationsEnabled
                                 ? PhosphorIcons.toggleRight(PhosphorIconsStyle.fill)

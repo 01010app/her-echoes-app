@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:provider/provider.dart';
 
+import '../../core/subscription_provider.dart';
+import '../../core/favorites_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_shapes.dart';
+import 'pro_badge.dart';
 
 class HomeMiniCard extends StatelessWidget {
   final String fullName;
@@ -10,6 +15,7 @@ class HomeMiniCard extends StatelessWidget {
   final String imagePath;
   final bool isPro;
   final VoidCallback onTap;
+  final Map<String, dynamic>? woman;
 
   const HomeMiniCard({
     super.key,
@@ -18,10 +24,17 @@ class HomeMiniCard extends StatelessWidget {
     required this.imagePath,
     required this.onTap,
     this.isPro = false,
+    this.woman,
   });
 
   @override
   Widget build(BuildContext context) {
+    final userIsPro = context.watch<SubscriptionProvider>().isPro;
+    final showProBadge = isPro && !userIsPro;
+    final favoritesProvider = context.watch<FavoritesProvider>();
+    final womanId = woman?['woman_id']?.toString() ?? '';
+    final isFav = womanId.isNotEmpty ? favoritesProvider.isFavorite(womanId) : false;
+
     return GestureDetector(
       onTap: onTap,
       child: Material(
@@ -73,7 +86,6 @@ class HomeMiniCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-
                     Text(
                       fullName,
                       maxLines: 1,
@@ -85,7 +97,6 @@ class HomeMiniCard extends StatelessWidget {
                         color: AppColors.textPrimary,
                       ),
                     ),
-
                     Text(
                       profession,
                       maxLines: 1,
@@ -100,25 +111,35 @@ class HomeMiniCard extends StatelessWidget {
                 ),
               ),
 
-              /// PRO BADGE
-              if (isPro)
+              /// PRO BADGE — solo si FREE
+              if (showProBadge)
+                const Positioned(
+                  top: 8,
+                  right: 8,
+                  child: ProBadge(),
+                ),
+
+              /// FAVORITE BUTTON — solo si usuario PRO
+              if (userIsPro && woman != null)
                 Positioned(
                   top: 8,
                   right: 8,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.accent,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      "PRO",
-                      style: AppTextStyles.body.copyWith(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
+                  child: GestureDetector(
+                    onTap: () => favoritesProvider.toggle(woman!),
+                    child: Container(
+                      width: 28,
+                      height: 28,
+                      decoration: BoxDecoration(
+                        color: isFav
+                            ? const Color(0xFFF70F3D)
+                            : Colors.black.withOpacity(0.35),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        isFav
+                            ? PhosphorIcons.heart(PhosphorIconsStyle.fill)
+                            : PhosphorIcons.heart(PhosphorIconsStyle.regular),
+                        size: 14,
                         color: Colors.white,
                       ),
                     ),

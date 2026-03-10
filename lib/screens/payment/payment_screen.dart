@@ -4,45 +4,20 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/language_provider.dart';
+import '../../core/subscription_provider.dart';
 import '../../core/theme/app_colors.dart';
-import '../../services/content_service.dart';
+import 'plan_selection_screen.dart';
+import 'payment_method_screen.dart';
 
-class LegalContentScreen extends StatefulWidget {
-  final String contentKey;
-  final String language;
-
-  const LegalContentScreen({
-    super.key,
-    required this.contentKey,
-    required this.language,
-  });
-
-  @override
-  State<LegalContentScreen> createState() => _LegalContentScreenState();
-}
-
-class _LegalContentScreenState extends State<LegalContentScreen> {
-  Map<String, dynamic>? _data;
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    final data = await ContentService.loadLegalContent();
-    setState(() {
-      _data = data[widget.contentKey];
-    });
-  }
+class PaymentScreen extends StatelessWidget {
+  const PaymentScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     final topPadding = MediaQuery.of(context).padding.top;
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
     final isEnglish = context.watch<LanguageProvider>().isEnglish;
-    final lang = isEnglish ? "en" : "es";
-    final content = _data?[lang];
+    final isPro = context.watch<SubscriptionProvider>().isPro;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -77,9 +52,7 @@ class _LegalContentScreenState extends State<LegalContentScreen> {
                 Expanded(
                   child: Center(
                     child: Text(
-                      content?['title'] ?? '',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                      isEnglish ? "Payment method" : "Medio de pago",
                       style: GoogleFonts.inter(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
@@ -95,59 +68,66 @@ class _LegalContentScreenState extends State<LegalContentScreen> {
             ),
           ),
           Expanded(
-            child: content == null
-                ? const Center(
-                    child: CircularProgressIndicator(
-                      color: Color(0xFFE1002D),
-                    ),
-                  )
-                : SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(16, 24, 16, 32),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: _buildBlocks(content),
-                    ),
-                  ),
+            child: isPro
+                ? PaymentMethodBody(isEnglish: isEnglish)
+                : _buildEmptyState(context, isEnglish, bottomPadding),
           ),
         ],
       ),
     );
   }
 
-  List<Widget> _buildBlocks(Map<String, dynamic> content) {
-    final List blocks = content['content'] ?? [];
-    return blocks.map<Widget>((block) {
-      switch (block['type']) {
-        case 'h2':
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 12),
+  Widget _buildEmptyState(
+      BuildContext context, bool isEnglish, double bottomPadding) {
+    return Stack(
+      children: [
+        Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
             child: Text(
-              block['text'],
-              style: GoogleFonts.inter(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                height: 1.4,
-                letterSpacing: -0.5,
-                color: const Color(0xFF000000),
-              ),
-            ),
-          );
-        case 'p':
-        default:
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 16),
-            child: Text(
-              block['text'],
+              isEnglish
+                  ? "Your billing information for the plan you subscribe to will appear here."
+                  : "Aquí aparecerá la información de facturación del Plan al que te suscribas.",
+              textAlign: TextAlign.center,
               style: GoogleFonts.inter(
                 fontSize: 16,
-                fontWeight: FontWeight.w400,
-                height: 1.6,
-                letterSpacing: -0.5,
-                color: const Color(0xFF434343),
+                fontWeight: FontWeight.w500,
+                height: 1.4,
+                letterSpacing: -0.4,
+                color: const Color(0xFF404040),
               ),
             ),
-          );
-      }
-    }).toList();
+          ),
+        ),
+        Positioned(
+          bottom: bottomPadding + 16,
+          left: 24,
+          right: 24,
+          child: ElevatedButton(
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (_) => const PlanSelectionScreen()),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFE1002D),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16)),
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              elevation: 0,
+            ),
+            child: Text(
+              isEnglish ? "Subscribe to a Plan" : "Suscríbete a un Plan",
+              style: GoogleFonts.inter(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                height: 1.0,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }

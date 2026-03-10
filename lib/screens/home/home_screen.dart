@@ -1,16 +1,26 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../core/language_provider.dart';
+import '../../core/subscription_provider.dart';
+import '../../core/favorites_provider.dart';
 import '../../widgets/navigation/floating_tab_bar.dart';
 import '../../widgets/cards/home_mini_card.dart';
 import '../../widgets/system/app_header.dart';
+import '../../widgets/home/upsell_banner.dart';
+import '../../widgets/modals/upsell_modal_free.dart';
+import '../../widgets/modals/upsell_modal_pro.dart';
 
 import '../card_detail/card_detail_screen.dart';
 import '../daily_echo/daily_echo_screen.dart';
 import '../show_all/show_all_screen.dart';
 import '../favorites/favorites_screen.dart';
 import '../settings/settings_screen.dart';
+
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class HomeScreen extends StatefulWidget {
   final List<Map<String, dynamic>> suggestions;
@@ -51,6 +61,9 @@ class _HomeScreenState extends State<HomeScreen> {
         _currentImageIndex = (_currentImageIndex + 1) % _homeImages.length;
       });
     });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkWeeklyProUpsell();
+    });
   }
 
   @override
@@ -59,16 +72,51 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
+  Future<void> _checkWeeklyProUpsell() async {
+    final isPro = context.read<SubscriptionProvider>().isPro;
+    if (!isPro) return;
+
+    final prefs = await SharedPreferences.getInstance();
+    final lastShown = prefs.getInt('pro_upsell_last_shown') ?? 0;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    const oneWeekMs = 7 * 24 * 60 * 60 * 1000;
+
+    if (now - lastShown >= oneWeekMs) {
+      await prefs.setInt('pro_upsell_last_shown', now);
+      if (mounted) _showProUpsell();
+    }
+  }
+
+  void _showUpsell() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => const UpsellModalFree(),
+    );
+  }
+
+  void _showProUpsell() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withOpacity(0.55),
+      builder: (_) => UpsellModalPro(
+        currentHomeImage: _homeImages[_currentImageIndex],
+      ),
+    );
+  }
+
   void onTabSelected(int index) {
-    setState(() {
-      currentIndex = index;
-    });
+    setState(() => currentIndex = index);
   }
 
   void onSettingsTap() {
-    setState(() {
-      hasSettingsNotification = false;
-    });
+    setState(() => hasSettingsNotification = false);
     Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => const SettingsScreen()),
@@ -102,10 +150,7 @@ class _HomeScreenState extends State<HomeScreen> {
         return LayoutBuilder(
           builder: (context, constraints) {
             return Padding(
-              padding: const EdgeInsets.only(
-                top: 106,
-                bottom: 0,
-              ),
+              padding: const EdgeInsets.only(top: 106),
               child: DailyEchoScreen(todaysWomen: widget.todaysWomen),
             );
           },
@@ -125,7 +170,9 @@ class _HomeScreenState extends State<HomeScreen> {
           },
         );
       case 3:
-        return const FavoritesScreen();
+        return FavoritesScreen(
+          onNavigateToDaily: () => setState(() => currentIndex = 1),
+        );
       default:
         return _buildHomeContent();
     }
@@ -134,10 +181,14 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildHomeContent() {
     return LayoutBuilder(
       builder: (context, constraints) {
+        final isEnglish = context.watch<LanguageProvider>().isEnglish;
+        final isPro = context.watch<SubscriptionProvider>().isPro;
+        final favoritesProvider = context.watch<FavoritesProvider>();
         final screenHeight = constraints.maxHeight;
         final tabBarTop = screenHeight - 24 - 61;
         final carouselTop = tabBarTop - 24 - 156;
-        final titleTop = carouselTop - 24 - 18;
+        final bannerTop = carouselTop - 24 - 18 - 24 - 80;
+        final titleTop = bannerTop + 80 + 24;
 
         return Stack(
           children: [
@@ -162,7 +213,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
 
-            // 3. DEGRADADO 370px
+            // 3. DEGRADADO
             Positioned(
               bottom: 265,
               left: 0,
@@ -187,10 +238,10 @@ class _HomeScreenState extends State<HomeScreen> {
             // 4. TÍTULO
             Positioned(
               top: titleTop,
-              left: 16,
-              right: 16,
+              left: 24,
+              right: 24,
               child: Text(
-                "Sugerencias de hoy",
+                isEnglish ? "Today's suggestions" : "Sugerencias de hoy",
                 style: GoogleFonts.gloock(
                   fontSize: 18,
                   height: 1.4,
@@ -199,7 +250,35 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
 
-            // 5. CARRUSEL
+            // 5. BANNER UPSELL
+            Positioned(
+              top: bannerTop,
+              left: 24,
+              right: 24,
+              child: isPro
+                  ? UpsellBanner(
+                      title: isEnglish
+                          ? "Inspiration for your family"
+                          : "Inspiración para tu familia",
+                      subtitle: isEnglish
+                          ? "Give a daily dose of inspiration to 2 more people with the Family Plan."
+                          : "Regala una dosis diaria de inspiración a 2 personas más de tu familia con el Plan familiar.",
+                      icon: PhosphorIcons.usersThree,
+                      onTap: _showProUpsell,
+                    )
+                  : UpsellBanner(
+                      title: isEnglish
+                          ? "Get inspired daily"
+                          : "Inspírate diariamente",
+                      subtitle: isEnglish
+                          ? "Unlock hundreds of inspiring stories every day with the PRO Plan."
+                          : "Desbloquea y accede a cientos de historias de inspiración todos los días con el Plan PRO.",
+                      icon: PhosphorIcons.crownSimple,
+                      onTap: _showUpsell,
+                    ),
+            ),
+
+            // 6. CARRUSEL
             Positioned(
               top: carouselTop,
               left: 0,
@@ -208,7 +287,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 height: 156,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.only(left: 16, right: 16),
+                  padding: const EdgeInsets.only(left: 24, right: 24),
                   itemCount: widget.suggestions.length,
                   separatorBuilder: (_, __) => const SizedBox(width: 8),
                   itemBuilder: (context, index) {
@@ -217,30 +296,23 @@ class _HomeScreenState extends State<HomeScreen> {
                     final imageUrl = rawId.startsWith('http')
                         ? rawId
                         : "https://raw.githubusercontent.com/01010app/her-echoes-app/main/images/cards/$rawId.webp";
+                    final isContentPro = woman['is_free'] != "VERDADERO";
+                    final blocked = isContentPro && !isPro;
 
                     return HomeMiniCard(
                       fullName: woman['full_name'] ?? '',
                       profession: woman['pro-tag01_en'] ?? '',
                       imagePath: imageUrl,
-                      isPro: woman['is_free'] != "VERDADERO",
+                      isPro: blocked,
+                      woman: woman,
                       onTap: () {
-                        final isFree = woman['is_free'] == "VERDADERO";
-                        if (isFree) {
+                        if (blocked) {
+                          _showUpsell();
+                        } else {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (_) => CardDetailScreen(woman: woman),
-                            ),
-                          );
-                        } else {
-                          showModalBottomSheet(
-                            context: context,
-                            builder: (_) => Container(
-                              padding: const EdgeInsets.all(32),
-                              child: const Text(
-                                "Upsell modal — próximamente",
-                                style: TextStyle(fontSize: 18),
-                              ),
                             ),
                           );
                         }
@@ -250,7 +322,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-
           ],
         );
       },

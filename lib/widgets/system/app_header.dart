@@ -38,7 +38,7 @@ class AppHeader extends StatelessWidget {
                 clipBehavior: Clip.none,
                 children: [
                   PhosphorIcon(
-                    PhosphorIcons.slidersHorizontal(),
+                    PhosphorIcons.gearSix(),
                     size: 28.0,
                     color: AppColors.accent,
                   ),

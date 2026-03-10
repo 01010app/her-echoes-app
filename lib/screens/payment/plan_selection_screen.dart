@@ -1,0 +1,343 @@
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:provider/provider.dart';
+
+import '../../core/language_provider.dart';
+import '../../core/theme/app_colors.dart';
+import 'add_card_screen.dart';
+
+enum PlanType { individual, family }
+
+class PlanSelectionScreen extends StatefulWidget {
+  const PlanSelectionScreen({super.key});
+
+  @override
+  State<PlanSelectionScreen> createState() => _PlanSelectionScreenState();
+}
+
+class _PlanSelectionScreenState extends State<PlanSelectionScreen> {
+  PlanType _selected = PlanType.individual;
+  bool _freeTrial = true;
+
+  @override
+  Widget build(BuildContext context) {
+    final topPadding = MediaQuery.of(context).padding.top;
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
+    final isEnglish = context.watch<LanguageProvider>().isEnglish;
+
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: Column(
+        children: [
+          Container(height: topPadding, color: Colors.white),
+          Container(
+            height: 48,
+            color: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: AppColors.background,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: PhosphorIcon(
+                        PhosphorIcons.arrowLeft(PhosphorIconsStyle.bold),
+                        size: 20,
+                        color: AppColors.accent,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Center(
+                    child: Text(
+                      isEnglish ? "Subscribe to a Plan" : "Suscríbete a un Plan",
+                      style: GoogleFonts.inter(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        height: 1.5,
+                        letterSpacing: -0.5,
+                        color: const Color(0xFF404040),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 44),
+              ],
+            ),
+          ),
+          Expanded(
+            child: Stack(
+              children: [
+                SingleChildScrollView(
+                  padding: EdgeInsets.only(
+                    left: 16,
+                    right: 16,
+                    top: 24,
+                    bottom: bottomPadding + 100,
+                  ),
+                  child: Column(
+                    children: [
+                      _PlanCard(
+                        selected: _selected == PlanType.individual,
+                        title: isEnglish ? "Individual Plan" : "Plan Individual",
+                        price: _freeTrial ? "CLP 16.800" : "CLP 9.900",
+                        periodicity: isEnglish ? "Annual" : "Anual",
+                        trailLabel: isEnglish
+                            ? "With 7-day free trial"
+                            : "Con prueba gratuita de 7 días",
+                        showTrialToggle: true,
+                        trialEnabled: _freeTrial,
+                        onTrialToggle: (val) =>
+                            setState(() => _freeTrial = val),
+                        onTap: () =>
+                            setState(() => _selected = PlanType.individual),
+                      ),
+                      const SizedBox(height: 12),
+                      _PlanCard(
+                        selected: _selected == PlanType.family,
+                        title: isEnglish ? "Family Plan" : "Plan Familiar",
+                        price: "CLP 16.500",
+                        periodicity: isEnglish ? "Annual" : "Anual",
+                        onTap: () =>
+                            setState(() => _selected = PlanType.family),
+                      ),
+                    ],
+                  ),
+                ),
+                Positioned(
+                  bottom: bottomPadding + 16,
+                  left: 24,
+                  right: 24,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => AddCardScreen(
+                          selectedPlan: _selected,
+                          freeTrial: _freeTrial,
+                        ),
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFE1002D),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16)),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      elevation: 0,
+                    ),
+                    child: Text(
+                      isEnglish ? "Add payment method" : "Agregar medio de pago",
+                      style: GoogleFonts.inter(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        height: 1.0,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PlanCard extends StatelessWidget {
+  final bool selected;
+  final String title;
+  final String price;
+  final String periodicity;
+  final String? trailLabel;
+  final bool showTrialToggle;
+  final bool trialEnabled;
+  final ValueChanged<bool>? onTrialToggle;
+  final VoidCallback onTap;
+
+  const _PlanCard({
+    required this.selected,
+    required this.title,
+    required this.price,
+    required this.periodicity,
+    this.trailLabel,
+    this.showTrialToggle = false,
+    this.trialEnabled = false,
+    this.onTrialToggle,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: selected ? const Color(0xFFE1002D) : Colors.transparent,
+            width: 2,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.only(
+          left: 8,
+          top: 16,
+          right: 16,
+          bottom: 12,
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Bullet radio
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: selected
+                        ? const Color(0xFFE1002D)
+                        : const Color(0xFFCCCCCC),
+                    width: 2,
+                  ),
+                ),
+                child: selected
+                    ? Center(
+                        child: Container(
+                          width: 10,
+                          height: 10,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFE1002D),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      )
+                    : null,
+              ),
+            ),
+            const SizedBox(width: 8),
+            // Contenido
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Fila 1: nombre + precio
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          title,
+                          style: GoogleFonts.inter(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                            height: 1.0,
+                            letterSpacing: -0.2,
+                            color: const Color(0xFF444444),
+                          ),
+                        ),
+                      ),
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 200),
+                        child: Text(
+                          price,
+                          key: ValueKey(price),
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            height: 1.23,
+                            color: const Color(0xFF222222),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  // Fila 2: periodicidad
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "Periodicidad",
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w400,
+                          height: 1.14,
+                          color: const Color(0xFF444444),
+                        ),
+                      ),
+                      Text(
+                        periodicity,
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w400,
+                          height: 1.14,
+                          color: const Color(0xFF444444),
+                        ),
+                      ),
+                    ],
+                  ),
+                  // Fila 3: prueba gratuita (solo Individual)
+                  if (showTrialToggle && trailLabel != null) ...[
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            trailLabel!,
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              height: 1.5,
+                              letterSpacing: -0.5,
+                              color: const Color(0xFF434343),
+                            ),
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () => onTrialToggle?.call(!trialEnabled),
+                          child: PhosphorIcon(
+                            trialEnabled
+                                ? PhosphorIcons.toggleRight(
+                                    PhosphorIconsStyle.fill)
+                                : PhosphorIcons.toggleLeft(
+                                    PhosphorIconsStyle.fill),
+                            size: 36,
+                            color: trialEnabled
+                                ? const Color(0xFFF70F3D)
+                                : const Color(0xFF949494),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

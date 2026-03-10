@@ -1,32 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:provider/provider.dart';
 
+import '../../core/language_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../widgets/settings/settings_list_container.dart';
 import '../../widgets/settings/settings_divider.dart';
 
-class LanguageScreen extends StatefulWidget {
+class LanguageScreen extends StatelessWidget {
   const LanguageScreen({super.key});
 
   @override
-  State<LanguageScreen> createState() => _LanguageScreenState();
-}
-
-class _LanguageScreenState extends State<LanguageScreen> {
-  bool _isEnglish = false;
-
-  @override
   Widget build(BuildContext context) {
+    final lang = context.watch<LanguageProvider>();
     final topPadding = MediaQuery.of(context).padding.top;
+    final isEnglish = context.watch<LanguageProvider>().isEnglish;
 
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Column(
         children: [
-
           Container(height: topPadding, color: Colors.white),
-
           Container(
             height: 48,
             color: Colors.white,
@@ -55,7 +50,7 @@ class _LanguageScreenState extends State<LanguageScreen> {
                 Expanded(
                   child: Center(
                     child: Text(
-                      "Idioma",
+                      isEnglish ? "Language" : "Idioma",
                       style: GoogleFonts.inter(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
@@ -70,15 +65,12 @@ class _LanguageScreenState extends State<LanguageScreen> {
               ],
             ),
           ),
-
           const SizedBox(height: 24),
-
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: SettingsListContainer(
                 children: [
-
                   // ENGLISH
                   Padding(
                     padding: const EdgeInsets.only(top: 16, bottom: 16, right: 16),
@@ -97,13 +89,13 @@ class _LanguageScreenState extends State<LanguageScreen> {
                           ),
                         ),
                         GestureDetector(
-                          onTap: () => setState(() => _isEnglish = true),
+                          onTap: () => lang.setEnglish(true),
                           child: PhosphorIcon(
-                            _isEnglish
+                            lang.isEnglish
                                 ? PhosphorIcons.toggleRight(PhosphorIconsStyle.fill)
                                 : PhosphorIcons.toggleLeft(PhosphorIconsStyle.fill),
                             size: 36,
-                            color: _isEnglish
+                            color: lang.isEnglish
                                 ? const Color(0xFFF70F3D)
                                 : const Color(0xFF949494),
                           ),
@@ -132,13 +124,13 @@ class _LanguageScreenState extends State<LanguageScreen> {
                           ),
                         ),
                         GestureDetector(
-                          onTap: () => setState(() => _isEnglish = false),
+                          onTap: () => lang.setEnglish(false),
                           child: PhosphorIcon(
-                            !_isEnglish
+                            !lang.isEnglish
                                 ? PhosphorIcons.toggleRight(PhosphorIconsStyle.fill)
                                 : PhosphorIcons.toggleLeft(PhosphorIconsStyle.fill),
                             size: 36,
-                            color: !_isEnglish
+                            color: !lang.isEnglish
                                 ? const Color(0xFFF70F3D)
                                 : const Color(0xFF949494),
                           ),
@@ -146,7 +138,6 @@ class _LanguageScreenState extends State<LanguageScreen> {
                       ],
                     ),
                   ),
-
                 ],
               ),
             ),

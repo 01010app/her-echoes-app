@@ -1,7 +1,13 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:provider/provider.dart';
+import '../../core/language_provider.dart';
+import '../../core/subscription_provider.dart';
+import '../../core/favorites_provider.dart';
 import '../../core/theme/app_colors.dart';
+import '../../widgets/modals/upsell_modal_free.dart';
 
 class CardDetailScreen extends StatefulWidget {
   final Map<String, dynamic> woman;
@@ -19,6 +25,8 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
   int _selectedTab = 0;
   final ScrollController _scrollController = ScrollController();
   double _imageHeight = 520;
+  final GlobalKey _menuKey = GlobalKey();
+  OverlayEntry? _menuOverlay;
 
   @override
   void initState() {
@@ -33,6 +41,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
 
   @override
   void dispose() {
+    _closeMenu();
     _scrollController.dispose();
     super.dispose();
   }
@@ -43,7 +52,272 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
     return "https://raw.githubusercontent.com/01010app/her-echoes-app/main/images/cards/$rawId.webp";
   }
 
-  bool get isEnglish => true;
+  bool get isEnglish => context.read<LanguageProvider>().isEnglish;
+
+  void _showUpsell() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => const UpsellModalFree(),
+    );
+  }
+
+  void _showFavoriteConfirmation() {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        backgroundColor: Colors.white,
+        contentPadding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 56,
+              height: 56,
+              decoration: const BoxDecoration(
+                color: Color(0xFFFFF0F3),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                PhosphorIcons.heart(PhosphorIconsStyle.fill),
+                size: 28,
+                color: const Color(0xFFF70F3D),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              isEnglish ? "Added to Favorites!" : "¡Añadido a Favoritas!",
+              textAlign: TextAlign.center,
+              style: GoogleFonts.inter(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF1A1A1A),
+                height: 1.2,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              isEnglish
+                  ? "You can find it in your Favorites tab."
+                  : "Puedes encontrarla en tu pestaña de Favoritas.",
+              textAlign: TextAlign.center,
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                color: const Color(0xFF777777),
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFE1002D),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  elevation: 0,
+                ),
+                child: Text(
+                  isEnglish ? "Continue" : "Continuar",
+                  style: GoogleFonts.inter(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    height: 1.0,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showMenu() {
+    final isPro = context.read<SubscriptionProvider>().isPro;
+    final favoritesProvider = context.read<FavoritesProvider>();
+    final womanId = widget.woman['woman_id']?.toString() ?? '';
+    final isFav = womanId.isNotEmpty ? favoritesProvider.isFavorite(womanId) : false;
+
+    final RenderBox button = _menuKey.currentContext!.findRenderObject() as RenderBox;
+    final RenderBox overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+    final Offset pos = button.localToGlobal(Offset.zero, ancestor: overlay);
+
+    const menuWidth = 280.0;
+    final left = pos.dx + button.size.width - menuWidth;
+    final top = pos.dy + button.size.height + 8;
+
+    _menuOverlay = OverlayEntry(
+      builder: (_) => GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onTap: _closeMenu,
+        child: Stack(
+          children: [
+            Positioned.fill(child: Container(color: Colors.transparent)),
+            Positioned(
+              left: left,
+              top: top,
+              width: menuWidth,
+              child: Material(
+                color: Colors.transparent,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(24),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.95),
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color.fromRGBO(50, 50, 93, 0.25),
+                            offset: Offset(0, 50),
+                            blurRadius: 100,
+                            spreadRadius: -20,
+                          ),
+                          BoxShadow(
+                            color: Color.fromRGBO(0, 0, 0, 0.3),
+                            offset: Offset(0, 30),
+                            blurRadius: 60,
+                            spreadRadius: -30,
+                          ),
+                        ],
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            _menuRow(
+                              icon: isFav
+                                  ? PhosphorIcons.heart(PhosphorIconsStyle.fill)
+                                  : PhosphorIcons.heart(PhosphorIconsStyle.bold),
+                              label: isFav
+                                  ? (isEnglish ? "Added to Favorites" : "Añadido a Favoritos")
+                                  : (isEnglish ? "Add to Favorites" : "Añadir a Favoritos"),
+                              onTap: () {
+                                _closeMenu();
+                                if (isPro) {
+                                  favoritesProvider.toggle(widget.woman);
+                                  if (!isFav) _showFavoriteConfirmation();
+                                } else {
+                                  _showUpsell();
+                                }
+                              },
+                            ),
+                            _menuDivider(),
+                            _menuRow(
+                              icon: PhosphorIcons.shareNetwork(PhosphorIconsStyle.bold),
+                              label: isEnglish ? "Share with friends" : "Compartir con amigos",
+                              onTap: () { _closeMenu(); },
+                            ),
+                            _menuDivider(),
+                            _menuRow(
+                              icon: PhosphorIcons.warning(PhosphorIconsStyle.bold),
+                              label: isEnglish ? "Report issue" : "Reportar problema",
+                              subtitle: isEnglish
+                                  ? "Incorrect info, copyright, deceased?"
+                                  : "¿Info incorrecta, copyright, fallecida?",
+                              onTap: () { _closeMenu(); },
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    Overlay.of(context).insert(_menuOverlay!);
+  }
+
+  void _closeMenu() {
+    _menuOverlay?.remove();
+    _menuOverlay = null;
+  }
+
+  Widget _menuDivider() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Divider(
+        height: 1,
+        thickness: 0.5,
+        color: Colors.black.withOpacity(0.16),
+      ),
+    );
+  }
+
+  Widget _menuRow({
+    required IconData icon,
+    required String label,
+    String? subtitle,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            SizedBox(
+              width: 20,
+              height: 20,
+              child: Icon(icon, size: 20, color: const Color(0xFF3C3C3C)),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    label,
+                    style: GoogleFonts.inter(
+                      fontSize: 18,
+                      height: 16 / 18,
+                      letterSpacing: -0.5,
+                      color: const Color(0xFF3C3C3C),
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                  if (subtitle != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        height: 16 / 12,
+                        letterSpacing: -0.5,
+                        color: const Color(0xFF5D5D5D),
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -53,30 +327,18 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
       backgroundColor: Colors.white,
       body: Column(
         children: [
-
-          // FIXED: HERO
           _buildHero(w),
-
-          // GAP solo cuando no está colapsada
           if (_imageHeight > 320) const SizedBox(height: 16),
-
-          // FIXED: TABS
           _buildTabs(),
-
-          // SCROLLABLE CONTENT
           Expanded(
             child: SingleChildScrollView(
               controller: _scrollController,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _selectedTab == 0
-                      ? _buildBiography(w)
-                      : _buildLegacy(w),
+                  _selectedTab == 0 ? _buildBiography(w) : _buildLegacy(w),
                   _buildBottomActions(context),
-                  SizedBox(
-                    height: MediaQuery.of(context).padding.bottom + 16,
-                  ),
+                  SizedBox(height: MediaQuery.of(context).padding.bottom - 11),
                 ],
               ),
             ),
@@ -89,8 +351,6 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
   Widget _buildHero(Map<String, dynamic> w) {
     return Stack(
       children: [
-
-        // IMAGE
         AnimatedContainer(
           duration: const Duration(milliseconds: 50),
           height: _imageHeight,
@@ -109,8 +369,6 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
             ),
           ),
         ),
-
-        // GRADIENT
         AnimatedContainer(
           duration: const Duration(milliseconds: 50),
           height: _imageHeight,
@@ -135,8 +393,6 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
             ),
           ),
         ),
-
-        // TEXT ON IMAGE
         Positioned(
           left: 24,
           right: 24,
@@ -168,8 +424,6 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
             ],
           ),
         ),
-
-        // BACK BUTTON
         Positioned(
           top: MediaQuery.of(context).padding.top + 8,
           left: 16,
@@ -196,13 +450,12 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
             ),
           ),
         ),
-
-        // MENU BUTTON
         Positioned(
           top: MediaQuery.of(context).padding.top + 8,
           right: 16,
           child: GestureDetector(
-            onTap: () => _showMenu(context),
+            key: _menuKey,
+            onTap: _showMenu,
             child: Container(
               width: 36,
               height: 36,
@@ -239,9 +492,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: const Color(0xFFF2F2F2),
-        borderRadius: isCollapsed
-            ? BorderRadius.zero
-            : BorderRadius.circular(16),
+        borderRadius: isCollapsed ? BorderRadius.zero : BorderRadius.circular(16),
       ),
       child: Row(
         children: [
@@ -258,9 +509,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
     return Expanded(
       child: GestureDetector(
         onTap: () {
-          if (_selectedTab != index) {
-            setState(() => _selectedTab = index);
-          }
+          if (_selectedTab != index) setState(() => _selectedTab = index);
         },
         behavior: HitTestBehavior.opaque,
         child: AnimatedContainer(
@@ -305,9 +554,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
         : ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
     final dateStr = "${months[now.month - 1]} ${now.day}, ${now.year}";
     final pastDate = w['past_date']?.toString() ?? '';
-    final label = isEnglish
-        ? "On $dateStr, $pastDate"
-        : "En $dateStr, $pastDate";
+    final label = isEnglish ? "On $dateStr, $pastDate" : "En $dateStr, $pastDate";
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -340,9 +587,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  (isEnglish
-                      ? w['on_this_date_en']
-                      : w['on_this_date_es']) ?? '',
+                  (isEnglish ? w['on_this_date_en'] : w['on_this_date_es']) ?? '',
                   style: GoogleFonts.inter(
                     fontSize: 11,
                     fontWeight: FontWeight.w400,
@@ -366,7 +611,6 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        // TAG con fondo
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
@@ -390,8 +634,6 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
             ],
           ),
         ),
-
-        // LUGAR fuera del tag
         if (place.isNotEmpty)
           Text(
             place,
@@ -412,31 +654,17 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-
           const SizedBox(height: 16),
-
-          // EVENT BLOCK
-          if ((w['on_this_date_en'] ?? '').isNotEmpty)
-            _buildEventBlock(w),
-
-          // BIRTH
+          if ((w['on_this_date_en'] ?? '').isNotEmpty) _buildEventBlock(w),
           if ((w['birth_date'] ?? '').isNotEmpty)
             _buildBioTag(
               icon: PhosphorIcons.baby(PhosphorIconsStyle.regular),
               date: w['birth_date'] as String,
               place: w['birth_place'] as String? ?? '',
             ),
-
           const SizedBox(height: 8),
-
-          // BIO TEXT
-          ..._parseBlocks(
-            isEnglish ? w['bio_en'] ?? '' : w['bio_es'] ?? '',
-          ),
-
+          ..._parseBlocks(isEnglish ? w['bio_en'] ?? '' : w['bio_es'] ?? ''),
           const SizedBox(height: 8),
-
-          // DEATH
           _buildBioTag(
             icon: PhosphorIcons.skull(PhosphorIconsStyle.regular),
             date: (w['death_date'] ?? '').toString().isNotEmpty
@@ -444,7 +672,6 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                 : (isEnglish ? 'Still alive' : 'Aún con vida'),
             place: w['death_place'] as String? ?? '',
           ),
-
           const SizedBox(height: 32),
         ],
       ),
@@ -457,15 +684,11 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-
           const SizedBox(height: 16),
-
-          // QUOTE BLOCK
           if ((w['quote_text_en'] ?? '').isNotEmpty)
             Container(
               margin: const EdgeInsets.only(bottom: 16),
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
                 color: const Color(0xFFFBF4F5),
                 borderRadius: BorderRadius.circular(16),
@@ -481,9 +704,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      (isEnglish
-                          ? w['quote_text_en']
-                          : w['quote_text_es']) ?? '',
+                      (isEnglish ? w['quote_text_en'] : w['quote_text_es']) ?? '',
                       style: GoogleFonts.inter(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
@@ -496,12 +717,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                 ],
               ),
             ),
-
-          // LEGACY TEXT
-          ..._parseBlocks(
-            isEnglish ? w['legacy_en'] ?? '' : w['legacy_es'] ?? '',
-          ),
-
+          ..._parseBlocks(isEnglish ? w['legacy_en'] ?? '' : w['legacy_es'] ?? ''),
           const SizedBox(height: 32),
         ],
       ),
@@ -511,47 +727,26 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
   List<Widget> _parseBlocks(String raw) {
     final widgets = <Widget>[];
     int cursor = 0;
-
     while (cursor < raw.length) {
       if (raw.startsWith('[S]', cursor)) {
         cursor += 3;
         final end = raw.indexOf(RegExp(r'\[S\]|\[P\]'), cursor);
-        final text = (end == -1
-                ? raw.substring(cursor)
-                : raw.substring(cursor, end))
-            .trim();
+        final text = (end == -1 ? raw.substring(cursor) : raw.substring(cursor, end)).trim();
         if (text.isNotEmpty) {
           widgets.add(Padding(
             padding: const EdgeInsets.only(top: 16, bottom: 4),
-            child: Text(
-              text,
-              style: GoogleFonts.inter(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                color: const Color(0xFF1A1A1A),
-              ),
-            ),
+            child: Text(text, style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600, color: const Color(0xFF1A1A1A))),
           ));
         }
         cursor = end == -1 ? raw.length : end;
       } else if (raw.startsWith('[P]', cursor)) {
         cursor += 3;
         final end = raw.indexOf(RegExp(r'\[S\]|\[P\]'), cursor);
-        final text = (end == -1
-                ? raw.substring(cursor)
-                : raw.substring(cursor, end))
-            .trim();
+        final text = (end == -1 ? raw.substring(cursor) : raw.substring(cursor, end)).trim();
         if (text.isNotEmpty) {
           widgets.add(Padding(
             padding: const EdgeInsets.only(bottom: 8),
-            child: Text(
-              text,
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                color: const Color(0xFF404040),
-                height: 1.6,
-              ),
-            ),
+            child: Text(text, style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF404040), height: 1.6)),
           ));
         }
         cursor = end == -1 ? raw.length : end;
@@ -559,13 +754,17 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
         cursor++;
       }
     }
-
     return widgets;
   }
 
   Widget _buildBottomActions(BuildContext context) {
+    final isPro = context.watch<SubscriptionProvider>().isPro;
+    final favoritesProvider = context.watch<FavoritesProvider>();
+    final womanId = widget.woman['woman_id']?.toString() ?? '';
+    final isFav = womanId.isNotEmpty ? favoritesProvider.isFavorite(womanId) : false;
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+      padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
       child: Row(
         children: [
           Expanded(
@@ -573,9 +772,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
               onPressed: () {},
               style: OutlinedButton.styleFrom(
                 side: const BorderSide(color: Color(0xFFE1002D)),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 elevation: 0,
               ),
@@ -593,17 +790,28 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
           const SizedBox(width: 8),
           Expanded(
             child: ElevatedButton(
-              onPressed: () {},
+              onPressed: () {
+                if (isPro) {
+                  favoritesProvider.toggle(widget.woman);
+                  if (!isFav) _showFavoriteConfirmation();
+                } else {
+                  _showUpsell();
+                }
+              },
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFE1002D),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
+                backgroundColor: (isFav && isPro)
+                    ? const Color(0xFF949494)
+                    : const Color(0xFFE1002D),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 elevation: 0,
               ),
               child: Text(
-                isEnglish ? "Add to Favorites" : "Añadir a Favoritos",
+                isPro
+                    ? (isFav
+                        ? (isEnglish ? "Added ♥" : "Añadido ♥")
+                        : (isEnglish ? "Add to Favorites" : "Añadir a Favoritos"))
+                    : (isEnglish ? "Add to Favorites" : "Añadir a Favoritos"),
                 style: GoogleFonts.inter(
                   color: Colors.white,
                   fontSize: 16,
@@ -615,66 +823,6 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
           ),
         ],
       ),
-    );
-  }
-
-  void _showMenu(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (_) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildMenuItem(
-              PhosphorIcons.heart(PhosphorIconsStyle.regular),
-              isEnglish ? "Add to Favorites" : "Añadir a Favoritos",
-              () {},
-            ),
-            _buildMenuItem(
-              PhosphorIcons.shareFat(PhosphorIconsStyle.regular),
-              isEnglish ? "Share with friends" : "Compartir con amigos",
-              () {},
-            ),
-            _buildMenuItem(
-              PhosphorIcons.warning(PhosphorIconsStyle.regular),
-              isEnglish ? "Report issue" : "Reportar problema",
-              () {},
-              subtitle: isEnglish
-                  ? "Incorrect info, copyright, deceased?"
-                  : "¿Info incorrecta, copyright, fallecida?",
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMenuItem(
-    IconData icon,
-    String label,
-    VoidCallback onTap, {
-    String? subtitle,
-  }) {
-    return ListTile(
-      leading: Icon(icon, color: const Color(0xFF1A1A1A)),
-      title: Text(label, style: GoogleFonts.inter(fontSize: 15)),
-      subtitle: subtitle != null
-          ? Text(
-              subtitle,
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                color: const Color(0xFF999999),
-              ),
-            )
-          : null,
-      onTap: () {
-        Navigator.pop(context);
-        onTap();
-      },
     );
   }
 }

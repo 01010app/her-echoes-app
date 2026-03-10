@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:provider/provider.dart';
 
+import '../../core/language_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../widgets/settings/settings_list_container.dart';
 import '../../widgets/settings/settings_divider.dart';
@@ -14,14 +16,13 @@ class PreferencesScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final topPadding = MediaQuery.of(context).padding.top;
+    final isEnglish = context.watch<LanguageProvider>().isEnglish;
 
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Column(
         children: [
-
           Container(height: topPadding, color: Colors.white),
-
           Container(
             height: 48,
             color: Colors.white,
@@ -50,7 +51,7 @@ class PreferencesScreen extends StatelessWidget {
                 Expanded(
                   child: Center(
                     child: Text(
-                      "Preferencias",
+                      isEnglish ? "Preferences" : "Preferencias",
                       style: GoogleFonts.inter(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
@@ -65,30 +66,28 @@ class PreferencesScreen extends StatelessWidget {
               ],
             ),
           ),
-
           const SizedBox(height: 24),
-
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: SettingsListContainer(
                 children: [
                   _PreferencesItem(
-                    label: "Notificaciones",
+                    label: isEnglish ? "Notifications" : "Notificaciones",
                     onTap: () => Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => NotificationsScreen(),
+                        builder: (_) => const NotificationsScreen(),
                       ),
                     ),
                   ),
                   const SettingsDivider(),
                   _PreferencesItem(
-                    label: "Idioma",
+                    label: isEnglish ? "Language" : "Idioma",
                     onTap: () => Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => LanguageScreen(),
+                        builder: (_) => const LanguageScreen(),
                       ),
                     ),
                   ),
@@ -106,10 +105,7 @@ class _PreferencesItem extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
 
-  const _PreferencesItem({
-    required this.label,
-    required this.onTap,
-  });
+  const _PreferencesItem({required this.label, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
