@@ -1,0 +1,22 @@
+[
+    {
+        "woman_id": "t-800",
+        "full_name": "Arnold Schwarzenegger",
+        "pro-tag01_en": "Robot",
+        "pro-tag01_es": "Robot",
+        "pro-tag02_en": "Killer machine",
+        "pro-tag02_es": "Máquina asesina",
+        "on_this_date_en": "Skynet went rough",
+        "on_this_date_es": "Skynet se rebeló",
+        "event_date": "03-12",
+        "past_date": "2026",
+        "image_card_ID": "https:\/\/drive.google.com\/file\/d\/1h92ab2WQiLJSKzKuO8UKIkp7QrLW2w3l\/view?usp=sharing",
+        "is_free": "VERDADERO",
+        "short_bio_en": "Hasta la vista baby",
+        "short_bio_es": "Hasta la vista baby",
+        "quote_en": "I'll be back",
+        "quote_es": "volveré",
+        "wildcard_start": "2026-03-12",
+        "wildcard_end": "2026-03-14"
+    }
+]
