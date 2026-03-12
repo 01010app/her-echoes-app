@@ -1,0 +1,22 @@
+[
+    {
+        "woman_id": "chuck-spadina",
+        "full_name": "Chuck Spadina",
+        "pro-tag01_en": "Assessin",
+        "pro-tag01_es": "Asesino",
+        "pro-tag02_en": "Paid assessin",
+        "pro-tag02_es": "Asesino a sueldo",
+        "on_this_date_en": "John entered the App",
+        "on_this_date_es": "John entró a la App",
+        "event_date": "",
+        "past_date": "2026",
+        "image_card_ID": "https:\/\/drive.google.com\/file\/d\/1h92ab2WQiLJSKzKuO8UKIkp7QrLW2w3l\/view?usp=sharing",
+        "is_free": "VERDADERO",
+        "short_bio_en": "A very violent tough guy",
+        "short_bio_es": "Es un tipo muy rudo y violento",
+        "quote_en": "But now, yeah, I'm thinkin' I'm back",
+        "quote_es": "Pero ahora, sí, creo que he vuelto",
+        "wildcard_start": "",
+        "wildcard_end": ""
+    }
+]
