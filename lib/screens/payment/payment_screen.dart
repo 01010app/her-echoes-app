@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../core/language_provider.dart';
 import '../../core/subscription_provider.dart';
 import '../../core/theme/app_colors.dart';
+import '../../widgets/system/app_button.dart';
 import 'plan_selection_screen.dart';
 import 'payment_method_screen.dart';
 
@@ -103,27 +104,12 @@ class PaymentScreen extends StatelessWidget {
           bottom: bottomPadding + 16,
           left: 24,
           right: 24,
-          child: ElevatedButton(
+          child: AppButton(
+            label: isEnglish ? "Subscribe to a Plan" : "Suscríbete a un Plan",
             onPressed: () => Navigator.push(
               context,
               MaterialPageRoute(
                   builder: (_) => const PlanSelectionScreen()),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFE1002D),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16)),
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              elevation: 0,
-            ),
-            child: Text(
-              isEnglish ? "Subscribe to a Plan" : "Suscríbete a un Plan",
-              style: GoogleFonts.inter(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                height: 1.0,
-              ),
             ),
           ),
         ),

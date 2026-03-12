@@ -26,12 +26,14 @@ class HomeScreen extends StatefulWidget {
   final List<Map<String, dynamic>> suggestions;
   final List<Map<String, dynamic>> allWomen;
   final List<Map<String, dynamic>> todaysWomen;
+  final List<Map<String, dynamic>> wildcards;
 
   const HomeScreen({
     super.key,
     required this.suggestions,
     required this.allWomen,
     required this.todaysWomen,
+    this.wildcards = const [],
   });
 
   @override
@@ -40,7 +42,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int currentIndex = 0;
-  bool hasSettingsNotification = true;
+  bool hasSettingsNotification = false;
 
   final List<String> _homeImages = [
     'assets/images/home/home01.webp',
@@ -75,12 +77,10 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _checkWeeklyProUpsell() async {
     final isPro = context.read<SubscriptionProvider>().isPro;
     if (!isPro) return;
-
     final prefs = await SharedPreferences.getInstance();
     final lastShown = prefs.getInt('pro_upsell_last_shown') ?? 0;
     final now = DateTime.now().millisecondsSinceEpoch;
     const oneWeekMs = 7 * 24 * 60 * 60 * 1000;
-
     if (now - lastShown >= oneWeekMs) {
       await prefs.setInt('pro_upsell_last_shown', now);
       if (mounted) _showProUpsell();
@@ -147,13 +147,12 @@ class _HomeScreenState extends State<HomeScreen> {
       case 0:
         return _buildHomeContent();
       case 1:
-        return LayoutBuilder(
-          builder: (context, constraints) {
-            return Padding(
-              padding: const EdgeInsets.only(top: 106),
-              child: DailyEchoScreen(todaysWomen: widget.todaysWomen),
-            );
-          },
+        return Padding(
+          padding: const EdgeInsets.only(top: 106),
+          child: DailyEchoScreen(
+            todaysWomen: widget.todaysWomen,
+            wildcards: widget.wildcards,
+          ),
         );
       case 2:
         return LayoutBuilder(
@@ -165,7 +164,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 top: headerBottom,
                 bottom: constraints.maxHeight - tabBarTop + 24,
               ),
-              child: ShowAllScreen(allWomen: widget.allWomen),
+              child: ShowAllScreen(
+                allWomen: widget.allWomen,
+                wildcards: widget.wildcards,
+              ),
             );
           },
         );
@@ -183,7 +185,6 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (context, constraints) {
         final isEnglish = context.watch<LanguageProvider>().isEnglish;
         final isPro = context.watch<SubscriptionProvider>().isPro;
-        final favoritesProvider = context.watch<FavoritesProvider>();
         final screenHeight = constraints.maxHeight;
         final tabBarTop = screenHeight - 24 - 61;
         final carouselTop = tabBarTop - 24 - 156;
@@ -196,7 +197,7 @@ class _HomeScreenState extends State<HomeScreen> {
             // 1. FONDO
             Container(color: const Color(0xFFF5F5F5)),
 
-            // 2. IMAGEN DECORATIVA con crossfade
+            // 2. IMAGEN DECORATIVA
             Positioned(
               bottom: 265,
               left: 0,
@@ -225,10 +226,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     gradient: LinearGradient(
                       begin: Alignment.bottomCenter,
                       end: Alignment.topCenter,
-                      colors: [
-                        Color(0xFFF5F5F5),
-                        Color(0x00F5F5F5),
-                      ],
+                      colors: [Color(0xFFF5F5F5), Color(0x00F5F5F5)],
                     ),
                   ),
                 ),
@@ -298,12 +296,16 @@ class _HomeScreenState extends State<HomeScreen> {
                         : "https://raw.githubusercontent.com/01010app/her-echoes-app/main/images/cards/$rawId.webp";
                     final isContentPro = woman['is_free'] != "VERDADERO";
                     final blocked = isContentPro && !isPro;
+                    final isWildcard = woman['_is_wildcard'] == true;
 
                     return HomeMiniCard(
                       fullName: woman['full_name'] ?? '',
-                      profession: woman['pro-tag01_en'] ?? '',
+                      profession: isEnglish
+                          ? woman['pro-tag01_en'] ?? ''
+                          : woman['pro-tag01_es'] ?? '',
                       imagePath: imageUrl,
                       isPro: blocked,
+                      isWildcard: isWildcard,
                       woman: woman,
                       onTap: () {
                         if (blocked) {

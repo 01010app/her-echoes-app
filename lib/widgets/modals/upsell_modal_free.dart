@@ -3,6 +3,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import '../../core/language_provider.dart';
+import '../../screens/payment/plan_type.dart';
+import '../../screens/payment/add_card_screen.dart';
+import '../system/app_button.dart';
 
 class UpsellModalFree extends StatefulWidget {
   const UpsellModalFree({super.key});
@@ -32,7 +35,6 @@ class _UpsellModalFreeState extends State<UpsellModalFree> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // DRAG HANDLE
           const SizedBox(height: 12),
           Center(
             child: Container(
@@ -45,8 +47,6 @@ class _UpsellModalFreeState extends State<UpsellModalFree> {
             ),
           ),
           const SizedBox(height: 12),
-
-          // TÍTULO
           Padding(
             padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
             child: Text(
@@ -63,8 +63,6 @@ class _UpsellModalFreeState extends State<UpsellModalFree> {
               ),
             ),
           ),
-
-          // DESCRIPCIÓN
           Padding(
             padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
             child: Text(
@@ -80,10 +78,7 @@ class _UpsellModalFreeState extends State<UpsellModalFree> {
               ),
             ),
           ),
-
           const SizedBox(height: 16),
-
-          // CARD INDIVIDUAL
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: GestureDetector(
@@ -119,9 +114,7 @@ class _UpsellModalFreeState extends State<UpsellModalFree> {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: _selectedIndividual
-                                ? const Color(0xFFE1002D)
-                                : const Color(0xFFE20000),
+                            color: const Color(0xFFE20000),
                             width: 2,
                           ),
                         ),
@@ -243,10 +236,7 @@ class _UpsellModalFreeState extends State<UpsellModalFree> {
               ),
             ),
           ),
-
           const SizedBox(height: 12),
-
-          // CARD FAMILIAR
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: GestureDetector(
@@ -282,9 +272,7 @@ class _UpsellModalFreeState extends State<UpsellModalFree> {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: !_selectedIndividual
-                                ? const Color(0xFFE1002D)
-                                : const Color(0xFFE20000),
+                            color: const Color(0xFFE20000),
                             width: 2,
                           ),
                         ),
@@ -364,41 +352,31 @@ class _UpsellModalFreeState extends State<UpsellModalFree> {
               ),
             ),
           ),
-
           const SizedBox(height: 16),
-
-          // CTA
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  // TODO: navegar a pantalla de pago
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFE1002D),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+            child: AppButton(
+              label: isEnglish ? "Subscribe" : "Suscribirse",
+              onPressed: () {
+                final priceToPass = _selectedIndividual
+                    ? "CLP ${_freeTrial ? '16.800' : '9.900'}"
+                    : "CLP 16.500";
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => AddCardScreen(
+                      selectedPlan: _selectedIndividual
+                          ? PlanType.individual
+                          : PlanType.family,
+                      freeTrial: _selectedIndividual ? _freeTrial : false,
+                      planPrice: priceToPass,
+                    ),
                   ),
-                  padding: EdgeInsets.zero,
-                  elevation: 0,
-                ),
-                child: Text(
-                  isEnglish ? "Subscribe" : "Suscribirse",
-                  style: GoogleFonts.inter(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    height: 1.0,
-                  ),
-                ),
-              ),
+                );
+              },
             ),
           ),
-
           SizedBox(height: 13 + bottomPadding),
         ],
       ),

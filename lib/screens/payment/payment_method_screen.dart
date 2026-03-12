@@ -5,6 +5,8 @@ import 'package:provider/provider.dart';
 
 import '../../core/language_provider.dart';
 import '../../core/theme/app_colors.dart';
+import '../../widgets/system/app_button.dart';
+import 'plan_type.dart';
 import 'plan_selection_screen.dart';
 
 class PaymentMethodScreen extends StatelessWidget {
@@ -24,14 +26,75 @@ class PaymentMethodScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isEnglish = context.watch<LanguageProvider>().isEnglish;
+    final topPadding = MediaQuery.of(context).padding.top;
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
+
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: PaymentMethodBody(
-        isEnglish: isEnglish,
-        planType: planType,
-        cardLast4: cardLast4,
-        cardHolder: cardHolder,
-        cardExpiry: cardExpiry,
+      body: Column(
+        children: [
+
+          Container(height: topPadding, color: Colors.white),
+
+          Container(
+            height: 48,
+            color: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: AppColors.background,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: PhosphorIcon(
+                        PhosphorIcons.arrowLeft(PhosphorIconsStyle.bold),
+                        size: 20,
+                        color: AppColors.accent,
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(width: 8),
+
+                Expanded(
+                  child: Center(
+                    child: Text(
+                      isEnglish ? "Payment method" : "Medio de pago",
+                      style: GoogleFonts.inter(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF404040),
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(width: 44),
+
+              ],
+            ),
+          ),
+
+          Expanded(
+            child: PaymentMethodBody(
+              isEnglish: isEnglish,
+              planType: planType,
+              cardLast4: cardLast4,
+              cardHolder: cardHolder,
+              cardExpiry: cardExpiry,
+              bottomPadding: bottomPadding,
+            ),
+          ),
+
+        ],
       ),
     );
   }
@@ -43,14 +106,16 @@ class PaymentMethodBody extends StatelessWidget {
   final String cardLast4;
   final String cardHolder;
   final String cardExpiry;
+  final double bottomPadding;
 
   const PaymentMethodBody({
     super.key,
     required this.isEnglish,
     this.planType = PlanType.individual,
-    this.cardLast4 = "3456",
+    this.cardLast4 = "0000",
     this.cardHolder = "CARD HOLDER",
     this.cardExpiry = "01/30",
+    this.bottomPadding = 0,
   });
 
   String get _planName => planType == PlanType.individual
@@ -62,8 +127,6 @@ class PaymentMethodBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bottomPadding = MediaQuery.of(context).padding.bottom;
-
     return Stack(
       children: [
         SingleChildScrollView(
@@ -116,7 +179,6 @@ class PaymentMethodBody extends StatelessWidget {
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
                             height: 16 / 13,
-                            letterSpacing: 0,
                             color: const Color(0xFF222222),
                           ),
                         ),
@@ -147,39 +209,40 @@ class PaymentMethodBody extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (_) => const PlanSelectionScreen()),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: const Color(0xFFE1002D),
-                        side: const BorderSide(color: Color(0xFFE1002D)),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 8),
-                        minimumSize: Size.zero,
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        elevation: 0,
-                      ),
-                      child: Text(
-                        isEnglish ? "Change Plan" : "Cambiar de Plan",
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFFE1002D),
+                    Material(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      child: InkWell(
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const PlanSelectionScreen()),
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                        splashColor: const Color(0xFFE1002D).withOpacity(0.12),
+                        highlightColor: const Color(0xFFE1002D).withOpacity(0.06),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            border: Border.all(color: const Color(0xFFE1002D)),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
+                          child: Text(
+                            isEnglish ? "Change Plan" : "Cambiar de Plan",
+                            style: GoogleFonts.inter(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFFE1002D),
+                            ),
+                          ),
                         ),
                       ),
                     ),
                   ],
                 ),
               ),
-
               const SizedBox(height: 16),
-
               Text(
                 isEnglish ? "Payment methods" : "Medios de pago",
                 style: GoogleFonts.inter(
@@ -191,7 +254,6 @@ class PaymentMethodBody extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 12),
-
               Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -271,29 +333,14 @@ class PaymentMethodBody extends StatelessWidget {
             ],
           ),
         ),
-
-        // ── Cancelar suscripción — fijo abajo ──
         Positioned(
-          bottom: bottomPadding + 16,
+          bottom: bottomPadding + 40,
           left: 24,
           right: 24,
-          child: OutlinedButton(
+          child: AppButton(
+            label: isEnglish ? "Cancel subscription" : "Cancelar suscripción",
             onPressed: () => _showCancelDialog(context),
-            style: OutlinedButton.styleFrom(
-              side: const BorderSide(color: Color(0xFFE1002D)),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16)),
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              backgroundColor: AppColors.background,
-            ),
-            child: Text(
-              isEnglish ? "Cancel subscription" : "Cancelar suscripción",
-              style: GoogleFonts.inter(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: const Color(0xFFE1002D),
-              ),
-            ),
+            isOutlined: true,
           ),
         ),
       ],
@@ -317,8 +364,13 @@ class PaymentMethodBody extends StatelessWidget {
                 color: Color(0xFFFFF0F3),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.warning_amber_rounded,
-                  size: 28, color: Color(0xFFF70F3D)),
+              child: Center(
+                child: PhosphorIcon(
+                  PhosphorIcons.warning(PhosphorIconsStyle.fill),
+                  color: const Color(0xFFF70F3D),
+                  size: 28,
+                ),
+              ),
             ),
             const SizedBox(height: 16),
             Text(
@@ -344,26 +396,9 @@ class PaymentMethodBody extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () => Navigator.pop(context),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFE1002D),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14)),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  elevation: 0,
-                ),
-                child: Text(
-                  isEnglish ? "Keep subscription" : "Mantener suscripción",
-                  style: GoogleFonts.inter(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
+            AppButton(
+              label: isEnglish ? "Keep subscription" : "Mantener suscripción",
+              onPressed: () => Navigator.pop(context),
             ),
             const SizedBox(height: 12),
             GestureDetector(

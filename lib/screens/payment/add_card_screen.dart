@@ -7,17 +7,21 @@ import 'package:provider/provider.dart';
 import '../../core/language_provider.dart';
 import '../../core/subscription_provider.dart';
 import '../../core/theme/app_colors.dart';
+import '../../widgets/system/app_button.dart';
+import 'plan_type.dart';
 import 'plan_selection_screen.dart';
 import 'payment_method_screen.dart';
 
 class AddCardScreen extends StatefulWidget {
   final PlanType selectedPlan;
   final bool freeTrial;
+  final String? planPrice;
 
   const AddCardScreen({
     super.key,
     required this.selectedPlan,
     required this.freeTrial,
+    this.planPrice,
   });
 
   @override
@@ -29,6 +33,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
   final _expiryController = TextEditingController();
   final _holderController = TextEditingController();
   final _cvvController = TextEditingController();
+  bool _showPlanBanner = true;
 
   bool get _isFormValid =>
       _cardNumberController.text.replaceAll(' ', '').length == 16 &&
@@ -68,6 +73,13 @@ class _AddCardScreenState extends State<AddCardScreen> {
     final topPadding = MediaQuery.of(context).padding.top;
     final bottomPadding = MediaQuery.of(context).padding.bottom;
     final isEnglish = context.watch<LanguageProvider>().isEnglish;
+
+    final isIndividual = widget.selectedPlan == PlanType.individual;
+    final planName = isEnglish
+        ? (isIndividual ? "Individual Plan" : "Family Plan")
+        : (isIndividual ? "Plan Individual" : "Plan Familiar");
+    final planPrice = widget.planPrice ??
+        (isIndividual ? "CLP 9.900" : "CLP 16.500");
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -130,13 +142,122 @@ class _AddCardScreenState extends State<AddCardScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      if (_showPlanBanner) ...[
+                        Container(
+                          padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFE9E9E9),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: const Color(0xFFDFDFDF),
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      planName,
+                                      style: GoogleFonts.inter(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w600,
+                                        height: 1.2,
+                                        color: const Color(0xFF404040),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      isEnglish ? "Billing" : "Peridiocidad",
+                                      style: GoogleFonts.inter(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w400,
+                                        height: 1.2,
+                                        color: const Color(0xFF404040),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 10),
+                                    Material(
+                                      color: Colors.transparent,
+                                      child: InkWell(
+                                        onTap: () => Navigator.pushReplacement(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) =>
+                                                const PlanSelectionScreen(),
+                                          ),
+                                        ),
+                                        borderRadius: BorderRadius.circular(8),
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 2, vertical: 2),
+                                          child: Text(
+                                            isEnglish
+                                                ? "Change Plan"
+                                                : "Cambiar de Plan",
+                                            style: GoogleFonts.inter(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w600,
+                                              height: 1.2,
+                                              color: AppColors.accent,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    planPrice,
+                                    style: GoogleFonts.inter(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w600,
+                                      height: 1.2,
+                                      color: const Color(0xFF404040),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    isEnglish ? "Annual" : "Anual",
+                                    style: GoogleFonts.inter(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w400,
+                                      height: 1.2,
+                                      color: const Color(0xFF404040),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(width: 8),
+                              GestureDetector(
+                                onTap: () =>
+                                    setState(() => _showPlanBanner = false),
+                                child: const Icon(
+                                  Icons.close,
+                                  size: 18,
+                                  color: Color(0xFF888888),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                      ],
                       _CardPreview(
                         cardNumber: _cardNumberController.text,
                         cardHolder: _holderController.text,
                         expiry: _expiryController.text,
                       ),
                       const SizedBox(height: 28),
-                      _FieldLabel(isEnglish ? "Card number" : "Número de tarjeta"),
+                      _FieldLabel(
+                          isEnglish ? "Card number" : "Número de tarjeta"),
                       const SizedBox(height: 8),
                       _CardField(
                         controller: _cardNumberController,
@@ -152,7 +273,8 @@ class _AddCardScreenState extends State<AddCardScreen> {
                         onChanged: (_) => setState(() {}),
                       ),
                       const SizedBox(height: 16),
-                      _FieldLabel(isEnglish ? "Expiry date" : "Fecha de expiración"),
+                      _FieldLabel(
+                          isEnglish ? "Expiry date" : "Fecha de expiración"),
                       const SizedBox(height: 8),
                       _CardField(
                         controller: _expiryController,
@@ -166,7 +288,8 @@ class _AddCardScreenState extends State<AddCardScreen> {
                         onChanged: (_) => setState(() {}),
                       ),
                       const SizedBox(height: 16),
-                      _FieldLabel(isEnglish ? "Card holder" : "Nombre en la tarjeta"),
+                      _FieldLabel(
+                          isEnglish ? "Card holder" : "Nombre en la tarjeta"),
                       const SizedBox(height: 8),
                       _CardField(
                         controller: _holderController,
@@ -198,27 +321,9 @@ class _AddCardScreenState extends State<AddCardScreen> {
                   bottom: bottomPadding + 16,
                   left: 24,
                   right: 24,
-                  child: ElevatedButton(
+                  child: AppButton(
+                    label: isEnglish ? "Add card" : "Agregar tarjeta",
                     onPressed: _isFormValid ? () => _submit(context) : null,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _isFormValid
-                          ? const Color(0xFFE1002D)
-                          : const Color(0xFF949494),
-                      disabledBackgroundColor: const Color(0xFF949494),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16)),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      elevation: 0,
-                    ),
-                    child: Text(
-                      isEnglish ? "Add card" : "Agregar tarjeta",
-                      style: GoogleFonts.inter(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        height: 1.0,
-                      ),
-                    ),
                   ),
                 ),
               ],
@@ -386,6 +491,7 @@ class _CardField extends StatelessWidget {
         inputFormatters: inputFormatters,
         onChanged: onChanged,
         obscureText: obscureText,
+        cursorColor: const Color(0xFFF70F3D),
         style: GoogleFonts.inter(
           fontSize: 15,
           fontWeight: FontWeight.w400,

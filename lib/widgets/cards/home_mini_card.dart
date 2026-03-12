@@ -4,16 +4,19 @@ import 'package:provider/provider.dart';
 
 import '../../core/subscription_provider.dart';
 import '../../core/favorites_provider.dart';
+import '../../core/language_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_shapes.dart';
 import 'pro_badge.dart';
+import 'wildcard_badge.dart';
 
 class HomeMiniCard extends StatelessWidget {
   final String fullName;
   final String profession;
   final String imagePath;
   final bool isPro;
+  final bool isWildcard;
   final VoidCallback onTap;
   final Map<String, dynamic>? woman;
 
@@ -24,12 +27,14 @@ class HomeMiniCard extends StatelessWidget {
     required this.imagePath,
     required this.onTap,
     this.isPro = false,
+    this.isWildcard = false,
     this.woman,
   });
 
   @override
   Widget build(BuildContext context) {
     final userIsPro = context.watch<SubscriptionProvider>().isPro;
+    final isEnglish = context.watch<LanguageProvider>().isEnglish;
     final showProBadge = isPro && !userIsPro;
     final favoritesProvider = context.watch<FavoritesProvider>();
     final womanId = woman?['woman_id']?.toString() ?? '';
@@ -111,7 +116,15 @@ class HomeMiniCard extends StatelessWidget {
                 ),
               ),
 
-              /// PRO BADGE — solo si FREE
+              /// WILDCARD BADGE — siempre visible si es wildcard
+              if (isWildcard)
+                Positioned(
+                  top: 8,
+                  left: 8,
+                  child: WildcardBadge(isEnglish: isEnglish),
+                ),
+
+              /// PRO BADGE — esquina superior derecha, solo si FREE
               if (showProBadge)
                 const Positioned(
                   top: 8,
@@ -120,7 +133,7 @@ class HomeMiniCard extends StatelessWidget {
                 ),
 
               /// FAVORITE BUTTON — solo si usuario PRO
-              if (userIsPro && woman != null)
+              if (userIsPro && woman != null && !isWildcard)
                 Positioned(
                   top: 8,
                   right: 8,

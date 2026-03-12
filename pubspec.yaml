@@ -20,6 +20,7 @@ dependencies:
   card_stack_widget: ^0.1.6
   provider: ^6.1.2
   shared_preferences: ^2.2.2
+  http: ^1.2.1
 
 dev_dependencies:
   flutter_test:
@@ -31,6 +32,10 @@ flutter:
 
   assets:
     - assets/data/her_echoes.json
+    - assets/data/wildcard.json
     - assets/images/home/
     - assets/images/system/
+    - assets/images/system/login/
     - assets/content/legal_content.json
+    - assets/images/system/bg-pattern.png
+    - assets/images/onboarding/

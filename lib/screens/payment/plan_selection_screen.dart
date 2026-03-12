@@ -5,9 +5,11 @@ import 'package:provider/provider.dart';
 
 import '../../core/language_provider.dart';
 import '../../core/theme/app_colors.dart';
+import '../../widgets/system/app_button.dart';
+import 'plan_type.dart';
 import 'add_card_screen.dart';
 
-enum PlanType { individual, family }
+export 'plan_type.dart';
 
 class PlanSelectionScreen extends StatefulWidget {
   const PlanSelectionScreen({super.key});
@@ -117,30 +119,20 @@ class _PlanSelectionScreenState extends State<PlanSelectionScreen> {
                   bottom: bottomPadding + 16,
                   left: 24,
                   right: 24,
-                  child: ElevatedButton(
+                  child: AppButton(
+                    label: isEnglish
+                        ? "Add payment method"
+                        : "Agregar medio de pago",
                     onPressed: () => Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (_) => AddCardScreen(
                           selectedPlan: _selected,
                           freeTrial: _freeTrial,
+                          planPrice: _selected == PlanType.individual
+                              ? "CLP ${_freeTrial ? '16.800' : '9.900'}"
+                              : "CLP 16.500",
                         ),
-                      ),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFE1002D),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16)),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      elevation: 0,
-                    ),
-                    child: Text(
-                      isEnglish ? "Add payment method" : "Agregar medio de pago",
-                      style: GoogleFonts.inter(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        height: 1.0,
                       ),
                     ),
                   ),
@@ -207,7 +199,6 @@ class _PlanCard extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Bullet radio
             Padding(
               padding: const EdgeInsets.only(top: 2),
               child: Container(
@@ -237,12 +228,10 @@ class _PlanCard extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            // Contenido
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Fila 1: nombre + precio
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
@@ -274,7 +263,6 @@ class _PlanCard extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  // Fila 2: periodicidad
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -298,7 +286,6 @@ class _PlanCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  // Fila 3: prueba gratuita (solo Individual)
                   if (showTrialToggle && trailLabel != null) ...[
                     const SizedBox(height: 8),
                     Row(

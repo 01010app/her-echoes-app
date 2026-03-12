@@ -5,15 +5,18 @@ import 'package:provider/provider.dart';
 
 import '../../core/subscription_provider.dart';
 import '../../widgets/cards/pro_badge.dart';
+import '../../widgets/cards/wildcard_badge.dart';
 import '../../widgets/modals/upsell_modal_free.dart';
 import '../card_detail/card_detail_screen.dart';
 
 class ShowAllScreen extends StatefulWidget {
   final List<Map<String, dynamic>> allWomen;
+  final List<Map<String, dynamic>> wildcards;
 
   const ShowAllScreen({
     super.key,
     required this.allWomen,
+    this.wildcards = const [],
   });
 
   @override
@@ -39,9 +42,17 @@ class _ShowAllScreenState extends State<ShowAllScreen> {
   Widget build(BuildContext context) {
     final userIsPro = context.watch<SubscriptionProvider>().isPro;
 
-    final women = widget.allWomen
+    // Wildcards marcadas, siempre accesibles
+    final wildcardItems = widget.wildcards.map((w) {
+      return {...w, '_is_wildcard': true};
+    }).toList();
+
+    final regularWomen = widget.allWomen
         .where((w) => (w['image_card_ID'] ?? '').toString().isNotEmpty)
         .toList();
+
+    // Wildcards primero
+    final women = [...wildcardItems, ...regularWomen];
 
     final titles = women.map((w) => '').toList();
 
@@ -51,8 +62,9 @@ class _ShowAllScreenState extends State<ShowAllScreen> {
       final imageUrl = rawId.startsWith('http')
           ? rawId
           : "https://raw.githubusercontent.com/01010app/her-echoes-app/main/images/cards/$rawId.webp";
+      final isWildcard = w['_is_wildcard'] == true;
       final isContentPro = w['is_free'] != "VERDADERO";
-      final isPro = isContentPro && !userIsPro;
+      final isPro = isContentPro && !userIsPro && !isWildcard;
       final isFocused = index == _focusedIndex;
 
       return Stack(
@@ -105,12 +117,20 @@ class _ShowAllScreenState extends State<ShowAllScreen> {
             ),
           ),
 
+          if (isWildcard)
+            const Positioned(
+              top: 16,
+              left: 16,
+              child: WildcardBadge(),
+            ),
+
           if (isPro)
             const Positioned(
               top: 16,
               right: 16,
               child: ProBadge(),
             ),
+
         ],
       );
     });
@@ -130,8 +150,9 @@ class _ShowAllScreenState extends State<ShowAllScreen> {
           },
           onSelectedItem: (index) {
             final woman = women[index];
+            final isWildcard = woman['_is_wildcard'] == true;
             final isContentPro = woman['is_free'] != "VERDADERO";
-            final blocked = isContentPro && !userIsPro;
+            final blocked = isContentPro && !userIsPro && !isWildcard;
             if (blocked) {
               _showUpsell(context);
             } else {

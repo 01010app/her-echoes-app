@@ -5,21 +5,210 @@
       "content": [
         {
           "type": "h2",
-          "text": "Lorem ipsum dolor sit amet"
+          "text": "1. Aceptación de los términos"
         },
         {
           "type": "p",
-          "text": "Lorem ipsum dolor sit amet..."
+          "text": "Al utilizar HerEchoes, aceptas estos Términos y Condiciones. Si no estás de acuerdo con alguno de ellos, debes dejar de utilizar la aplicación."
+        },
+        {
+          "type": "h2",
+          "text": "2. Uso de la aplicación"
+        },
+        {
+          "type": "p",
+          "text": "HerEchoes proporciona contenido histórico y biográfico con fines informativos y educativos. El usuario se compromete a utilizar la aplicación de manera responsable y conforme a la legislación aplicable."
+        },
+        {
+          "type": "h2",
+          "text": "3. Propiedad intelectual"
+        },
+        {
+          "type": "p",
+          "text": "Todo el contenido disponible en la aplicación, incluyendo textos, diseño, estructura y marca, es propiedad del desarrollador o se utiliza con las debidas licencias."
+        },
+        {
+          "type": "h2",
+          "text": "4. Limitación de responsabilidad"
+        },
+        {
+          "type": "p",
+          "text": "Aunque se procura que la información histórica sea precisa y verificada, HerEchoes no garantiza la ausencia total de errores. El contenido se ofrece con fines informativos."
+        },
+        {
+          "type": "h2",
+          "text": "5. Modificaciones"
+        },
+        {
+          "type": "p",
+          "text": "HerEchoes puede actualizar estos términos en cualquier momento. Se recomienda revisar esta sección periódicamente."
         }
       ]
     },
     "en": {
       "title": "Terms and Conditions",
-      "content": [...]
+      "content": [
+        {
+          "type": "h2",
+          "text": "1. Acceptance of Terms"
+        },
+        {
+          "type": "p",
+          "text": "By using HerEchoes, you agree to these Terms and Conditions. If you do not agree with any part of them, you should discontinue use of the application."
+        },
+        {
+          "type": "h2",
+          "text": "2. Use of the Application"
+        },
+        {
+          "type": "p",
+          "text": "HerEchoes provides historical and biographical content for informational and educational purposes. Users agree to use the application responsibly and in accordance with applicable laws."
+        },
+        {
+          "type": "h2",
+          "text": "3. Intellectual Property"
+        },
+        {
+          "type": "p",
+          "text": "All content available in the application, including text, design, structure, and branding, is owned by the developer or used under appropriate licenses."
+        },
+        {
+          "type": "h2",
+          "text": "4. Limitation of Liability"
+        },
+        {
+          "type": "p",
+          "text": "While efforts are made to ensure historical accuracy, HerEchoes does not guarantee the complete absence of errors. Content is provided for informational purposes."
+        },
+        {
+          "type": "h2",
+          "text": "5. Modifications"
+        },
+        {
+          "type": "p",
+          "text": "HerEchoes reserves the right to update these terms at any time. Users are encouraged to review them periodically."
+        }
+      ]
+    }
+  },
+  "privacy": {
+    "es": {
+      "title": "Política de Privacidad",
+      "content": [
+        {
+          "type": "h2",
+          "text": "1. Información General"
+        },
+        {
+          "type": "p",
+          "text": "HerEchoes es una aplicación informativa cuyo objetivo es difundir contenido histórico y biográfico sobre mujeres relevantes."
+        },
+        {
+          "type": "h2",
+          "text": "2. Datos que recopilamos"
+        },
+        {
+          "type": "p",
+          "text": "Actualmente, HerEchoes no solicita registro ni recopila datos personales identificables como nombre, correo electrónico o información de contacto."
+        },
+        {
+          "type": "p",
+          "text": "Plataformas externas como App Store o Google Play pueden recopilar datos técnicos conforme a sus propias políticas."
+        },
+        {
+          "type": "h2",
+          "text": "3. Uso de la información"
+        },
+        {
+          "type": "p",
+          "text": "HerEchoes no vende ni comercializa datos personales. Si en el futuro se integran herramientas de análisis o suscripciones, esta política será actualizada."
+        },
+        {
+          "type": "h2",
+          "text": "4. Seguridad"
+        },
+        {
+          "type": "p",
+          "text": "La aplicación no almacena información personal en servidores propios y adopta buenas prácticas técnicas para su funcionamiento seguro."
+        },
+        {
+          "type": "h2",
+          "text": "5. Cambios en esta política"
+        },
+        {
+          "type": "p",
+          "text": "Esta política puede actualizarse para reflejar cambios en la aplicación o en la normativa vigente."
+        }
+      ]
+    },
+    "en": {
+      "title": "Privacy Policy",
+      "content": [
+        {
+          "type": "h2",
+          "text": "1. General Information"
+        },
+        {
+          "type": "p",
+          "text": "HerEchoes is an informational application designed to share historical and biographical content about notable women."
+        },
+        {
+          "type": "h2",
+          "text": "2. Information We Collect"
+        },
+        {
+          "type": "p",
+          "text": "HerEchoes does not require user registration and does not collect personally identifiable information such as names or email addresses."
+        },
+        {
+          "type": "p",
+          "text": "Third-party platforms such as the App Store or Google Play may collect technical data under their own privacy policies."
+        },
+        {
+          "type": "h2",
+          "text": "3. Use of Information"
+        },
+        {
+          "type": "p",
+          "text": "HerEchoes does not sell or trade personal data. If analytics tools or subscriptions are implemented in the future, this policy will be updated."
+        },
+        {
+          "type": "h2",
+          "text": "4. Security"
+        },
+        {
+          "type": "p",
+          "text": "The application does not store personal data on proprietary servers and follows reasonable technical safeguards."
+        },
+        {
+          "type": "h2",
+          "text": "5. Changes to This Policy"
+        },
+        {
+          "type": "p",
+          "text": "This policy may be updated to reflect changes in the application or applicable regulations."
+        }
+      ]
     }
   },
   "about": {
-    "es": {...},
-    "en": {...}
+    "es": {
+      "title": "Acerca de",
+      "content": [
+        {
+          "type": "p",
+          "text": "HerEchoes es un proyecto independiente dedicado a visibilizar mujeres influyentes a lo largo de la historia."
+        }
+      ]
+    },
+    "en": {
+      "title": "About",
+      "content": [
+        {
+          "type": "p",
+          "text": "HerEchoes is an independent project dedicated to highlighting influential women throughout history."
+        }
+      ]
+    }
   }
 }

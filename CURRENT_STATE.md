@@ -1,5 +1,5 @@
 # HerEchoes — Estado Actual del Proyecto
-**Última actualización:** 2026-03-10 (sesión 3)
+**Última actualización:** 2026-03-12 (sesión 7)
 
 ---
 
@@ -11,259 +11,332 @@
 - **Background scaffolds:** SIEMPRE `Color(0xFFF5F5F5)` / `AppColors.background` — NUNCA blanco
 - **Accent:** `#F70F3D` / `Color(0xFFE1002D)`
 - **State management:** Provider
-- **Persistencia:** SharedPreferences (aún no conectado en favoritos)
+- **Persistencia:** SharedPreferences (favoritos aún en memoria; onboarding_done ✅ conectado)
 - **NUNCA refactorizar layouts que funcionan**
 - **Spinners:** SIEMPRE `CircularProgressIndicator(color: Color(0xFFE1002D))`
+- **Cursor en TextFields:** SIEMPRE `Color(0xFFF70F3D)`
+- **Botones CTA:** SIEMPRE `AppButton` — NUNCA `ElevatedButton` / `OutlinedButton`
+- **Botones CTA posición:** SIEMPRE `bottom: bottomPadding + 16`
+- **Tabs (ej. Biografía/Legado):** SIEMPRE `Material + InkWell`, NUNCA `GestureDetector` solo
 
 ---
 
-## Estructura de Archivos Relevantes
+## Widget Sistema: `AppButton`
+**Ruta:** `lib/widgets/system/app_button.dart`
+```dart
+class AppButton extends StatelessWidget {
+  final String label;
+  final VoidCallback? onPressed;  // null → gris #949494, siempre hay ripple
+  final bool isOutlined;          // default: false
+  final double? width;            // default: double.infinity
+}
+```
 
+- Rojo sólido `#E1002D` cuando enabled, gris `#949494` cuando null
+- `isOutlined: true` → borde rojo, fondo transparente
+- `onTap: () => onPressed?.call()` — ripple siempre activo aunque onPressed sea null
+- elevation: 2 con shadowColor rojo 25% cuando enabled
+- height: 52
+
+**Reglas de import por ubicación:**
+```
+lib/screens/*/         → '../../widgets/system/app_button.dart'
+lib/widgets/modals/    → '../system/app_button.dart'
+lib/widgets/*/         → '../system/app_button.dart'
+```
+
+---
+
+## Estructura de Archivos
 ```
 lib/
 ├── core/
-│   ├── favorites_provider.dart        ✅ creado
-│   ├── language_provider.dart         ✅ existente
-│   ├── subscription_provider.dart     ✅ existente
+│   ├── favorites_provider.dart
+│   ├── language_provider.dart
+│   ├── subscription_provider.dart
 │   └── theme/
-│       └── app_colors.dart            ✅ existente
+│       └── app_colors.dart
 ├── screens/
 │   ├── card_detail/
-│   │   └── card_detail_screen.dart    ✅ modificado (sesión 3)
+│   │   └── card_detail_screen.dart       ✅ sesión 7: idioma tags/quote/bio
 │   ├── favorites/
-│   │   └── favorites_screen.dart      ✅ modificado (sesión 3)
+│   │   └── favorites_screen.dart
+│   ├── login/
+│   │   ├── login_screen.dart             ✅ sesión 7: wildcards propagado
+│   │   ├── onboarding_screen.dart        ✅ sesión 7: wildcards propagado
+│   │   ├── email_login_screen.dart       ✅ sesión 7: wildcards propagado
+│   │   ├── forgot_password_screen.dart
+│   │   └── onboarding_name_screen.dart   ✅ sesión 7: wildcards propagado
 │   ├── payment/
-│   │   ├── payment_screen.dart        ✅ creado (sesión 2)
-│   │   ├── plan_selection_screen.dart ✅ creado (sesión 2)
-│   │   ├── add_card_screen.dart       ✅ creado (sesión 2)
-│   │   ├── payment_method_screen.dart ✅ modificado (sesión 3)
-│   │   └── plan_detail_screen.dart    ✅ creado (sesión 3)
+│   │   ├── plan_type.dart                ✅ sesión 7: enum PlanType separado
+│   │   ├── payment_screen.dart
+│   │   ├── plan_selection_screen.dart
+│   │   ├── add_card_screen.dart
+│   │   ├── payment_method_screen.dart
+│   │   └── plan_detail_screen.dart
+│   ├── home/
+│   │   └── home_screen.dart              ✅ sesión 7: wildcards + isWildcard en carrusel
+│   ├── daily_echo/
+│   │   └── daily_echo_screen.dart        ✅ sesión 7: wildcards primero, badge Especial
 │   └── settings/
-│       ├── settings_screen.dart       ✅ modificado (sesión 3)
-│       ├── legal_content_screen.dart  ✅ modificado (sesión 3)
-│       └── preferences_screen.dart    ✅ existente
+│       ├── settings_screen.dart
+│       ├── legal_content_screen.dart
+│       ├── notifications_screen.dart
+│       ├── language_screen.dart
+│       └── preferences_screen.dart
 ├── widgets/
 │   ├── cards/
-│   │   └── home_mini_card.dart        ✅ modificado (sesión 1)
+│   │   ├── home_mini_card.dart           ✅ sesión 7: isWildcard + WildcardBadge
+│   │   ├── pro_badge.dart
+│   │   └── wildcard_badge.dart           ✅ sesión 7: NUEVO
 │   ├── modals/
-│   │   └── upsell_modal_free.dart     ✅ existente
+│   │   ├── upsell_modal_free.dart
+│   │   └── upsell_modal_pro.dart
+│   ├── navigation/
+│   │   └── floating_tab_bar.dart
+│   ├── system/
+│   │   └── app_button.dart
 │   └── settings/
-│       ├── settings_section_title.dart
+│       ├── settings_divider.dart
 │       ├── settings_list_container.dart
 │       ├── settings_list_item.dart
-│       └── settings_divider.dart
+│       └── settings_section_title.dart
 └── services/
-    └── content_service.dart           ✅ existente
+    └── daily_suggestions_engine.dart     ✅ sesión 7: parámetro wildcards agregado
+
 assets/
+├── data/
+│   ├── her_echoes.json
+│   └── wildcard.json                     ✅ sesión 7: NUEVO (array vacío por defecto)
+├── images/
+│   ├── home/
+│   ├── system/
+│   │   ├── login/
+│   │   │   ├── logo-white.svg
+│   │   │   ├── icon_Apple.svg
+│   │   │   ├── icon_Google-color.svg
+│   │   │   └── icon_email.svg
+│   │   └── bg-pattern.png
+│   └── onboarding/
+│       ├── 01en.png / 01es.png
+│       ├── 02en.png / 02es.png
+│       ├── 03en.png / 03es.png
+│       └── 04en.png / 04es.png
 └── content/
-    └── legal_content.json             ✅ existente (contenido en lorem ipsum — pendiente reemplazar)
+    └── legal_content.json
+```
+
+**pubspec.yaml assets declarados:**
+```yaml
+assets:
+  - assets/data/her_echoes.json
+  - assets/data/wildcard.json
+  - assets/images/home/
+  - assets/images/system/
+  - assets/images/system/login/
+  - assets/content/legal_content.json
+  - assets/images/system/bg-pattern.png
+  - assets/images/onboarding/
+```
+
+---
+
+## Wildcard — Sistema completo (sesión 7)
+
+### Concepto
+- JSON separado `assets/data/wildcard.json` — mismo formato que `her_echoes.json` pero sin `event_date`
+- Cuando el array tiene entradas → aparece en posición 0 del carrusel Home y al inicio de Daily Echo
+- Cuando está vacío `[]` → no se muestra en ningún lado
+- Las wildcards se marcan internamente con `_is_wildcard: true` al procesarlas
+
+### Badge `WildcardBadge`
+**Ruta:** `lib/widgets/cards/wildcard_badge.dart`
+- Fondo: `Color(0xFF28A52A).withOpacity(0.85)`
+- Ícono: `PhosphorIcons.shootingStar(PhosphorIconsStyle.fill)`, size 12, blanco
+- Texto: "Especial" (ES) / "Special" (EN), Inter medium 10px, blanco
+- Posición en HomeMiniCard: esquina superior **izquierda** (top:8, left:8)
+- Posición en DailyEchoScreen: esquina superior **izquierda** (top:16, left:16)
+- Se muestra **siempre**, sea usuario FREE o PRO
+
+### Propagación de wildcards (cadena completa)
+```
+main.dart
+  loadJson() → carga wildcard.json → List<Map> wildcards
+  DailySuggestionsEngine.generateSuggestions(wildcards: wildcards)
+  → LoginScreen(wildcards: wildcards)
+    → HomeScreen(wildcards: wildcards)           ← vía "Continuar como invitado"
+    → EmailLoginScreen(wildcards: wildcards)
+      → OnboardingNameScreen(wildcards: wildcards)
+        → HomeScreen(wildcards: wildcards)
+  → OnboardingScreen(wildcards: wildcards)       ← primera vez
+    → LoginScreen(wildcards: wildcards)
+```
+
+### DailySuggestionsEngine
+- Nuevo parámetro: `List<Map<String, dynamic>> wildcards = const []`
+- Wildcards se insertan en posición 0 con `_is_wildcard: true`
+- Luego: hasta 3 mujeres del día + hasta 7 relacionadas por tag
+
+### HomeMiniCard
+- Nuevo parámetro: `bool isWildcard = false`
+- Si `isWildcard`: muestra `WildcardBadge` en top-left
+- Si `isWildcard`: NO muestra botón favorito (aunque usuario sea PRO)
+- PRO badge y favorito siguen en top-right como antes
+
+### DailyEchoScreen
+- Nuevo parámetro: `List<Map<String, dynamic>> wildcards = const []`
+- Wildcards van primero en el stack de cards
+- Badge Especial en top-left de cada wildcard card
+- PRO badge en top-right solo si NO es wildcard
+
+---
+
+## Flujo de Navegación Completo
+```
+main.dart
+├── FutureBuilder → SharedPreferences.getBool('onboarding_done')
+│   ├── false (primera vez) → OnboardingScreen
+│   │   └── "Comencemos" → LoginScreen (marca onboarding_done: true)
+│   └── true → LoginScreen
+│       ├── "Continuar como invitado/a" → HomeScreen (pushReplacement)
+│       ├── "Continuar con Apple" → TODO (solo iOS)
+│       ├── "Continuar con Google" → TODO
+│       └── "Continuar con Email" → EmailLoginScreen
+│           ├── "¿Olvidaste tu password?" → ForgotPasswordScreen
+│           │   └── Submit → estado success → "Volver a Login" → pop
+│           └── Submit → OnboardingNameScreen
+│               └── Submit → HomeScreen (pushAndRemoveUntil)
 ```
 
 ---
 
 ## Estado por Pantalla
 
-### `settings_screen.dart` ✅ COMPLETO
-- Header blanco con back button (círculo rojo `AppColors.accent`)
-- **Bug corregido:** `SizedBox(height: 24)` movido DENTRO del `SingleChildScrollView` (evita franja gris fija)
-- Secciones: Configuración del sistema / Nosotros / Detalle Plan / Dev·Debug
-- **"Pago" → "Medio de pago" / "Payment" → "Payment method"** ✅
-- Navegación:
-  - Preferencias → `PreferencesScreen`
-  - Medio de pago → `PaymentScreen()` (sin `const`)
-  - Acerca de Nosotros → `LegalContentScreen(contentKey: "about", ...)`
-  - Términos y Condiciones → `LegalContentScreen(contentKey: "terms", ...)`
-  - Plan Individual → `PlanDetailScreen()` ✅ nuevo
-  - Dev/Debug: toggle PRO con PhosphorIcon toggle (eliminar antes de producción)
-- Version 1.0.0 fijo abajo con `Positioned`
+### `main.dart` ✅ sesión 7
+- Carga `her_echoes.json` + `wildcard.json` en paralelo en `loadJson()`
+- `wildcards` propagado a `LoginScreen` y `OnboardingScreen`
+- `DailySuggestionsEngine.generateSuggestions(wildcards: wildcards)`
 
 ---
 
-### `legal_content_screen.dart` ✅ COMPLETO
-- Header blanco idéntico al de settings
-- **Bug corregido:** `SizedBox(height: 24)` eliminado como widget fijo, movido a `padding: fromLTRB(16, 24, 16, 32)` del scroll
-- **Spinner rojo:** `CircularProgressIndicator(color: Color(0xFFE1002D))`
-- Lee de `assets/content/legal_content.json` vía `ContentService.loadLegalContent()`
-- Estructura JSON esperada:
-  ```json
-  {
-    "terms": { "es": { "title": "...", "content": [{"type": "h2", "text": "..."}, {"type": "p", "text": "..."}] }, "en": {...} },
-    "about": { "es": {...}, "en": {...} }
-  }
-  ```
-- Bloques soportados: `h2` (Inter 18 semibold negro) y `p` (Inter 16 regular #434343)
-- **Pendiente:** reemplazar lorem ipsum con contenido real
+### `onboarding_screen.dart` ✅ sesión 7
+- Parámetros: `allWomen`, `todaysWomen`, `suggestions`, `wildcards` (optional, default `[]`)
+- `_finish()` pasa `wildcards` a `LoginScreen`
+- 4 slides con `PageView`, dots animados
+- Idioma: `LanguageProvider`
 
 ---
 
-### `payment_screen.dart` ✅ COMPLETO
-- Header: "Medio de pago" (ES) / "Payment method" (EN)
-- Estado FREE: texto centrado + CTA "Suscríbete a un Plan" → `PlanSelectionScreen`
-- Estado PRO: renderiza `PaymentMethodBody` directamente (sin doble header)
+### `login_screen.dart` ✅ sesión 7
+- Parámetros: `allWomen`, `todaysWomen`, `suggestions`, `wildcards` (optional, default `[]`)
+- `_goHome()` y `_goEmail()` propagan `wildcards`
 
 ---
 
-### `plan_selection_screen.dart` ✅ COMPLETO
-- `enum PlanType { individual, family }`
-- Individual: CLP 9.900 / Family: CLP 16.500, ambos Anuales
-- Toggle prueba gratis (solo Individual)
-- CTA "Agregar medio de pago" (gris #949494) → `AddCardScreen`
+### `email_login_screen.dart` ✅ sesión 7
+- Parámetros: `allWomen`, `todaysWomen`, `suggestions`, `wildcards` (optional, default `[]`)
+- `_submit()` propaga `wildcards` a `OnboardingNameScreen`
 
 ---
 
-### `add_card_screen.dart` ✅ COMPLETO
-- Preview de tarjeta en vivo (gradiente oscuro, badge VISA)
-- Campos: número (formato XXXX XXXX XXXX XXXX), expiración (MM/YY), titular, CVV
-- CTA rojo cuando form válido, gris cuando no
-- Al submit: `setIsPro(true)` + `Navigator.pushAndRemoveUntil` → `PaymentMethodScreen`
+### `onboarding_name_screen.dart` ✅ sesión 7
+- Parámetros: `allWomen`, `todaysWomen`, `suggestions`, `email`, `wildcards` (optional, default `[]`)
+- `_submit()` propaga `wildcards` a `HomeScreen`
+- ⚠️ PENDIENTE: migrar `ElevatedButton` a `AppButton`
+- ⚠️ PENDIENTE: guardar nombre en SharedPreferences
 
 ---
 
-### `payment_method_screen.dart` ✅ COMPLETO
-- Dos clases: `PaymentMethodScreen` (Scaffold completo) y `PaymentMethodBody` (sin header, para embeber en PaymentScreen PRO)
-- Card "Plan contratado": bg `#E9E9E9`, border `#DFDFDF`, 16px radius, padding 16
-  - Subtítulo "Plan contratado" (Inter 11 semibold #6C6868) arriba de todo
-  - Nombre plan + precio en row
-  - Periodicidad + Anual en row
-  - Botón "Cambiar de Plan": blanco bg, borde rojo, shrinkWrap
-- Sección "Medios de pago" (Inter 14 semibold #404040)
-- Card tarjeta: bg blanco, 16px radius, padding 16, shadow leve
-  - Badge VISA (#F0F0F0), "Visa •••• XXXX", fecha expiración, badge "Principal" verde
-- **Botón "Cancelar suscripción" FIJO abajo:** `Positioned(bottom: bottomPadding + 16, ...)` — OutlinedButton borde rojo, full width 24px margen horizontal
-- Dialog cancelación: icono warning rojo, CTA "Mantener suscripción" rojo, link "Sí, cancelar" gris
-- TODO: conectar cancelación con RevenueCat
+### `home_screen.dart` ✅ sesión 7
+- Parámetros: `suggestions`, `allWomen`, `todaysWomen`, `wildcards` (optional, default `[]`)
+- `DailyEchoScreen` recibe `wildcards`
+- Carrusel: detecta `_is_wildcard: true` → pasa `isWildcard: true` a `HomeMiniCard`
+- Carrusel: `profession` ahora respeta idioma (`pro-tag01_en` vs `pro-tag01_es`)
 
 ---
 
-### `plan_detail_screen.dart` ✅ COMPLETO (nuevo sesión 3)
-- Accesible desde Settings > Detalle Plan > Plan Individual
-- Header blanco igual a settings/legal
-- Solo muestra el card de "Plan contratado" (sin sección de tarjeta, sin botón cancelar)
-- Lee `isPro` del `SubscriptionProvider` para mostrar nombre y precio reales
-- Botón "Cambiar de Plan" navega a `PlanSelectionScreen`
+### `daily_echo_screen.dart` ✅ sesión 7
+- Parámetros: `todaysWomen`, `wildcards` (optional, default `[]`)
+- Wildcards al frente del stack con badge Especial top-left
+- PRO badge solo en cards no-wildcard
 
 ---
 
-### `favorites_screen.dart` ✅ COMPLETO
-- 3 estados:
-  1. **FREE:** texto upsell + CTA "Suscríbete" → `UpsellModalFree`
-  2. **PRO vacío:** texto explicativo + CTA "Visitar la mujer inspiradora de hoy" → `onNavigateToDaily`
-  3. **PRO con favoritos:** grid 2 columnas
-- **Bug corregido:** `headerHeight = MediaQuery.of(context).padding.top + 60.0` (sin el `+ 16` que causaba franja extra)
-- Grid specs: `childAspectRatio: 160/280`, 8px spacing, 32px border radius
-- Overlay blanco detrás del header: `Positioned(height: headerHeight)`
-- Botón corazón en cada card: **abre modal de confirmación antes de quitar** (`_showRemoveConfirmation`)
-  - Modal: icono corazón rojo, título "¿Quitar de Favoritas?", CTA rojo "Sí, quitar", link gris "Cancelar"
-- `topPadding = 104.0 + 16.0`, `bottomPadding = 85.0 + safeArea`
+### `card_detail_screen.dart` ✅ sesión 7
+- Tags, quote y bio respetan idioma (`LanguageProvider`)
+- ⚠️ CONOCIDO: `short_bio_es` vacío en varios registros del JSON — problema de datos, no de código
 
 ---
 
-### `card_detail_screen.dart` ✅ COMPLETO
-- Hero imagen animada 520→320px al hacer scroll
-- Tabs Biografía/Legado
-- Back button y menú contextual (OverlayEntry blur) en top
-- Menú contextual: Añadir/quitar favorito, Compartir, Reportar
-- **Botones abajo corregidos:** `padding: fromLTRB(24, 24, 24, 0)` + `SizedBox(height: padding.bottom - 11)` — botones 27px más cerca del borde
-- Botón favorito: bg `#949494` si ya está en favoritos (PRO), bg rojo si no / si FREE
-- Label favorito: "Añadido ♥" / "Añadir a Favoritos" / "Add to Favorites"
-- Modal confirmación al AÑADIR (no al quitar desde aquí)
-- Quitar desde favoritos se hace desde `favorites_screen.dart` con modal propio
+### `home_mini_card.dart` ✅ sesión 7
+- Nuevo parámetro `isWildcard`
+- `WildcardBadge` top-left cuando `isWildcard: true`
+- Favorito oculto en wildcards
 
 ---
 
-## Bugs Corregidos Esta Sesión
+### `wildcard_badge.dart` ✅ sesión 7 NUEVO
+- Fondo `#28A52A` al 85%
+- Ícono `shootingStarFill`, texto "Especial"/"Special"
 
-| Bug | Causa | Fix |
-|-----|-------|-----|
-| Franja gris bajo header en Settings | `SizedBox(height:24)` fijo fuera del scroll | Mover dentro del scroll como primer hijo |
-| Franja gris bajo header en LegalContent | Mismo patrón | Mismo fix |
-| Header demasiado alto en Favorites grid | `headerHeight` tenía `+ 16` de más | Eliminar el `+ 16` |
-| Spinner violeta en LegalContent | Sin color especificado, usa tema Material default | `color: Color(0xFFE1002D)` |
-| Botones detail view 27px muy arriba | `vertical: 24` en padding + `padding.bottom + 16` en SizedBox | `fromLTRB(24,24,24,0)` + `SizedBox(height: padding.bottom - 11)` |
-| Botón cancelar suscripción 8px muy arriba | `bottom: bottomPadding + 24` | `bottom: bottomPadding + 16` |
-| Sin confirmación al quitar favorito | Botón corazón llamaba `toggle()` directo | Modal `_showRemoveConfirmation` con confirmación |
+---
+
+### `daily_suggestions_engine.dart` ✅ sesión 7
+- Parámetro `wildcards` agregado
+- Wildcards en posición 0 marcadas con `_is_wildcard: true`
+
+---
+
+### Pantallas sin cambios sesión 7
+- `favorites_screen.dart` ✅
+- `upsell_modal_free.dart` ✅
+- `upsell_modal_pro.dart` ✅
+- `plan_selection_screen.dart` ✅
+- `add_card_screen.dart` ✅
+- `payment_method_screen.dart` ✅
+- `floating_tab_bar.dart` ✅
+- `settings_screen.dart` y sub-pantallas ✅
+
+---
+
+## URL Patrón Imágenes GitHub
+```
+https://raw.githubusercontent.com/01010app/her-echoes-app/main/images/cards/${rawId}.webp
+```
+
+---
+
+## Git Tags
+```bash
+git tag v1.0-pre-language
+git tag v1.1-payment-ui
+git tag v1.2-onboarding-wildcard   # ← agregar al cerrar sesión 7
+```
 
 ---
 
 ## Pendientes
 
 ### Alta prioridad
+- [ ] `onboarding_name_screen.dart` → migrar `ElevatedButton` a `AppButton`
+- [ ] Guardar nombre usuario en SharedPreferences
+- [ ] Persistencia favoritos con SharedPreferences
+- [ ] `legal_content.json`: reemplazar lorem ipsum con contenido real
 - [ ] Conectar `PaymentScreen` / `PaymentMethodScreen` con RevenueCat
-- [ ] `legal_content.json`: reemplazar lorem ipsum con contenido real (ES + EN)
-- [ ] Persistencia de favoritos con SharedPreferences (actualmente en memoria)
 
 ### Media prioridad
-- [ ] Modal PRO upsell → conectar CTA a pantalla de pago
-- [ ] Share: implementar share sheet real (actualmente `onPressed: () {}`)
-- [ ] Toggle "Recordarme 3 días" en preferencias → notificaciones locales reales
-- [ ] Detección de moneda por locale (actualmente hardcoded CLP)
-- [ ] Persistencia de idioma
-- [ ] Suscripción real: reemplazar `SubscriptionProvider` debug por RevenueCat
+- [ ] Apple Sign In: configuración Xcode + Apple Developer Console
+- [ ] Google Sign In: Firebase/GoogleSignIn package + config nativa
+- [ ] Backend: verificar si email existe → login vs registro
+- [ ] Share sheet real (actualmente `onPressed: () {}`)
+- [ ] Toggle "Recordarme 3 días" → notificaciones locales reales
+- [ ] Detección moneda por locale (actualmente hardcoded CLP)
+- [ ] Cancelar suscripción → conectar RevenueCat
+- [ ] `short_bio_es` vacío en varios registros del JSON — completar datos
 
 ### Antes de producción
-- [ ] Eliminar sección "Dev / Debug" con toggle PRO de `settings_screen.dart`
-- [ ] Términos y Condiciones: agregar cláusula de recordatorios renovación
-- [ ] Cancelar suscripción: conectar con RevenueCat (TODO marcado en código)
-- [ ] Cambio de plan: confirmar flujo downgrade PRO→FREE
-- [ ] Estados de error tarjeta (rechazada/expirada/bloqueada) en `add_card_screen.dart`
-
----
-
-## Patrón de Header Estándar (todas las sub-pantallas)
-
-```dart
-Column(
-  children: [
-    Container(height: topPadding, color: Colors.white),
-    Container(
-      height: 48,
-      color: Colors.white,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        children: [
-          GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: Container(
-              width: 44, height: 44,
-              decoration: BoxDecoration(color: AppColors.background, shape: BoxShape.circle),
-              child: Center(child: PhosphorIcon(PhosphorIcons.arrowLeft(PhosphorIconsStyle.bold), size: 20, color: AppColors.accent)),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(child: Center(child: Text("Título", style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w600, height: 1.5, letterSpacing: -0.5, color: Color(0xFF404040))))),
-          const SizedBox(width: 44),
-        ],
-      ),
-    ),
-    // ← NUNCA poner SizedBox aquí fuera
-    Expanded(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 24, 16, 32), // ← top: 24 va AQUÍ
-        ...
-      ),
-    ),
-  ],
-)
-```
-
----
-
-## Patrón de Navegación desde Settings
-
-```dart
-// settings_screen.dart imports necesarios:
-import '../payment/payment_screen.dart';
-import '../payment/plan_detail_screen.dart';
-import 'legal_content_screen.dart';
-import 'preferences_screen.dart';
-
-// Navegaciones:
-// Medio de pago:
-Navigator.push(context, MaterialPageRoute(builder: (_) => PaymentScreen()))  // sin const
-
-// Detalle Plan:
-Navigator.push(context, MaterialPageRoute(builder: (_) => const PlanDetailScreen()))
-
-// Legal:
-Navigator.push(context, MaterialPageRoute(builder: (_) => LegalContentScreen(contentKey: "about", language: isEnglish ? "en" : "es")))
-```
+- [ ] Eliminar sección Dev/Debug de `settings_screen.dart`
+- [ ] Verificar que las 118 imágenes en GitHub cargan correctamente
+- [ ] Estados error tarjeta (rechazada/expirada/bloqueada)
+- [ ] Cambio de plan: confirmar flujo downgrade
+- [ ] `pro-tag01_es` / `pro-tag02_es` en card detail y carrusel — verificar datos JSON completos

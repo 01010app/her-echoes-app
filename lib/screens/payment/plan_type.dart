@@ -1,0 +1,1 @@
+enum PlanType { individual, family }

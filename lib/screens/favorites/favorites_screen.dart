@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../core/favorites_provider.dart';
 import '../../core/language_provider.dart';
 import '../../core/subscription_provider.dart';
+import '../../widgets/system/app_button.dart';
 import '../card_detail/card_detail_screen.dart';
 import '../../widgets/modals/upsell_modal_free.dart';
 
@@ -75,29 +76,12 @@ class FavoritesScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    provider.toggle(woman);
-                    Navigator.pop(context);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFE1002D),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14)),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    elevation: 0,
-                  ),
-                  child: Text(
-                    isEnglish ? "Yes, remove" : "Sí, quitar",
-                    style: GoogleFonts.inter(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
+              AppButton(
+                label: isEnglish ? "Yes, remove" : "Sí, quitar",
+                onPressed: () {
+                  provider.toggle(woman);
+                  Navigator.pop(context);
+                },
               ),
               const SizedBox(height: 12),
               GestureDetector(
@@ -136,31 +120,6 @@ class FavoritesScreen extends StatelessWidget {
       color: const Color(0xFF404040),
     );
 
-    final ctaButton = ({required String label, required VoidCallback onPressed}) =>
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: onPressed,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFE1002D),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              elevation: 0,
-            ),
-            child: Text(
-              label,
-              style: GoogleFonts.inter(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                height: 1.0,
-              ),
-            ),
-          ),
-        );
-
     // Usuario FREE
     if (!isPro) {
       return Container(
@@ -183,7 +142,7 @@ class FavoritesScreen extends StatelessWidget {
                 style: descStyle,
               ),
               const SizedBox(height: 24),
-              ctaButton(
+              AppButton(
                 label: isEnglish ? "Subscribe" : "Suscríbete",
                 onPressed: () => _showUpsell(context),
               ),
@@ -215,7 +174,7 @@ class FavoritesScreen extends StatelessWidget {
                 style: descStyle,
               ),
               const SizedBox(height: 24),
-              ctaButton(
+              AppButton(
                 label: isEnglish
                     ? "Visit today's inspiring woman"
                     : "Visitar la mujer inspiradora de hoy",
@@ -266,7 +225,6 @@ class FavoritesScreen extends StatelessWidget {
             },
           ),
         ),
-        // Overlay blanco detrás del header
         Positioned(
           top: 0,
           left: 0,

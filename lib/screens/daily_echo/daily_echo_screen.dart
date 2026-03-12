@@ -4,17 +4,21 @@ import 'package:card_stack_widget/card_stack_widget.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/subscription_provider.dart';
+import '../../core/language_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../widgets/cards/pro_badge.dart';
+import '../../widgets/cards/wildcard_badge.dart';
 import '../../widgets/modals/upsell_modal_free.dart';
 import '../card_detail/card_detail_screen.dart';
 
 class DailyEchoScreen extends StatelessWidget {
   final List<Map<String, dynamic>> todaysWomen;
+  final List<Map<String, dynamic>> wildcards;
 
   const DailyEchoScreen({
     super.key,
     required this.todaysWomen,
+    this.wildcards = const [],
   });
 
   void _showUpsell(BuildContext context) {
@@ -32,10 +36,18 @@ class DailyEchoScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final userIsPro = context.watch<SubscriptionProvider>().isPro;
+    final isEnglish = context.watch<LanguageProvider>().isEnglish;
 
-    final women = todaysWomen
+    // Wildcards primero, luego las del día
+    final wildcardItems = wildcards
+        .map((w) => {...w, '_is_wildcard': true})
+        .toList();
+
+    final dailyItems = todaysWomen
         .where((w) => (w['image_card_ID'] ?? '').toString().isNotEmpty)
         .toList();
+
+    final women = [...wildcardItems, ...dailyItems];
 
     if (women.isEmpty) {
       return const Scaffold(
@@ -58,7 +70,8 @@ class DailyEchoScreen extends StatelessWidget {
                 ? rawId
                 : "https://raw.githubusercontent.com/01010app/her-echoes-app/main/images/cards/$rawId.webp";
             final isContentPro = w['is_free'] != "VERDADERO";
-            final isPro = isContentPro && !userIsPro;
+            final isBlocked = isContentPro && !userIsPro;
+            final isWildcard = w['_is_wildcard'] == true;
 
             return CardModel(
               key: Key("$index"),
@@ -108,8 +121,12 @@ class DailyEchoScreen extends StatelessWidget {
                           children: [
                             Text(
                               [
-                                w['pro-tag01_en'] ?? '',
-                                w['pro-tag02_en'] ?? '',
+                                isEnglish
+                                    ? w['pro-tag01_en'] ?? ''
+                                    : w['pro-tag01_es'] ?? '',
+                                isEnglish
+                                    ? w['pro-tag02_en'] ?? ''
+                                    : w['pro-tag02_es'] ?? '',
                               ].where((t) => t.isNotEmpty).join(' • '),
                               style: GoogleFonts.inter(
                                 color: Colors.white.withOpacity(0.8),
@@ -138,7 +155,9 @@ class DailyEchoScreen extends StatelessWidget {
                                 ),
                                 Expanded(
                                   child: Text(
-                                    (w['quote_text_en'] ?? '') as String,
+                                    (isEnglish
+                                        ? w['quote_text_en']
+                                        : w['quote_text_es'] ?? '') as String,
                                     style: GoogleFonts.inter(
                                       color: Colors.white.withOpacity(0.9),
                                       fontSize: 14,
@@ -152,8 +171,16 @@ class DailyEchoScreen extends StatelessWidget {
                         ),
                       ),
 
-                      // PRO BADGE
-                      if (isPro)
+                      // WILDCARD BADGE — esquina superior izquierda
+                      if (isWildcard)
+                        Positioned(
+                          top: 16,
+                          left: 16,
+                          child: WildcardBadge(isEnglish: isEnglish),
+                        ),
+
+                      // PRO BADGE — esquina superior derecha
+                      if (isBlocked && !isWildcard)
                         const Positioned(
                           top: 16,
                           right: 16,

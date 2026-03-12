@@ -3,6 +3,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import '../../core/language_provider.dart';
+import '../../screens/payment/plan_type.dart';
+import '../../screens/payment/add_card_screen.dart';
+import '../system/app_button.dart';
 
 class UpsellModalPro extends StatefulWidget {
   final String currentHomeImage;
@@ -34,8 +37,6 @@ class _UpsellModalProState extends State<UpsellModalPro> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-
-          // DRAG HANDLE
           const SizedBox(height: 12),
           Center(
             child: Container(
@@ -48,8 +49,6 @@ class _UpsellModalProState extends State<UpsellModalPro> {
             ),
           ),
           const SizedBox(height: 12),
-
-          // TÍTULO
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Text(
@@ -66,9 +65,7 @@ class _UpsellModalProState extends State<UpsellModalPro> {
               ),
             ),
           ),
-
           const SizedBox(height: 4),
-
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Text(
@@ -85,10 +82,7 @@ class _UpsellModalProState extends State<UpsellModalPro> {
               ),
             ),
           ),
-
           const SizedBox(height: 32),
-
-          // PLAN FAMILIAR
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Container(
@@ -182,43 +176,27 @@ class _UpsellModalProState extends State<UpsellModalPro> {
               ),
             ),
           ),
-
           const SizedBox(height: 16),
-
-          // CTA
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  // TODO: navegar a pantalla de pago
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFE1002D),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+            child: AppButton(
+              label: isEnglish ? "Upgrade your Plan" : "Actualiza tu Plan",
+              onPressed: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const AddCardScreen(
+                      selectedPlan: PlanType.family,
+                      freeTrial: false,
+                      planPrice: "CLP 16.500",
+                    ),
                   ),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  elevation: 0,
-                ),
-                child: Text(
-                  isEnglish ? "Upgrade your Plan" : "Actualiza tu Plan",
-                  style: GoogleFonts.inter(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    height: 1.0,
-                  ),
-                ),
-              ),
+                );
+              },
             ),
           ),
-
           const SizedBox(height: 8),
-
-          // TOGGLE RECORDAR
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
@@ -252,7 +230,6 @@ class _UpsellModalProState extends State<UpsellModalPro> {
               ],
             ),
           ),
-
           SizedBox(height: 8 + bottomPadding),
         ],
       ),

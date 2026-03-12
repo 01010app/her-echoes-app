@@ -8,6 +8,7 @@ import '../../core/subscription_provider.dart';
 import '../../core/favorites_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../widgets/modals/upsell_modal_free.dart';
+import '../../widgets/system/app_button.dart';
 
 class CardDetailScreen extends StatefulWidget {
   final Map<String, dynamic> woman;
@@ -114,28 +115,9 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
               ),
             ),
             const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () => Navigator.pop(context),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFE1002D),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  elevation: 0,
-                ),
-                child: Text(
-                  isEnglish ? "Continue" : "Continuar",
-                  style: GoogleFonts.inter(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    height: 1.0,
-                  ),
-                ),
-              ),
+            AppButton(
+              label: isEnglish ? "Continue" : "Continuar",
+              onPressed: () => Navigator.pop(context),
             ),
           ],
         ),
@@ -203,8 +185,8 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                                   ? PhosphorIcons.heart(PhosphorIconsStyle.fill)
                                   : PhosphorIcons.heart(PhosphorIconsStyle.bold),
                               label: isFav
-                                  ? (isEnglish ? "Added to Favorites" : "Añadido a Favoritos")
-                                  : (isEnglish ? "Add to Favorites" : "Añadir a Favoritos"),
+                                  ? (isEnglish ? "Added to Favorites" : "Añadido a Favoritas")
+                                  : (isEnglish ? "Add to Favorites" : "Añadir a Favoritas"),
                               onTap: () {
                                 _closeMenu();
                                 if (isPro) {
@@ -402,9 +384,9 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
             children: [
               Text(
                 [
-                  w['pro-tag01_en'] ?? '',
-                  w['pro-tag02_en'] ?? '',
-                ].where((t) => t.isNotEmpty).join(' • '),
+                  isEnglish ? w['pro-tag01_en'] : w['pro-tag01_es'],
+                  isEnglish ? w['pro-tag02_en'] : w['pro-tag02_es'],
+                ].where((t) => (t ?? '').toString().isNotEmpty).join(' • '),
                 style: GoogleFonts.inter(
                   color: Colors.white.withOpacity(0.9),
                   fontSize: 14,
@@ -507,38 +489,44 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
   Widget _buildTab(String label, int index) {
     final isSelected = _selectedTab == index;
     return Expanded(
-      child: GestureDetector(
-        onTap: () {
-          if (_selectedTab != index) setState(() => _selectedTab = index);
-        },
-        behavior: HitTestBehavior.opaque,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          height: 37,
-          decoration: BoxDecoration(
-            color: isSelected ? Colors.white : Colors.transparent,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: isSelected
-                ? [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    ),
-                  ]
-                : [],
-          ),
-          child: Center(
-            child: Text(
-              label,
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                height: 1.5,
-                letterSpacing: 0,
-                color: isSelected
-                    ? const Color(0xFFE1002D)
-                    : const Color(0xFF6D6D6D),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          onTap: () {
+            if (_selectedTab != index) setState(() => _selectedTab = index);
+          },
+          borderRadius: BorderRadius.circular(12),
+          splashColor: const Color(0xFFE1002D).withOpacity(0.10),
+          highlightColor: const Color(0xFFE1002D).withOpacity(0.05),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            height: 37,
+            decoration: BoxDecoration(
+              color: isSelected ? Colors.white : Colors.transparent,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: isSelected
+                  ? [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ]
+                  : [],
+            ),
+            child: Center(
+              child: Text(
+                label,
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  height: 1.5,
+                  letterSpacing: 0,
+                  color: isSelected
+                      ? const Color(0xFFE1002D)
+                      : const Color(0xFF6D6D6D),
+                ),
               ),
             ),
           ),
@@ -762,63 +750,37 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
     final favoritesProvider = context.watch<FavoritesProvider>();
     final womanId = widget.woman['woman_id']?.toString() ?? '';
     final isFav = womanId.isNotEmpty ? favoritesProvider.isFavorite(womanId) : false;
+    final favAdded = isPro && isFav;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
       child: Row(
         children: [
           Expanded(
-            child: OutlinedButton(
+            child: AppButton(
+              label: isEnglish ? "Share" : "Compartir",
+              isOutlined: true,
               onPressed: () {},
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: Color(0xFFE1002D)),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                elevation: 0,
-              ),
-              child: Text(
-                isEnglish ? "Share" : "Compartir",
-                style: GoogleFonts.inter(
-                  color: const Color(0xFFE1002D),
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  height: 1.0,
-                ),
-              ),
             ),
           ),
           const SizedBox(width: 8),
           Expanded(
-            child: ElevatedButton(
-              onPressed: () {
-                if (isPro) {
-                  favoritesProvider.toggle(widget.woman);
-                  if (!isFav) _showFavoriteConfirmation();
-                } else {
-                  _showUpsell();
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: (isFav && isPro)
-                    ? const Color(0xFF949494)
-                    : const Color(0xFFE1002D),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                elevation: 0,
-              ),
-              child: Text(
-                isPro
-                    ? (isFav
-                        ? (isEnglish ? "Added ♥" : "Añadido ♥")
-                        : (isEnglish ? "Add to Favorites" : "Añadir a Favoritos"))
-                    : (isEnglish ? "Add to Favorites" : "Añadir a Favoritos"),
-                style: GoogleFonts.inter(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  height: 1.0,
-                ),
-              ),
+            child: AppButton(
+              label: isPro
+                  ? (isFav
+                      ? (isEnglish ? "Added ♥" : "Añadido ♥")
+                      : (isEnglish ? "Add to Favorites" : "Añadir a Favoritas"))
+                  : (isEnglish ? "Add to Favorites" : "Añadir a Favoritas"),
+              onPressed: favAdded
+                  ? () {}
+                  : () {
+                      if (isPro) {
+                        favoritesProvider.toggle(widget.woman);
+                        if (!isFav) _showFavoriteConfirmation();
+                      } else {
+                        _showUpsell();
+                      }
+                    },
             ),
           ),
         ],

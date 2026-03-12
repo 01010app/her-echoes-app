@@ -65,7 +65,7 @@ class FloatingTabBar extends StatelessWidget {
                 onTap: onTabSelected,
               ),
               _TabButton(
-                label: isEnglish ? "Favorites" : "Favoritos",
+                label: isEnglish ? "Favorites" : "Favoritas",
                 icon: PhosphorIcons.heart,
                 index: 3,
                 currentIndex: currentIndex,
