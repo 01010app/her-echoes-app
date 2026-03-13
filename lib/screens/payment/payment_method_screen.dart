@@ -5,6 +5,9 @@ import 'package:provider/provider.dart';
 
 import '../../core/language_provider.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/language_provider.dart';
+import '../../core/subscription_provider.dart';
+import '../../core/theme/app_colors.dart';
 import '../../widgets/system/app_button.dart';
 import 'plan_type.dart';
 import 'plan_selection_screen.dart';
@@ -403,8 +406,8 @@ class PaymentMethodBody extends StatelessWidget {
             const SizedBox(height: 12),
             GestureDetector(
               onTap: () {
-                Navigator.pop(context);
-                // TODO: conectar cancelación real con RevenueCat
+                context.read<SubscriptionProvider>().setIsPro(false);
+                Navigator.popUntil(context, (route) => route.isFirst);
               },
               child: Text(
                 isEnglish ? "Yes, cancel" : "Sí, cancelar",

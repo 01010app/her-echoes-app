@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io' show Platform;
 import '../../core/theme/app_colors.dart';
 import '../../widgets/system/app_button.dart';
@@ -38,7 +39,13 @@ class _OnboardingNameScreenState extends State<OnboardingNameScreen> {
     super.dispose();
   }
 
-  void _submit() {
+  Future<void> _submit() async {
+    final name = _nameController.text.trim();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('user_name', name);
+
+    if (!mounted) return;
+
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(
@@ -51,7 +58,6 @@ class _OnboardingNameScreenState extends State<OnboardingNameScreen> {
       ),
       (route) => false,
     );
-    // TODO: guardar nombre en SharedPreferences
   }
 
   @override

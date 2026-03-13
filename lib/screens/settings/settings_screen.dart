@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/language_provider.dart';
 import '../../core/subscription_provider.dart';
@@ -15,8 +16,26 @@ import 'preferences_screen.dart';
 import '../payment/payment_screen.dart';
 import '../payment/plan_detail_screen.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
+
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  String _userName = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserName();
+  }
+
+  Future<void> _loadUserName() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() => _userName = prefs.getString('user_name') ?? '');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -85,8 +104,57 @@ class SettingsScreen extends StatelessWidget {
                     children: [
                       const SizedBox(height: 24),
 
+                      // ── Perfil ──────────────────────────────
+                      if (_userName.isNotEmpty) ...[
+                        SettingsListContainer(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 14),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 44,
+                                    height: 44,
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xFFFFE5EA),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        _userName
+                                            .trim()
+                                            .substring(0, 1)
+                                            .toUpperCase(),
+                                        style: GoogleFonts.inter(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.w600,
+                                          color: AppColors.accent,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 14),
+                                  Text(
+                                    _userName,
+                                    style: GoogleFonts.inter(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500,
+                                      color: const Color(0xFF1A1A1A),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 32),
+                      ],
+
                       SettingsSectionTitle(
-                        title: isEnglish ? "System Settings" : "Configuración del sistema",
+                        title: isEnglish
+                            ? "System Settings"
+                            : "Configuración del sistema",
                       ),
 
                       SettingsListContainer(
@@ -104,8 +172,12 @@ class SettingsScreen extends StatelessWidget {
                           const SettingsDivider(),
                           SettingsListItem(
                             icon: PhosphorIcons.creditCard,
-                            label: isEnglish ? "Payment method" : "Medio de pago",
-                            description: isEnglish ? "12 days remaining" : "12 días restantes",
+                            label: isEnglish
+                                ? "Payment method"
+                                : "Medio de pago",
+                            description: isEnglish
+                                ? "12 days remaining"
+                                : "12 días restantes",
                             onTap: () => Navigator.push(
                               context,
                               MaterialPageRoute(
@@ -140,7 +212,9 @@ class SettingsScreen extends StatelessWidget {
                           const SettingsDivider(),
                           SettingsListItem(
                             icon: PhosphorIcons.fileText,
-                            label: isEnglish ? "Terms & Conditions" : "Términos y Condiciones",
+                            label: isEnglish
+                                ? "Terms & Conditions"
+                                : "Términos y Condiciones",
                             onTap: () => Navigator.push(
                               context,
                               MaterialPageRoute(
@@ -164,7 +238,9 @@ class SettingsScreen extends StatelessWidget {
                         children: [
                           SettingsListItem(
                             icon: PhosphorIcons.file,
-                            label: isEnglish ? "Individual Plan" : "Plan Individual",
+                            label: isEnglish
+                                ? "Individual Plan"
+                                : "Plan Individual",
                             onTap: () => Navigator.push(
                               context,
                               MaterialPageRoute(
@@ -227,7 +303,9 @@ class SettingsScreen extends StatelessWidget {
                       SettingsListContainer(
                         children: [
                           SettingsListItem(
-                            label: isEnglish ? "Delete Account" : "Eliminar App",
+                            label: isEnglish
+                                ? "Delete Account"
+                                : "Eliminar App",
                             showChevron: false,
                             isError: true,
                           ),

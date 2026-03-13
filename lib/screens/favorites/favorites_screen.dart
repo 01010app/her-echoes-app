@@ -275,7 +275,13 @@ class _FavoriteCard extends StatelessWidget {
               alignment: Alignment.center,
               errorBuilder: (_, __, ___) => Container(
                 color: const Color(0xFFE0E0E0),
-                child: const Icon(Icons.person, color: Colors.white54, size: 48),
+                child: Center(
+                  child: PhosphorIcon(
+                    PhosphorIcons.user(PhosphorIconsStyle.light),
+                    size: 48,
+                    color: Colors.white54,
+                  ),
+                ),
               ),
             ),
             Positioned(
