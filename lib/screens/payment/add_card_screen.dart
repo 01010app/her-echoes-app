@@ -12,6 +12,8 @@ import 'plan_type.dart';
 import 'plan_selection_screen.dart';
 import 'payment_method_screen.dart';
 
+enum _CardError { none, declined, expired, noFunds, invalidCvv }
+
 class AddCardScreen extends StatefulWidget {
   final PlanType selectedPlan;
   final bool freeTrial;
@@ -34,6 +36,8 @@ class _AddCardScreenState extends State<AddCardScreen> {
   final _holderController = TextEditingController();
   final _cvvController = TextEditingController();
   bool _showPlanBanner = true;
+  bool _isLoading = false;
+  _CardError _error = _CardError.none;
 
   bool get _isFormValid =>
       _cardNumberController.text.replaceAll(' ', '').length == 16 &&
@@ -50,22 +54,91 @@ class _AddCardScreenState extends State<AddCardScreen> {
     super.dispose();
   }
 
-  void _submit(BuildContext context) {
+  // Simula el procesamiento — aquí irá RevenueCat en producción
+  Future<void> _submit(BuildContext context) async {
+    setState(() {
+      _isLoading = true;
+      _error = _CardError.none;
+    });
+
+    await Future.delayed(const Duration(seconds: 2));
+
+    if (!mounted) return;
+
+    // ── Detección de tarjetas de prueba ──────────────────────────
+    final digits = _cardNumberController.text.replaceAll(' ', '');
+    final expiry = _expiryController.text;
+    final cvv = _cvvController.text;
+
+    _CardError error = _CardError.none;
+
+    if (digits.startsWith('4000000000000002')) {
+      error = _CardError.declined;
+    } else if (expiry == '00/00' || _isExpired(expiry)) {
+      error = _CardError.expired;
+    } else if (digits.startsWith('4000000000009995')) {
+      error = _CardError.noFunds;
+    } else if (cvv == '000') {
+      error = _CardError.invalidCvv;
+    }
+
+    if (error != _CardError.none) {
+      setState(() {
+        _isLoading = false;
+        _error = error;
+      });
+      return;
+    }
+
+    // ── Éxito ────────────────────────────────────────────────────
+    setState(() => _isLoading = false);
     context.read<SubscriptionProvider>().setIsPro(true);
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(
         builder: (_) => PaymentMethodScreen(
           planType: widget.selectedPlan,
-          cardLast4: _cardNumberController.text
-              .replaceAll(' ', '')
-              .substring(12),
+          cardLast4: digits.substring(12),
           cardHolder: _holderController.text.trim(),
           cardExpiry: _expiryController.text,
         ),
       ),
       (route) => route.isFirst,
     );
+  }
+
+  bool _isExpired(String expiry) {
+    if (expiry.length != 5) return false;
+    final parts = expiry.split('/');
+    if (parts.length != 2) return false;
+    final month = int.tryParse(parts[0]) ?? 0;
+    final year = int.tryParse('20${parts[1]}') ?? 0;
+    final now = DateTime.now();
+    final exp = DateTime(year, month + 1);
+    return exp.isBefore(now);
+  }
+
+  String _errorMessage(bool isEnglish) {
+    switch (_error) {
+      case _CardError.declined:
+        return isEnglish
+            ? "Your card was declined. Please try a different card."
+            : "Tu tarjeta fue rechazada. Intenta con otra tarjeta.";
+      case _CardError.expired:
+        return isEnglish
+            ? "Your card has expired. Please check the expiry date."
+            : "Tu tarjeta está vencida. Verifica la fecha de expiración.";
+      case _CardError.noFunds:
+        return isEnglish
+            ? "Insufficient funds. Please try a different card."
+            : "Fondos insuficientes. Intenta con otra tarjeta.";
+      case _CardError.invalidCvv:
+        return isEnglish
+            ? "Invalid CVV. Please check and try again."
+            : "CVV inválido. Verifica e intenta nuevamente.";
+      case _CardError.none:
+        return '';
+    }
   }
 
   @override
@@ -78,8 +151,8 @@ class _AddCardScreenState extends State<AddCardScreen> {
     final planName = isEnglish
         ? (isIndividual ? "Individual Plan" : "Family Plan")
         : (isIndividual ? "Plan Individual" : "Plan Familiar");
-    final planPrice = widget.planPrice ??
-        (isIndividual ? "CLP 9.900" : "CLP 16.500");
+    final planPrice =
+        widget.planPrice ?? (isIndividual ? "CLP 9.900" : "CLP 16.500");
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -114,7 +187,9 @@ class _AddCardScreenState extends State<AddCardScreen> {
                 Expanded(
                   child: Center(
                     child: Text(
-                      isEnglish ? "Add payment method" : "Agregar medio de pago",
+                      isEnglish
+                          ? "Add payment method"
+                          : "Agregar medio de pago",
                       style: GoogleFonts.inter(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
@@ -171,7 +246,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
-                                      isEnglish ? "Billing" : "Peridiocidad",
+                                      isEnglish ? "Billing" : "Periodicidad",
                                       style: GoogleFonts.inter(
                                         fontSize: 13,
                                         fontWeight: FontWeight.w400,
@@ -239,10 +314,10 @@ class _AddCardScreenState extends State<AddCardScreen> {
                               GestureDetector(
                                 onTap: () =>
                                     setState(() => _showPlanBanner = false),
-                                child: const Icon(
-                                  Icons.close,
+                                child: PhosphorIcon(
+                                  PhosphorIcons.x(PhosphorIconsStyle.bold),
                                   size: 18,
-                                  color: Color(0xFF888888),
+                                  color: const Color(0xFF888888),
                                 ),
                               ),
                             ],
@@ -250,12 +325,52 @@ class _AddCardScreenState extends State<AddCardScreen> {
                         ),
                         const SizedBox(height: 20),
                       ],
+
                       _CardPreview(
                         cardNumber: _cardNumberController.text,
                         cardHolder: _holderController.text,
                         expiry: _expiryController.text,
                       ),
                       const SizedBox(height: 28),
+
+                      // ── Banner de error ───────────────────────
+                      if (_error != _CardError.none) ...[
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFFF0F3),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: const Color(0xFFE1002D).withOpacity(0.3),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              PhosphorIcon(
+                                PhosphorIcons.warningCircle(
+                                    PhosphorIconsStyle.fill),
+                                size: 20,
+                                color: const Color(0xFFE1002D),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  _errorMessage(isEnglish),
+                                  style: GoogleFonts.inter(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w500,
+                                    color: const Color(0xFFE1002D),
+                                    height: 1.4,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                      ],
+
                       _FieldLabel(
                           isEnglish ? "Card number" : "Número de tarjeta"),
                       const SizedBox(height: 8),
@@ -265,12 +380,15 @@ class _AddCardScreenState extends State<AddCardScreen> {
                             ? "Insert your credit card number"
                             : "Ingresa el número de tu tarjeta",
                         keyboardType: TextInputType.number,
+                        hasError: _error == _CardError.declined ||
+                            _error == _CardError.noFunds,
                         inputFormatters: [
                           FilteringTextInputFormatter.digitsOnly,
                           _CardNumberFormatter(),
                           LengthLimitingTextInputFormatter(19),
                         ],
-                        onChanged: (_) => setState(() {}),
+                        onChanged: (_) =>
+                            setState(() => _error = _CardError.none),
                       ),
                       const SizedBox(height: 16),
                       _FieldLabel(
@@ -280,12 +398,14 @@ class _AddCardScreenState extends State<AddCardScreen> {
                         controller: _expiryController,
                         hint: "MM/YY",
                         keyboardType: TextInputType.number,
+                        hasError: _error == _CardError.expired,
                         inputFormatters: [
                           FilteringTextInputFormatter.digitsOnly,
                           _ExpiryFormatter(),
                           LengthLimitingTextInputFormatter(5),
                         ],
-                        onChanged: (_) => setState(() {}),
+                        onChanged: (_) =>
+                            setState(() => _error = _CardError.none),
                       ),
                       const SizedBox(height: 16),
                       _FieldLabel(
@@ -298,7 +418,8 @@ class _AddCardScreenState extends State<AddCardScreen> {
                             : "El nombre en la tarjeta",
                         keyboardType: TextInputType.name,
                         inputFormatters: [],
-                        onChanged: (_) => setState(() {}),
+                        onChanged: (_) =>
+                            setState(() => _error = _CardError.none),
                       ),
                       const SizedBox(height: 16),
                       const _FieldLabel("CVV"),
@@ -308,23 +429,34 @@ class _AddCardScreenState extends State<AddCardScreen> {
                         hint: "CVV",
                         keyboardType: TextInputType.number,
                         obscureText: true,
+                        hasError: _error == _CardError.invalidCvv,
                         inputFormatters: [
                           FilteringTextInputFormatter.digitsOnly,
                           LengthLimitingTextInputFormatter(4),
                         ],
-                        onChanged: (_) => setState(() {}),
+                        onChanged: (_) =>
+                            setState(() => _error = _CardError.none),
                       ),
                     ],
                   ),
                 ),
+
+                // ── Botón CTA ─────────────────────────────────
                 Positioned(
                   bottom: bottomPadding + 16,
                   left: 24,
                   right: 24,
-                  child: AppButton(
-                    label: isEnglish ? "Add card" : "Agregar tarjeta",
-                    onPressed: _isFormValid ? () => _submit(context) : null,
-                  ),
+                  child: _isLoading
+                      ? const Center(
+                          child: CircularProgressIndicator(
+                            color: Color(0xFFE1002D),
+                          ),
+                        )
+                      : AppButton(
+                          label: isEnglish ? "Add card" : "Agregar tarjeta",
+                          onPressed:
+                              _isFormValid ? () => _submit(context) : null,
+                        ),
                 ),
               ],
             ),
@@ -334,6 +466,8 @@ class _AddCardScreenState extends State<AddCardScreen> {
     );
   }
 }
+
+// ── Widgets internos ──────────────────────────────────────────────────────────
 
 class _CardPreview extends StatelessWidget {
   final String cardNumber;
@@ -461,6 +595,7 @@ class _CardField extends StatelessWidget {
   final List<TextInputFormatter> inputFormatters;
   final ValueChanged<String> onChanged;
   final bool obscureText;
+  final bool hasError;
 
   const _CardField({
     required this.controller,
@@ -469,14 +604,22 @@ class _CardField extends StatelessWidget {
     required this.inputFormatters,
     required this.onChanged,
     this.obscureText = false,
+    this.hasError = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: hasError
+              ? const Color(0xFFE1002D).withOpacity(0.6)
+              : Colors.transparent,
+          width: 1.5,
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.04),
