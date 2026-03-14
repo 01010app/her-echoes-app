@@ -4,6 +4,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/language_provider.dart';
+import '../../core/currency_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../widgets/system/app_button.dart';
 import 'plan_type.dart';
@@ -24,9 +25,15 @@ class _PlanSelectionScreenState extends State<PlanSelectionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final topPadding = MediaQuery.of(context).padding.top;
+    final topPadding    = MediaQuery.of(context).padding.top;
     final bottomPadding = MediaQuery.of(context).padding.bottom;
-    final isEnglish = context.watch<LanguageProvider>().isEnglish;
+    final isEnglish     = context.watch<LanguageProvider>().isEnglish;
+    final pricing       = context.watch<CurrencyProvider>().pricing;
+
+    final individualPrice = _freeTrial
+        ? pricing.format(pricing.individualTrial)
+        : pricing.format(pricing.individualAnnual);
+    final familyPrice = pricing.format(pricing.familyAnnual);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -42,18 +49,13 @@ class _PlanSelectionScreenState extends State<PlanSelectionScreen> {
                 GestureDetector(
                   onTap: () => Navigator.pop(context),
                   child: Container(
-                    width: 44,
-                    height: 44,
+                    width: 44, height: 44,
                     decoration: BoxDecoration(
-                      color: AppColors.background,
-                      shape: BoxShape.circle,
-                    ),
+                        color: AppColors.background, shape: BoxShape.circle),
                     child: Center(
                       child: PhosphorIcon(
-                        PhosphorIcons.arrowLeft(PhosphorIconsStyle.bold),
-                        size: 20,
-                        color: AppColors.accent,
-                      ),
+                          PhosphorIcons.arrowLeft(PhosphorIconsStyle.bold),
+                          size: 20, color: AppColors.accent),
                     ),
                   ),
                 ),
@@ -63,12 +65,9 @@ class _PlanSelectionScreenState extends State<PlanSelectionScreen> {
                     child: Text(
                       isEnglish ? "Subscribe to a Plan" : "Suscríbete a un Plan",
                       style: GoogleFonts.inter(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        height: 1.5,
-                        letterSpacing: -0.5,
-                        color: const Color(0xFF404040),
-                      ),
+                          fontSize: 18, fontWeight: FontWeight.w600,
+                          height: 1.5, letterSpacing: -0.5,
+                          color: const Color(0xFF404040)),
                     ),
                   ),
                 ),
@@ -81,17 +80,14 @@ class _PlanSelectionScreenState extends State<PlanSelectionScreen> {
               children: [
                 SingleChildScrollView(
                   padding: EdgeInsets.only(
-                    left: 16,
-                    right: 16,
-                    top: 24,
-                    bottom: bottomPadding + 100,
-                  ),
+                      left: 16, right: 16, top: 24,
+                      bottom: bottomPadding + 100),
                   child: Column(
                     children: [
                       _PlanCard(
                         selected: _selected == PlanType.individual,
                         title: isEnglish ? "Individual Plan" : "Plan Individual",
-                        price: _freeTrial ? "CLP 16.800" : "CLP 9.900",
+                        price: individualPrice,
                         periodicity: isEnglish ? "Annual" : "Anual",
                         trailLabel: isEnglish
                             ? "With 7-day free trial"
@@ -107,7 +103,7 @@ class _PlanSelectionScreenState extends State<PlanSelectionScreen> {
                       _PlanCard(
                         selected: _selected == PlanType.family,
                         title: isEnglish ? "Family Plan" : "Plan Familiar",
-                        price: "CLP 16.500",
+                        price: familyPrice,
                         periodicity: isEnglish ? "Annual" : "Anual",
                         onTap: () =>
                             setState(() => _selected = PlanType.family),
@@ -117,8 +113,7 @@ class _PlanSelectionScreenState extends State<PlanSelectionScreen> {
                 ),
                 Positioned(
                   bottom: bottomPadding + 16,
-                  left: 24,
-                  right: 24,
+                  left: 24, right: 24,
                   child: AppButton(
                     label: isEnglish
                         ? "Add payment method"
@@ -130,8 +125,8 @@ class _PlanSelectionScreenState extends State<PlanSelectionScreen> {
                           selectedPlan: _selected,
                           freeTrial: _freeTrial,
                           planPrice: _selected == PlanType.individual
-                              ? "CLP ${_freeTrial ? '16.800' : '9.900'}"
-                              : "CLP 16.500",
+                              ? individualPrice
+                              : familyPrice,
                         ),
                       ),
                     ),
@@ -184,26 +179,19 @@ class _PlanCard extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 8, offset: const Offset(0, 2)),
           ],
         ),
         padding: const EdgeInsets.only(
-          left: 8,
-          top: 16,
-          right: 16,
-          bottom: 12,
-        ),
+            left: 8, top: 16, right: 16, bottom: 12),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
               padding: const EdgeInsets.only(top: 2),
               child: Container(
-                width: 24,
-                height: 24,
+                width: 24, height: 24,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
@@ -216,12 +204,10 @@ class _PlanCard extends StatelessWidget {
                 child: selected
                     ? Center(
                         child: Container(
-                          width: 10,
-                          height: 10,
+                          width: 10, height: 10,
                           decoration: const BoxDecoration(
-                            color: Color(0xFFE1002D),
-                            shape: BoxShape.circle,
-                          ),
+                              color: Color(0xFFE1002D),
+                              shape: BoxShape.circle),
                         ),
                       )
                     : null,
@@ -236,29 +222,20 @@ class _PlanCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Expanded(
-                        child: Text(
-                          title,
-                          style: GoogleFonts.inter(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                            height: 1.0,
-                            letterSpacing: -0.2,
-                            color: const Color(0xFF444444),
-                          ),
-                        ),
+                        child: Text(title,
+                            style: GoogleFonts.inter(
+                                fontSize: 16, fontWeight: FontWeight.w500,
+                                height: 1.0, letterSpacing: -0.2,
+                                color: const Color(0xFF444444))),
                       ),
                       AnimatedSwitcher(
                         duration: const Duration(milliseconds: 200),
-                        child: Text(
-                          price,
-                          key: ValueKey(price),
-                          style: GoogleFonts.inter(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            height: 1.23,
-                            color: const Color(0xFF222222),
-                          ),
-                        ),
+                        child: Text(price,
+                            key: ValueKey(price),
+                            style: GoogleFonts.inter(
+                                fontSize: 13, fontWeight: FontWeight.w600,
+                                height: 1.23,
+                                color: const Color(0xFF222222))),
                       ),
                     ],
                   ),
@@ -266,24 +243,16 @@ class _PlanCard extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        "Periodicidad",
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w400,
-                          height: 1.14,
-                          color: const Color(0xFF444444),
-                        ),
-                      ),
-                      Text(
-                        periodicity,
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w400,
-                          height: 1.14,
-                          color: const Color(0xFF444444),
-                        ),
-                      ),
+                      Text(periodicity,
+                          style: GoogleFonts.inter(
+                              fontSize: 14, fontWeight: FontWeight.w400,
+                              height: 1.14,
+                              color: const Color(0xFF444444))),
+                      Text(periodicity,
+                          style: GoogleFonts.inter(
+                              fontSize: 14, fontWeight: FontWeight.w400,
+                              height: 1.14,
+                              color: const Color(0xFF444444))),
                     ],
                   ),
                   if (showTrialToggle && trailLabel != null) ...[
@@ -291,16 +260,11 @@ class _PlanCard extends StatelessWidget {
                     Row(
                       children: [
                         Expanded(
-                          child: Text(
-                            trailLabel!,
-                            style: GoogleFonts.inter(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                              height: 1.5,
-                              letterSpacing: -0.5,
-                              color: const Color(0xFF434343),
-                            ),
-                          ),
+                          child: Text(trailLabel!,
+                              style: GoogleFonts.inter(
+                                  fontSize: 13, fontWeight: FontWeight.w500,
+                                  height: 1.5, letterSpacing: -0.5,
+                                  color: const Color(0xFF434343))),
                         ),
                         GestureDetector(
                           onTap: () => onTrialToggle?.call(!trialEnabled),

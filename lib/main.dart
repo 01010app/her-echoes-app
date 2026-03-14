@@ -13,6 +13,8 @@ import 'screens/login/onboarding_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'services/daily_suggestions_engine.dart';
 
+import 'core/currency_provider.dart';
+
 void main() {
   runApp(
     MultiProvider(
@@ -20,6 +22,7 @@ void main() {
         ChangeNotifierProvider(create: (_) => LanguageProvider()),
         ChangeNotifierProvider(create: (_) => SubscriptionProvider()),
         ChangeNotifierProvider(create: (_) => FavoritesProvider()),
+        ChangeNotifierProvider(create: (_) => CurrencyProvider()),
       ],
       child: const MyApp(),
     ),

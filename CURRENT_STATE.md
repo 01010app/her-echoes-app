@@ -1,5 +1,5 @@
 # HerEchoes — Estado Actual del Proyecto
-**Última actualización:** 2026-03-14 (sesión 10 — inicio)
+**Última actualización:** 2026-03-14 (sesión 10)
 
 ---
 
@@ -23,16 +23,16 @@
 
 ## Widget Sistema: `AppButton`
 **Ruta:** `lib/widgets/system/app_button.dart`
-```dart
-class AppButton extends StatelessWidget {
-  final String label;
-  final VoidCallback? onPressed;
-  final bool isOutlined;
-  final double? width;
-}
-```
+
 - height: 52, rojo `#E1002D` enabled, gris `#949494` null
 - `isOutlined: true` → borde rojo, fondo transparente
+
+**Reglas de import:**
+```
+lib/screens/*/         → '../../widgets/system/app_button.dart'
+lib/widgets/modals/    → '../system/app_button.dart'
+lib/widgets/*/         → '../system/app_button.dart'
+```
 
 ---
 
@@ -70,8 +70,8 @@ lib/
 │   │   ├── plan_type.dart
 │   │   ├── payment_screen.dart
 │   │   ├── plan_selection_screen.dart
-│   │   ├── add_card_screen.dart               ✅ errores tarjeta ⬅ PRÓXIMO: campo cupón
-│   │   ├── payment_method_screen.dart         ✅ cancelar baja isPro
+│   │   ├── add_card_screen.dart               ✅ sesión 10: campo cupón completo
+│   │   ├── payment_method_screen.dart         ✅ sesión 10: banner recordatorio cupón
 │   │   └── plan_detail_screen.dart
 │   ├── home/home_screen.dart                  ✅ punto rojo Settings dinámico
 │   ├── daily_echo/daily_echo_screen.dart
@@ -92,15 +92,60 @@ lib/
 
 assets/
 ├── data/her_echoes.json, wildcard.json
-├── images/home/, system/, onboarding/, cards/ ✅ imágenes subidas vía git
+├── images/home/, system/, onboarding/, cards/
 └── content/legal_content.json
 ```
 
 ---
 
+## Sistema de Cupones ✅ sesión 10
+
+### Servidor
+- `coupons.json` — `https://callmehector.cl/apps/herechoes/coupons.json`
+- `coupons.php` — `https://callmehector.cl/apps/herechoes/coupons.php`
+
+### Estructura cupón
+```json
+{
+  "code": "INFLUENCER2026",
+  "type": "percent",
+  "value": 30,
+  "trial_months": 1,
+  "max_uses": 100,
+  "uses": 0,
+  "valid_from": "2026-03-14",
+  "valid_until": "2026-12-31",
+  "active": true
+}
+```
+- `type`: `"percent"` o `"fixed"`
+- `value`: porcentaje (30) o monto CLP (3000)
+- `trial_months`: meses con descuento
+- `max_uses`: límite de usos, `null` = ilimitado
+- `valid_until`: fecha límite, `null` = indefinido
+
+### API
+- GET `coupons.php?code=CODIGO` → `{valid, type, value, code, trial_months}`
+- POST `coupons.php` con `{password, code}` → registra uso
+
+### Cupones activos
+| Código | Tipo | Valor | Meses | Max usos |
+|---|---|---|---|---|
+| INFLUENCER2026 | percent | 30% | 1 | 100 |
+| REGALO100 | percent | 100% | 1 | 1 |
+| DESCUENTO3000 | fixed | CLP 3.000 | 3 | ilimitado |
+
+### UI en app
+- Campo "Código de promoción" en `add_card_screen.dart`
+- Validación en tiempo real contra servidor
+- Resumen con subtotal, descuento, total y aviso amarillo de duración
+- Banner verde recordatorio en `payment_method_screen.dart`
+
+---
+
 ## Wildcard
 - Panel admin: `https://callmehector.cl/apps/herechoes/wildcard.php`
-- ⚠️ Token GitHub `herechoes-wildcard` expira **Apr 11 2026**
+- ⚠️ Token GitHub `herechoes-wildcard` expira **Apr 11 2026** — renovar antes
 - Tutorial dev: `herechoes-tutorial.html` — 7 secciones draggables ✅
 
 ---
@@ -139,37 +184,70 @@ static const bool _hasNewTerms = false; // → true en settings_screen.dart
 
 ---
 
+## Flujo de Navegación
+```
+main.dart
+├── Descarga wildcard.json desde GitHub → fallback asset local
+├── onboarding_done
+│   ├── false → OnboardingScreen → LoginScreen
+│   └── true → LoginScreen
+│       ├── "Invitado/a" → HomeScreen
+│       └── "Email" → EmailLoginScreen → OnboardingNameScreen → HomeScreen
+```
+
+---
+
+## URLs
+```
+Imágenes cards:  https://raw.githubusercontent.com/01010app/her-echoes-app/main/images/cards/${rawId}.webp
+Wildcard JSON:   https://raw.githubusercontent.com/01010app/her-echoes-app/main/assets/data/wildcard.json
+Panel admin:     https://callmehector.cl/apps/herechoes/wildcard.php
+Cupones API:     https://callmehector.cl/apps/herechoes/coupons.php
+Tutorial dev:    https://callmehector.cl/apps/herechoes/herechoes-tutorial.html
+```
+
+---
+
 ## Git Tags
 ```
-v1.0 → v1.5-notifications ✅
+v1.0-pre-language        ✅
+v1.1-payment-ui          ✅
+v1.2-onboarding-wildcard ✅
+v1.3-wildcard-admin      ✅
+v1.4-share-favorites     ✅
+v1.5-notifications       ✅
+v1.6-coupons             ✅ sesión 10
+v1.7-coupon-reminder     ✅ sesión 10
 ```
 
 ---
 
 ## Pendientes
 
-### Alta prioridad — PRÓXIMA SESIÓN
-- [ ] Campo cupón de descuento en `add_card_screen.dart`
-- [ ] JSON de cupones con código, % descuento, validez
-- [ ] ⚠️ Token GitHub expira **Apr 11 2026**
+### Alta prioridad
+- [ ] ⚠️ Token GitHub expira **Apr 11 2026** — renovar
+- [ ] `legal_content.json`: reemplazar lorem ipsum con contenido real
 - [ ] RevenueCat — integración real suscripciones
-- [ ] `legal_content.json`: reemplazar lorem ipsum
+- [ ] Cancelar suscripción → RevenueCat (UI lista)
 
 ### Media prioridad
 - [ ] Apple Sign In: Xcode + Apple Developer Console
 - [ ] Google Sign In: Firebase + config nativa
-- [ ] Flujo Plan Familiar: invitación por email
+- [ ] Backend: verificar si email existe → login vs registro
+- [ ] Flujo Plan Familiar: invitación por email (requiere backend)
 - [ ] Detección moneda por locale (hardcoded CLP)
 - [ ] Avatar Settings → foto real con auth
+- [ ] `short_bio_es` vacío en varios registros JSON
 
 ### Antes de producción
 - [ ] Eliminar sección Dev/Debug de `settings_screen.dart`
 - [ ] Verificar 118 imágenes en GitHub
 - [ ] Flujo downgrade de plan
+- [ ] Subir imagen real de wildcard y probar en dispositivo
 
 ---
 
-## Next Development Focus (sesión 10)
-1. Campo código de promoción en `add_card_screen.dart`
-2. JSON de cupones + lógica de validación
-3. Conexión con RevenueCat
+## Next Development Focus (sesión 11)
+1. RevenueCat — integración real suscripciones
+2. Apple Sign In
+3. Detección moneda por locale
