@@ -27,7 +27,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String _userName = '';
   // Términos: true cuando hay nuevos términos sin aceptar
   // Cambiar a true manualmente cuando publiques nuevos T&C
-  static const bool _hasNewTerms = true;
+  static const bool _hasNewTerms = false;
 
   @override
   void initState() {
@@ -112,7 +112,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       children: [
                         Padding(
                           padding: const EdgeInsets.only(
-                              left: 8, right: 16, top: 14, bottom: 14),
+                              left: 16, right: 16, top: 14, bottom: 14),
                           child: Row(
                             children: [
                               Container(
@@ -260,7 +260,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     children: [
                       Padding(
                         padding: const EdgeInsets.only(
-                            top: 16, bottom: 16, right: 16),
+                            left: 16, right: 16, top: 14, bottom: 14),
                         child: Row(
                           children: [
                             Expanded(
