@@ -44,6 +44,13 @@ class _HomeScreenState extends State<HomeScreen> {
   int currentIndex = 0;
   bool hasSettingsNotification = false;
 
+  // ── Claves SharedPreferences que generan notificación en el ícono ──
+  // Agregar aquí cualquier nueva clave booleana que signifique "hay algo pendiente"
+  static const List<String> _notificationKeys = [
+    'settings_has_card_issue',
+    'settings_has_new_terms',
+  ];
+
   final List<String> _homeImages = [
     'assets/images/home/home01.webp',
     'assets/images/home/home02.webp',
@@ -64,6 +71,7 @@ class _HomeScreenState extends State<HomeScreen> {
       });
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkSettingsNotification();
       _checkWeeklyProUpsell();
     });
   }
@@ -72,6 +80,12 @@ class _HomeScreenState extends State<HomeScreen> {
   void dispose() {
     _imageTimer?.cancel();
     super.dispose();
+  }
+
+  Future<void> _checkSettingsNotification() async {
+    final prefs = await SharedPreferences.getInstance();
+    final hasAny = _notificationKeys.any((k) => prefs.getBool(k) == true);
+    if (mounted) setState(() => hasSettingsNotification = hasAny);
   }
 
   Future<void> _checkWeeklyProUpsell() async {
@@ -115,12 +129,13 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() => currentIndex = index);
   }
 
-  void onSettingsTap() {
-    setState(() => hasSettingsNotification = false);
-    Navigator.push(
+  Future<void> onSettingsTap() async {
+    await Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => const SettingsScreen()),
     );
+    // Al volver de Settings re-chequea por si cambió algo
+    _checkSettingsNotification();
   }
 
   @override

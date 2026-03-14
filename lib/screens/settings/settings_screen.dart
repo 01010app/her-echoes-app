@@ -25,6 +25,9 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   String _userName = '';
+  // Términos: true cuando hay nuevos términos sin aceptar
+  // Cambiar a true manualmente cuando publiques nuevos T&C
+  static const bool _hasNewTerms = true;
 
   @override
   void initState() {
@@ -43,6 +46,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final bottomPadding = MediaQuery.of(context).padding.bottom;
     final isEnglish = context.watch<LanguageProvider>().isEnglish;
     final isPro = context.watch<SubscriptionProvider>().isPro;
+    final hasCardIssue = isPro && false; // ← conectar con RevenueCat
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -95,233 +99,220 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
           Expanded(
-            child: Stack(
-              children: [
-                SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 24),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 24),
 
-                      // ── Perfil ──────────────────────────────
-                      if (_userName.isNotEmpty) ...[
-                        SettingsListContainer(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 14),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    width: 44,
-                                    height: 44,
-                                    decoration: const BoxDecoration(
-                                      color: Color(0xFFFFE5EA),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        _userName
-                                            .trim()
-                                            .substring(0, 1)
-                                            .toUpperCase(),
-                                        style: GoogleFonts.inter(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.w600,
-                                          color: AppColors.accent,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 14),
-                                  Text(
-                                    _userName,
+                  // ── Perfil ──────────────────────────────────
+                  if (_userName.isNotEmpty) ...[
+                    SettingsListContainer(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(
+                              left: 8, right: 16, top: 14, bottom: 14),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 44,
+                                height: 44,
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFFFFE5EA),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    _userName.trim().substring(0, 1).toUpperCase(),
                                     style: GoogleFonts.inter(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w500,
-                                      color: const Color(0xFF1A1A1A),
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.accent,
                                     ),
                                   ),
-                                ],
+                                ),
+                              ),
+                              const SizedBox(width: 14),
+                              Text(
+                                _userName,
+                                style: GoogleFonts.inter(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                  color: const Color(0xFF1A1A1A),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 32),
+                  ],
+
+                  SettingsSectionTitle(
+                    title: isEnglish
+                        ? "System Settings"
+                        : "Configuración del sistema",
+                  ),
+
+                  SettingsListContainer(
+                    children: [
+                      SettingsListItem(
+                        icon: PhosphorIcons.slidersHorizontal,
+                        label: isEnglish ? "Preferences" : "Preferencias",
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const PreferencesScreen(),
+                          ),
+                        ),
+                      ),
+                      const SettingsDivider(),
+                      SettingsListItem(
+                        icon: PhosphorIcons.creditCard,
+                        label: isEnglish
+                            ? "Payment method"
+                            : "Medio de pago",
+                        hasNotification: hasCardIssue,
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => PaymentScreen(),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  SettingsSectionTitle(
+                    title: isEnglish ? "About Us" : "Nosotros",
+                  ),
+
+                  SettingsListContainer(
+                    children: [
+                      SettingsListItem(
+                        icon: PhosphorIcons.userFocus,
+                        label: isEnglish
+                            ? "About Us"
+                            : "Acerca de Nosotros",
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => LegalContentScreen(
+                              contentKey: "about",
+                              language: isEnglish ? "en" : "es",
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SettingsDivider(),
+                      SettingsListItem(
+                        icon: PhosphorIcons.fileText,
+                        label: isEnglish
+                            ? "Terms & Conditions"
+                            : "Términos y Condiciones",
+                        hasNotification: _hasNewTerms,
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => LegalContentScreen(
+                              contentKey: "terms",
+                              language: isEnglish ? "en" : "es",
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  SettingsSectionTitle(
+                    title: isEnglish ? "Plan Details" : "Detalle Plan",
+                  ),
+
+                  SettingsListContainer(
+                    children: [
+                      SettingsListItem(
+                        icon: PhosphorIcons.file,
+                        label: isEnglish
+                            ? "Individual Plan"
+                            : "Plan Individual",
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const PlanDetailScreen(),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  // ===== DEBUG =====
+                  SettingsSectionTitle(title: "Dev / Debug"),
+
+                  SettingsListContainer(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(
+                            top: 16, bottom: 16, right: 16),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                "Modo PRO",
+                                style: GoogleFonts.inter(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                  height: 1.5,
+                                  letterSpacing: -0.5,
+                                  color: const Color(0xFF404040),
+                                ),
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () => context
+                                  .read<SubscriptionProvider>()
+                                  .setIsPro(!isPro),
+                              child: PhosphorIcon(
+                                isPro
+                                    ? PhosphorIcons.toggleRight(
+                                        PhosphorIconsStyle.fill)
+                                    : PhosphorIcons.toggleLeft(
+                                        PhosphorIconsStyle.fill),
+                                size: 36,
+                                color: isPro
+                                    ? const Color(0xFFF70F3D)
+                                    : const Color(0xFF949494),
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 32),
-                      ],
-
-                      SettingsSectionTitle(
-                        title: isEnglish
-                            ? "System Settings"
-                            : "Configuración del sistema",
                       ),
-
-                      SettingsListContainer(
-                        children: [
-                          SettingsListItem(
-                            icon: PhosphorIcons.slidersHorizontal,
-                            label: isEnglish ? "Preferences" : "Preferencias",
-                            onTap: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const PreferencesScreen(),
-                              ),
-                            ),
-                          ),
-                          const SettingsDivider(),
-                          SettingsListItem(
-                            icon: PhosphorIcons.creditCard,
-                            label: isEnglish
-                                ? "Payment method"
-                                : "Medio de pago",
-                            description: isEnglish
-                                ? "12 days remaining"
-                                : "12 días restantes",
-                            onTap: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => PaymentScreen(),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 32),
-
-                      SettingsSectionTitle(
-                        title: isEnglish ? "About Us" : "Nosotros",
-                      ),
-
-                      SettingsListContainer(
-                        children: [
-                          SettingsListItem(
-                            icon: PhosphorIcons.userFocus,
-                            label: isEnglish ? "About Us" : "Acerca de Nosotros",
-                            onTap: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => LegalContentScreen(
-                                  contentKey: "about",
-                                  language: isEnglish ? "en" : "es",
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SettingsDivider(),
-                          SettingsListItem(
-                            icon: PhosphorIcons.fileText,
-                            label: isEnglish
-                                ? "Terms & Conditions"
-                                : "Términos y Condiciones",
-                            onTap: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => LegalContentScreen(
-                                  contentKey: "terms",
-                                  language: isEnglish ? "en" : "es",
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 32),
-
-                      SettingsSectionTitle(
-                        title: isEnglish ? "Plan Details" : "Detalle Plan",
-                      ),
-
-                      SettingsListContainer(
-                        children: [
-                          SettingsListItem(
-                            icon: PhosphorIcons.file,
-                            label: isEnglish
-                                ? "Individual Plan"
-                                : "Plan Individual",
-                            onTap: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const PlanDetailScreen(),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 32),
-
-                      // ===== DEBUG =====
-                      SettingsSectionTitle(title: "Dev / Debug"),
-
-                      SettingsListContainer(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(
-                                top: 16, bottom: 16, right: 16),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    "Modo PRO",
-                                    style: GoogleFonts.inter(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w500,
-                                      height: 1.5,
-                                      letterSpacing: -0.5,
-                                      color: const Color(0xFF404040),
-                                    ),
-                                  ),
-                                ),
-                                GestureDetector(
-                                  onTap: () => context
-                                      .read<SubscriptionProvider>()
-                                      .setIsPro(!isPro),
-                                  child: PhosphorIcon(
-                                    isPro
-                                        ? PhosphorIcons.toggleRight(
-                                            PhosphorIconsStyle.fill)
-                                        : PhosphorIcons.toggleLeft(
-                                            PhosphorIconsStyle.fill),
-                                    size: 36,
-                                    color: isPro
-                                        ? const Color(0xFFF70F3D)
-                                        : const Color(0xFF949494),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      // ===== /DEBUG =====
-
-                      const SizedBox(height: 32),
-
-                      SettingsListContainer(
-                        children: [
-                          SettingsListItem(
-                            label: isEnglish
-                                ? "Delete Account"
-                                : "Eliminar App",
-                            showChevron: false,
-                            isError: true,
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 100),
                     ],
                   ),
-                ),
+                  // ===== /DEBUG =====
 
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 24 + bottomPadding,
-                  child: Center(
+                  const SizedBox(height: 32),
+
+                  SettingsListContainer(
+                    children: [
+                      SettingsListItem(
+                        label: isEnglish ? "Delete Account" : "Eliminar App",
+                        showChevron: false,
+                        isError: true,
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  Center(
                     child: Text(
                       "Version 1.0.0",
                       style: GoogleFonts.inter(
@@ -333,8 +324,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     ),
                   ),
-                ),
-              ],
+
+                  SizedBox(height: bottomPadding + 24),
+                ],
+              ),
             ),
           ),
         ],

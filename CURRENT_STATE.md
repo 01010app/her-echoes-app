@@ -11,7 +11,7 @@
 - **Background scaffolds:** SIEMPRE `Color(0xFFF5F5F5)` / `AppColors.background` — NUNCA blanco
 - **Accent:** `#F70F3D` / `Color(0xFFE1002D)`
 - **State management:** Provider
-- **Persistencia:** SharedPreferences (favoritos aún en memoria; onboarding_done ✅ conectado)
+- **Persistencia:** SharedPreferences — onboarding_done ✅, user_name ✅, favorites ✅
 - **NUNCA refactorizar layouts que funcionan**
 - **Spinners:** SIEMPRE `CircularProgressIndicator(color: Color(0xFFE1002D))`
 - **Cursor en TextFields:** SIEMPRE `Color(0xFFF70F3D)`
@@ -51,28 +51,28 @@ lib/widgets/*/         → '../system/app_button.dart'
 ```
 lib/
 ├── core/
-│   ├── favorites_provider.dart
+│   ├── favorites_provider.dart           ✅ sesión 9: persistencia SharedPreferences
 │   ├── language_provider.dart
 │   ├── subscription_provider.dart
 │   └── theme/
 │       └── app_colors.dart
 ├── screens/
 │   ├── card_detail/
-│   │   └── card_detail_screen.dart     ✅ sesión 9: e-card share implementado
+│   │   └── card_detail_screen.dart       ✅ sesión 9: e-card share implementado
 │   ├── favorites/
-│   │   └── favorites_screen.dart
+│   │   └── favorites_screen.dart         ✅ sesión 9: Icons.person → PhosphorIcon
 │   ├── login/
 │   │   ├── login_screen.dart
 │   │   ├── onboarding_screen.dart
 │   │   ├── email_login_screen.dart
 │   │   ├── forgot_password_screen.dart
-│   │   └── onboarding_name_screen.dart   ⚠️ PENDIENTE: migrar ElevatedButton a AppButton
+│   │   └── onboarding_name_screen.dart   ✅ ya usa AppButton y guarda user_name
 │   ├── payment/
 │   │   ├── plan_type.dart
 │   │   ├── payment_screen.dart
 │   │   ├── plan_selection_screen.dart
-│   │   ├── add_card_screen.dart          ⚠️ usa Icons.close (pendiente → PhosphorIcon)
-│   │   ├── payment_method_screen.dart    ✅ sesión 8
+│   │   ├── add_card_screen.dart          ✅ sesión 9: errores tarjeta, Icons.close → PhosphorIcon
+│   │   ├── payment_method_screen.dart    ✅ sesión 9: cancelar baja isPro, import corregido
 │   │   └── plan_detail_screen.dart
 │   ├── home/
 │   │   └── home_screen.dart              ✅ sesión 8
@@ -81,7 +81,7 @@ lib/
 │   ├── show_all/
 │   │   └── show_all_screen.dart          ✅ sesión 8
 │   └── settings/
-│       ├── settings_screen.dart
+│       ├── settings_screen.dart          ✅ sesión 9: sección perfil con nombre y avatar inicial
 │       ├── legal_content_screen.dart
 │       ├── notifications_screen.dart
 │       ├── language_screen.dart
@@ -109,7 +109,7 @@ lib/
 assets/
 ├── data/
 │   ├── her_echoes.json
-│   └── wildcard.json                     ✅ sesión 8
+│   └── wildcard.json
 ├── images/
 │   ├── home/
 │   ├── system/
@@ -132,12 +132,12 @@ assets/
 
 ## Dependencias activas (pubspec.yaml)
 ```yaml
-path_provider: ^2.1.x   ⚠️ DEBE estar en pubspec — usado por card_detail_screen.dart
+path_provider: ^2.1.4    ✅ sesión 9: agregado
 share_plus: ^12.0.0      ✅
 http: ^1.2.1             ✅
-google_fonts: ^6.2.1     ✅  (usa Lora para e-card)
+google_fonts: ^6.2.1     ✅ (usa Lora para e-card)
+shared_preferences: ^2.2.2 ✅
 ```
-> ⚠️ Verificar que `path_provider` esté en pubspec.yaml — no aparecía en la versión subida
 
 ---
 
@@ -151,12 +151,11 @@ google_fonts: ^6.2.1     ✅  (usa Lora para e-card)
 - Cuando está vacío `[]` → no se muestra en ningún lado
 - Las wildcards se marcan internamente con `_is_wildcard: true`
 
-### Panel Admin Web ✅ sesión 9 — EN PRODUCCIÓN
+### Panel Admin Web ✅ EN PRODUCCIÓN
 - URL: `https://callmehector.cl/apps/herechoes/wildcard.php`
 - Password protegido
 - Lee estado actual desde GitHub API
 - Publica/reemplaza `wildcard.json` en GitHub vía API
-- Campos alineados exactamente con `card_detail_screen.dart`
 - Lógica de `wildcard_start` / `wildcard_end` para visibilidad por fechas
 - Propósito: marketing con influencers (visibilidad temporal a cambio de difusión)
 
@@ -177,16 +176,29 @@ google_fonts: ^6.2.1     ✅  (usa Lora para e-card)
 - Gradiente rojo HerEchoes sobre la foto
 - Badge "Especial/Special" si es wildcard
 - Quote en Lora italic, nombre en Lora bold, profesión en Inter
-- Logo/branding HerEchoes en esquina inferior derecha
 - Se captura con `RepaintBoundary` → PNG → `XFile`
-- Comparte vía `Share.shareXFiles()` con texto:
-    - EN: `"Discover her story on HerEchoes 👉 https://callmehector.cl/apps/herechoes/?ref=share"`
-    - ES: `"Descubre su historia en HerEchoes 👉 https://callmehector.cl/apps/herechoes/?ref=share"`
+- Comparte vía `Share.shareXFiles()` con texto deeplink
+- ✅ En dispositivo real: abre sheet nativo (WhatsApp, Instagram, etc.)
+- ⚠️ En Simulator iOS: solo "Guardar como archivo" — comportamiento normal, NO es bug
 
-### Estado actual share
-- ✅ Genera e-card PNG correctamente
-- ✅ En dispositivo real: abre sheet de compartir (WhatsApp, Instagram, etc.)
-- ⚠️ En Simulator iOS: solo ofrece "Guardar como archivo" — comportamiento normal del simulador, NO es un bug
+---
+
+## Estados de error tarjeta ✅ sesión 9
+
+### Tarjetas de prueba en `add_card_screen.dart`
+| Número | Error |
+|---|---|
+| `4000 0000 0000 0002` | Rechazada |
+| `4000 0000 0000 9995` | Sin fondos |
+| Cualquier + fecha `00/00` | Expirada |
+| Cualquier + CVV `000` | CVV inválido |
+| Cualquier otro | ✅ Éxito |
+
+- Banner de error con `PhosphorIcons.warningCircle`
+- Campo con borde rojo animado
+- Error desaparece al escribir
+- Spinner durante procesamiento (2s simulados)
+- Al éxito → `setIsPro(true)` → `PaymentMethodScreen`
 
 ---
 
@@ -200,36 +212,9 @@ main.dart
 │   └── true → LoginScreen
 │       ├── "Continuar como invitado/a" → HomeScreen
 │       └── "Continuar con Email" → EmailLoginScreen
-│           └── Submit → OnboardingNameScreen
+│           └── Submit → OnboardingNameScreen (guarda user_name)
 │               └── Submit → HomeScreen
 ```
-
----
-
-## Estado por Pantalla
-
-### `card_detail_screen.dart` ✅ sesión 9
-- E-card share implementado
-- Botón "Compartir con amigos" / "Share with friends" en la pantalla
-- Botón "Compartir" / "Share" en el bottom bar
-- `_isSharing` flag para evitar doble tap
-- Usa `path_provider` + `share_plus`
-
-### `add_card_screen.dart` ⚠️ sesión 9
-- Funcional
-- Bug menor: usa `Icons.close` en el banner del plan (pendiente → `PhosphorIcon`)
-
-### `main.dart` ✅ sesión 8
-- Descarga `wildcard.json` desde GitHub raw URL con timeout 6s
-
-### `payment_method_screen.dart` ✅ sesión 8
-- Header con botón volver agregado
-
-### `show_all_screen.dart` ✅ sesión 8
-- Wildcards en posición 0, siempre accesibles
-
-### `home_screen.dart` ✅ sesión 8
-- Pasa `wildcards` a `ShowAllScreen`
 
 ---
 
@@ -246,12 +231,12 @@ https://raw.githubusercontent.com/01010app/her-echoes-app/main/assets/data/wildc
 ---
 
 ## Git Tags
-```bash
-git tag v1.0-pre-language
-git tag v1.1-payment-ui
-git tag v1.2-onboarding-wildcard
-git tag v1.3-wildcard-admin      ✅ cerrar sesión 8
-git tag v1.4-share-ecard         # ← agregar al cerrar sesión 9
+```
+v1.0-pre-language       ✅
+v1.1-payment-ui         ✅
+v1.2-onboarding-wildcard ✅
+v1.3-wildcard-admin     ✅
+v1.4-share-favorites    ✅ sesión 9
 ```
 
 ---
@@ -259,33 +244,30 @@ git tag v1.4-share-ecard         # ← agregar al cerrar sesión 9
 ## Pendientes
 
 ### Alta prioridad
-- [ ] Verificar `path_provider` en `pubspec.yaml` — requerido por `card_detail_screen.dart`
-- [ ] `add_card_screen.dart` → reemplazar `Icons.close` por `PhosphorIcon(PhosphorIcons.x(...))`
-- [ ] `onboarding_name_screen.dart` → migrar `ElevatedButton` a `AppButton`
-- [ ] Guardar nombre usuario en SharedPreferences
-- [ ] Persistencia favoritos con SharedPreferences
 - [ ] `legal_content.json`: reemplazar lorem ipsum con contenido real
 - [ ] Conectar `PaymentScreen` / `PaymentMethodScreen` con RevenueCat
+- [ ] Cancelar suscripción → conectar RevenueCat (UI lista, lógica pendiente)
 
 ### Media prioridad
-- [ ] Estados de error en pago: tarjeta rechazada / expirada / sin fondos (`add_card_screen.dart`)
-- [ ] Apple Sign In: configuración Xcode + Apple Developer Console
-- [ ] Google Sign In: Firebase/GoogleSignIn package + config nativa
+- [ ] Apple Sign In: Xcode + Apple Developer Console
+- [ ] Google Sign In: Firebase/GoogleSignIn + config nativa
 - [ ] Backend: verificar si email existe → login vs registro
+- [ ] Flujo Plan Familiar: invitación por email (requiere backend)
 - [ ] Toggle "Recordarme 3 días" → notificaciones locales reales
-- [ ] Detección moneda por locale (actualmente hardcoded CLP)
-- [ ] Cancelar suscripción → conectar RevenueCat
+- [ ] Detección moneda por locale (hardcoded CLP)
 - [ ] `short_bio_es` vacío en varios registros del JSON — completar datos
+- [ ] Avatar Settings → foto real cuando haya auth (Apple/Google devuelven photoURL)
 
 ### Antes de producción
 - [ ] Eliminar sección Dev/Debug de `settings_screen.dart`
 - [ ] Verificar que las 118 imágenes en GitHub cargan correctamente
 - [ ] Cambio de plan: confirmar flujo downgrade
 - [ ] Token GitHub (`herechoes-wildcard`) expira Apr 11 2026 — renovar antes
-- [ ] Subir imagen real de wildcard y probar en simulador
+- [ ] Subir imagen real de wildcard y probar en dispositivo
 
 ---
 
 ## Next Development Focus (sesión 10)
-1. Verificar `path_provider` en pubspec.yaml
-2. Fix `Icons.close` → `PhosphorIcon` en
+1. Notificaciones locales — toggle "Recordarme 3 días"
+2. Conectar RevenueCat (cancelación + activación PRO real)
+3. Apple Sign In / Google Sign In

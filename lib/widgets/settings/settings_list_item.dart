@@ -8,6 +8,7 @@ class SettingsListItem extends StatefulWidget {
   final String? description;
   final bool showChevron;
   final bool isError;
+  final bool hasNotification;
   final VoidCallback? onTap;
 
   const SettingsListItem({
@@ -17,6 +18,7 @@ class SettingsListItem extends StatefulWidget {
     this.description,
     this.showChevron = true,
     this.isError = false,
+    this.hasNotification = false,
     this.onTap,
   });
 
@@ -40,7 +42,7 @@ class _SettingsListItemState extends State<SettingsListItem> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 100),
         color: _pressed
-            ? Colors.black.withOpacity(0.05) // 👈 5% black overlay
+            ? Colors.black.withOpacity(0.05)
             : Colors.transparent,
         constraints: const BoxConstraints(minHeight: 56),
         padding: const EdgeInsets.only(
@@ -91,6 +93,18 @@ class _SettingsListItemState extends State<SettingsListItem> {
                 ),
               ),
               const SizedBox(width: 8),
+            ],
+
+            if (widget.hasNotification) ...[
+              Container(
+                width: 8,
+                height: 8,
+                margin: const EdgeInsets.only(right: 8),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFE1002D),
+                  shape: BoxShape.circle,
+                ),
+              ),
             ],
 
             if (widget.showChevron)
