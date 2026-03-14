@@ -25,8 +25,6 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   String _userName = '';
-  // Términos: true cuando hay nuevos términos sin aceptar
-  // Cambiar a true manualmente cuando publiques nuevos T&C
   static const bool _hasNewTerms = false;
 
   @override
@@ -42,11 +40,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final topPadding = MediaQuery.of(context).padding.top;
+    final topPadding    = MediaQuery.of(context).padding.top;
     final bottomPadding = MediaQuery.of(context).padding.bottom;
-    final isEnglish = context.watch<LanguageProvider>().isEnglish;
-    final isPro = context.watch<SubscriptionProvider>().isPro;
-    final hasCardIssue = isPro && false; // ← conectar con RevenueCat
+    final isEnglish     = context.watch<LanguageProvider>().isEnglish;
+    final isPro         = context.watch<SubscriptionProvider>().isPro;
+    final hasCardIssue  = isPro && false;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -62,18 +60,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 GestureDetector(
                   onTap: () => Navigator.pop(context),
                   child: Container(
-                    width: 44,
-                    height: 44,
+                    width: 44, height: 44,
                     decoration: BoxDecoration(
-                      color: AppColors.background,
-                      shape: BoxShape.circle,
-                    ),
+                        color: AppColors.background, shape: BoxShape.circle),
                     child: Center(
                       child: PhosphorIcon(
-                        PhosphorIcons.arrowLeft(PhosphorIconsStyle.bold),
-                        size: 20,
-                        color: AppColors.accent,
-                      ),
+                          PhosphorIcons.arrowLeft(PhosphorIconsStyle.bold),
+                          size: 20, color: AppColors.accent),
                     ),
                   ),
                 ),
@@ -85,12 +78,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: GoogleFonts.inter(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        height: 1.5,
-                        letterSpacing: -0.5,
-                        color: const Color(0xFF404040),
-                      ),
+                          fontSize: 18, fontWeight: FontWeight.w600,
+                          height: 1.5, letterSpacing: -0.5,
+                          color: const Color(0xFF404040)),
                     ),
                   ),
                 ),
@@ -116,32 +106,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           child: Row(
                             children: [
                               Container(
-                                width: 44,
-                                height: 44,
+                                width: 44, height: 44,
                                 decoration: const BoxDecoration(
-                                  color: Color(0xFFFFE5EA),
-                                  shape: BoxShape.circle,
-                                ),
+                                    color: Color(0xFFFFE5EA),
+                                    shape: BoxShape.circle),
                                 child: Center(
                                   child: Text(
                                     _userName.trim().substring(0, 1).toUpperCase(),
                                     style: GoogleFonts.inter(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.accent,
-                                    ),
+                                        fontSize: 18, fontWeight: FontWeight.w600,
+                                        color: AppColors.accent),
                                   ),
                                 ),
                               ),
                               const SizedBox(width: 14),
-                              Text(
-                                _userName,
-                                style: GoogleFonts.inter(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
-                                  color: const Color(0xFF1A1A1A),
-                                ),
-                              ),
+                              Text(_userName,
+                                  style: GoogleFonts.inter(
+                                      fontSize: 16, fontWeight: FontWeight.w500,
+                                      color: const Color(0xFF1A1A1A))),
                             ],
                           ),
                         ),
@@ -151,9 +133,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ],
 
                   SettingsSectionTitle(
-                    title: isEnglish
-                        ? "System Settings"
-                        : "Configuración del sistema",
+                    title: isEnglish ? "System Settings" : "Configuración del sistema",
                   ),
 
                   SettingsListContainer(
@@ -161,26 +141,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       SettingsListItem(
                         icon: PhosphorIcons.slidersHorizontal,
                         label: isEnglish ? "Preferences" : "Preferencias",
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const PreferencesScreen(),
-                          ),
-                        ),
+                        onTap: () => Navigator.push(context,
+                            MaterialPageRoute(
+                                builder: (_) => const PreferencesScreen())),
                       ),
                       const SettingsDivider(),
                       SettingsListItem(
                         icon: PhosphorIcons.creditCard,
-                        label: isEnglish
-                            ? "Payment method"
-                            : "Medio de pago",
+                        label: isEnglish ? "Payment method" : "Medio de pago",
                         hasNotification: hasCardIssue,
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => PaymentScreen(),
-                          ),
-                        ),
+                        onTap: () => Navigator.push(context,
+                            MaterialPageRoute(
+                                builder: (_) => PaymentScreen())),
                       ),
                     ],
                   ),
@@ -195,18 +167,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     children: [
                       SettingsListItem(
                         icon: PhosphorIcons.userFocus,
-                        label: isEnglish
-                            ? "About Us"
-                            : "Acerca de Nosotros",
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => LegalContentScreen(
-                              contentKey: "about",
-                              language: isEnglish ? "en" : "es",
-                            ),
-                          ),
-                        ),
+                        label: isEnglish ? "About Us" : "Acerca de Nosotros",
+                        onTap: () => Navigator.push(context,
+                            MaterialPageRoute(
+                                builder: (_) => LegalContentScreen(
+                                    contentKey: "about",
+                                    language: isEnglish ? "en" : "es"))),
                       ),
                       const SettingsDivider(),
                       SettingsListItem(
@@ -215,15 +181,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ? "Terms & Conditions"
                             : "Términos y Condiciones",
                         hasNotification: _hasNewTerms,
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => LegalContentScreen(
-                              contentKey: "terms",
-                              language: isEnglish ? "en" : "es",
-                            ),
-                          ),
-                        ),
+                        onTap: () => Navigator.push(context,
+                            MaterialPageRoute(
+                                builder: (_) => LegalContentScreen(
+                                    contentKey: "terms",
+                                    language: isEnglish ? "en" : "es"))),
                       ),
                     ],
                   ),
@@ -238,65 +200,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     children: [
                       SettingsListItem(
                         icon: PhosphorIcons.file,
-                        label: isEnglish
-                            ? "Individual Plan"
-                            : "Plan Individual",
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const PlanDetailScreen(),
-                          ),
-                        ),
+                        label: isEnglish ? "Individual Plan" : "Plan Individual",
+                        onTap: () => Navigator.push(context,
+                            MaterialPageRoute(
+                                builder: (_) => const PlanDetailScreen())),
                       ),
                     ],
                   ),
-
-                  const SizedBox(height: 32),
-
-                  // ===== DEBUG =====
-                  SettingsSectionTitle(title: "Dev / Debug"),
-
-                  SettingsListContainer(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(
-                            left: 16, right: 16, top: 14, bottom: 14),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                "Modo PRO",
-                                style: GoogleFonts.inter(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
-                                  height: 1.5,
-                                  letterSpacing: -0.5,
-                                  color: const Color(0xFF404040),
-                                ),
-                              ),
-                            ),
-                            GestureDetector(
-                              onTap: () => context
-                                  .read<SubscriptionProvider>()
-                                  .setIsPro(!isPro),
-                              child: PhosphorIcon(
-                                isPro
-                                    ? PhosphorIcons.toggleRight(
-                                        PhosphorIconsStyle.fill)
-                                    : PhosphorIcons.toggleLeft(
-                                        PhosphorIconsStyle.fill),
-                                size: 36,
-                                color: isPro
-                                    ? const Color(0xFFF70F3D)
-                                    : const Color(0xFF949494),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  // ===== /DEBUG =====
 
                   const SizedBox(height: 32),
 
@@ -316,12 +226,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     child: Text(
                       "Version 1.0.0",
                       style: GoogleFonts.inter(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w400,
-                        height: 1.5,
-                        letterSpacing: -0.5,
-                        color: const Color(0xFF787575),
-                      ),
+                          fontSize: 11, fontWeight: FontWeight.w400,
+                          height: 1.5, letterSpacing: -0.5,
+                          color: const Color(0xFF787575)),
                     ),
                   ),
 
