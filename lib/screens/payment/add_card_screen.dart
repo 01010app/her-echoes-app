@@ -179,10 +179,14 @@ class _AddCardScreenState extends State<AddCardScreen> {
       context,
       MaterialPageRoute(
         builder: (_) => PaymentMethodScreen(
-          planType:   widget.selectedPlan,
-          cardLast4:  digits.substring(12),
-          cardHolder: _holderController.text.trim(),
-          cardExpiry: _expiryController.text,
+          planType:          widget.selectedPlan,
+          cardLast4:         digits.substring(12),
+          cardHolder:        _holderController.text.trim(),
+          cardExpiry:        _expiryController.text,
+          couponCode:        _appliedCode,
+          couponType:        _couponType,
+          couponValue:       _couponValue,
+          couponTrialMonths: _couponTrialMonths,
         ),
       ),
       (route) => route.isFirst,
