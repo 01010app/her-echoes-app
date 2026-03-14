@@ -1,5 +1,5 @@
 # HerEchoes — Estado Actual del Proyecto
-**Última actualización:** 2026-03-13 (sesión 9 — completa)
+**Última actualización:** 2026-03-14 (sesión 10 — inicio)
 
 ---
 
@@ -26,35 +26,25 @@
 ```dart
 class AppButton extends StatelessWidget {
   final String label;
-  final VoidCallback? onPressed;  // null → gris #949494, siempre hay ripple
-  final bool isOutlined;          // default: false
-  final double? width;            // default: double.infinity
+  final VoidCallback? onPressed;
+  final bool isOutlined;
+  final double? width;
 }
 ```
-
-- Rojo sólido `#E1002D` cuando enabled, gris `#949494` cuando null
+- height: 52, rojo `#E1002D` enabled, gris `#949494` null
 - `isOutlined: true` → borde rojo, fondo transparente
-- elevation: 2 con shadowColor rojo 25% cuando enabled
-- height: 52
-
-**Reglas de import por ubicación:**
-```
-lib/screens/*/         → '../../widgets/system/app_button.dart'
-lib/widgets/modals/    → '../system/app_button.dart'
-lib/widgets/*/         → '../system/app_button.dart'
-```
 
 ---
 
 ## Dependencias activas (pubspec.yaml)
 ```yaml
-path_provider: ^2.1.4              ✅ sesión 9
-share_plus: ^12.0.0                ✅
-http: ^1.2.1                       ✅
-google_fonts: ^6.2.1               ✅ (usa Lora para e-card)
-shared_preferences: ^2.2.2         ✅
-flutter_local_notifications: ^18.0.1  ✅ sesión 9
-timezone: ^0.9.4                   ✅ sesión 9
+path_provider: ^2.1.4
+share_plus: ^12.0.0
+http: ^1.2.1
+google_fonts: ^6.2.1
+shared_preferences: ^2.2.2
+flutter_local_notifications: ^18.0.1
+timezone: ^0.9.4
 ```
 
 ---
@@ -63,206 +53,123 @@ timezone: ^0.9.4                   ✅ sesión 9
 ```
 lib/
 ├── core/
-│   ├── favorites_provider.dart           ✅ sesión 9: persistencia SharedPreferences
+│   ├── favorites_provider.dart           ✅ persistencia SharedPreferences
 │   ├── language_provider.dart
 │   ├── subscription_provider.dart
-│   └── theme/
-│       └── app_colors.dart
+│   └── theme/app_colors.dart
 ├── screens/
-│   ├── card_detail/
-│   │   └── card_detail_screen.dart       ✅ sesión 9: e-card share
-│   ├── favorites/
-│   │   └── favorites_screen.dart         ✅ sesión 9: Icons.person → PhosphorIcon
+│   ├── card_detail/card_detail_screen.dart    ✅ e-card share
+│   ├── favorites/favorites_screen.dart        ✅
 │   ├── login/
 │   │   ├── login_screen.dart
 │   │   ├── onboarding_screen.dart
 │   │   ├── email_login_screen.dart
 │   │   ├── forgot_password_screen.dart
-│   │   └── onboarding_name_screen.dart   ✅ usa AppButton, guarda user_name
+│   │   └── onboarding_name_screen.dart        ✅ guarda user_name
 │   ├── payment/
 │   │   ├── plan_type.dart
 │   │   ├── payment_screen.dart
 │   │   ├── plan_selection_screen.dart
-│   │   ├── add_card_screen.dart          ✅ sesión 9: errores tarjeta, PhosphorIcon
-│   │   ├── payment_method_screen.dart    ✅ sesión 9: cancelar baja isPro
+│   │   ├── add_card_screen.dart               ✅ errores tarjeta ⬅ PRÓXIMO: campo cupón
+│   │   ├── payment_method_screen.dart         ✅ cancelar baja isPro
 │   │   └── plan_detail_screen.dart
-│   ├── home/
-│   │   └── home_screen.dart              ✅ sesión 9: punto rojo Settings dinámico
-│   ├── daily_echo/
-│   │   └── daily_echo_screen.dart
-│   ├── show_all/
-│   │   └── show_all_screen.dart          ✅ sesión 8
+│   ├── home/home_screen.dart                  ✅ punto rojo Settings dinámico
+│   ├── daily_echo/daily_echo_screen.dart
+│   ├── show_all/show_all_screen.dart
 │   └── settings/
-│       ├── settings_screen.dart          ✅ sesión 9: perfil, punto rojo items, versión en scroll
+│       ├── settings_screen.dart               ✅ perfil, punto rojo, versión en scroll
 │       ├── legal_content_screen.dart
-│       ├── notifications_screen.dart     ✅ sesión 9: notificaciones locales 9AM
+│       ├── notifications_screen.dart          ✅ notificaciones locales 9AM
 │       ├── language_screen.dart
 │       └── preferences_screen.dart
 ├── widgets/
-│   ├── cards/
-│   │   ├── home_mini_card.dart
-│   │   ├── pro_badge.dart
-│   │   └── wildcard_badge.dart
-│   ├── modals/
-│   │   ├── upsell_modal_free.dart
-│   │   └── upsell_modal_pro.dart
-│   ├── navigation/
-│   │   └── floating_tab_bar.dart
-│   ├── system/
-│   │   └── app_button.dart
-│   └── settings/
-│       ├── settings_divider.dart
-│       ├── settings_list_container.dart
-│       ├── settings_list_item.dart       ✅ sesión 9: parámetro hasNotification
-│       └── settings_section_title.dart
-└── services/
-    └── daily_suggestions_engine.dart
+│   ├── cards/home_mini_card.dart, pro_badge.dart, wildcard_badge.dart
+│   ├── modals/upsell_modal_free.dart, upsell_modal_pro.dart
+│   ├── navigation/floating_tab_bar.dart
+│   ├── system/app_button.dart
+│   └── settings/settings_divider, container, item ✅ hasNotification, section_title
+└── services/daily_suggestions_engine.dart
 
 assets/
-├── data/
-│   ├── her_echoes.json
-│   └── wildcard.json
-├── images/
-│   ├── home/
-│   ├── system/login/
-│   └── onboarding/
-└── content/
-    └── legal_content.json
+├── data/her_echoes.json, wildcard.json
+├── images/home/, system/, onboarding/, cards/ ✅ imágenes subidas vía git
+└── content/legal_content.json
 ```
 
 ---
 
-## Wildcard — Sistema completo (sesiones 7-8-9)
-
-### Panel Admin Web ✅ EN PRODUCCIÓN
-- URL: `https://callmehector.cl/apps/herechoes/wildcard.php`
-- Token GitHub `herechoes-wildcard` expira **Apr 11 2026** — ⚠️ renovar antes
-
-### Badge `WildcardBadge`
-- Fondo: `Color(0xFF28A52A).withOpacity(0.85)`
-- Ícono: `PhosphorIcons.shootingStar(PhosphorIconsStyle.fill)`, size 12, blanco
-- Texto: "Especial" (ES) / "Special" (EN)
-- Se muestra siempre, FREE y PRO
+## Wildcard
+- Panel admin: `https://callmehector.cl/apps/herechoes/wildcard.php`
+- ⚠️ Token GitHub `herechoes-wildcard` expira **Apr 11 2026**
+- Tutorial dev: `herechoes-tutorial.html` — 7 secciones draggables ✅
 
 ---
 
-## E-Card / Share ✅ sesión 9
-- Widget `_ShareECard` en `card_detail_screen.dart`
-- Imagen 1080×1080px, captura con `RepaintBoundary` → PNG → `XFile`
-- ✅ Dispositivo real: sheet nativo (WhatsApp, Instagram, etc.)
-- ⚠️ Simulator: solo "Guardar como archivo" — normal, NO es bug
+## E-Card / Share ✅
+- `_ShareECard` 1080×1080px en `card_detail_screen.dart`
+- ✅ Dispositivo real: sheet nativo — ⚠️ Simulator: solo "Guardar"
 
 ---
 
-## Estados de error tarjeta ✅ sesión 9
+## Estados error tarjeta ✅
 | Número | Error |
 |---|---|
 | `4000 0000 0000 0002` | Rechazada |
 | `4000 0000 0000 9995` | Sin fondos |
-| Cualquier + fecha `00/00` | Expirada |
+| Cualquier + `00/00` | Expirada |
 | Cualquier + CVV `000` | CVV inválido |
-| Cualquier otro | ✅ Éxito |
 
 ---
 
-## Notificaciones locales ✅ sesión 9
-- Paquete: `flutter_local_notifications: ^18.0.1` + `timezone: ^0.9.4`
-- `AppDelegate.swift` actualizado con `FlutterLocalNotificationsPlugin`
-- Toggle en Settings → Preferences → Notificaciones
-- Notificación diaria a las **9:00 AM** (hora local)
-- Persiste estado en SharedPreferences key `notifications_enabled`
-- ✅ Pide permiso al activar
-- ⚠️ En Simulator no llegan — en dispositivo real sí
+## Notificaciones locales ✅
+- Diaria 9:00 AM — key `notifications_enabled`
+- `AppDelegate.swift` actualizado
+- ⚠️ Solo funciona en dispositivo real
 
 ---
 
-## Sistema de Notificación en ícono Settings ✅ sesión 9
-
-### Claves SharedPreferences que activan el punto rojo:
+## Sistema punto rojo Settings ✅
 ```dart
-'settings_has_card_issue'  // true → punto rojo en "Medio de pago"
-'settings_has_new_terms'   // true → punto rojo en "Términos y Condiciones"
-```
-
-### Para activar desde código:
-```dart
-final prefs = await SharedPreferences.getInstance();
+// Activar:
 await prefs.setBool('settings_has_card_issue', true);
-```
-
-### Para nuevos T&C (sin backend):
-En `settings_screen.dart` cambiar:
-```dart
-static const bool _hasNewTerms = false; // → true para activar
-```
-
-### Comportamiento:
-- `home_screen.dart` chequea las claves al iniciar y al volver de Settings
-- El punto rojo en el ícono de tuerca desaparece automáticamente al salir de Settings
-
----
-
-## Flujo de Navegación
-```
-main.dart
-├── Descarga wildcard.json desde GitHub → fallback asset local
-├── FutureBuilder → onboarding_done
-│   ├── false → OnboardingScreen → LoginScreen
-│   └── true → LoginScreen
-│       ├── "Invitado/a" → HomeScreen
-│       └── "Email" → EmailLoginScreen → OnboardingNameScreen → HomeScreen
-```
-
----
-
-## URLs
-```
-Imágenes: https://raw.githubusercontent.com/01010app/her-echoes-app/main/images/cards/${rawId}.webp
-Wildcard JSON: https://raw.githubusercontent.com/01010app/her-echoes-app/main/assets/data/wildcard.json
-Panel admin: https://callmehector.cl/apps/herechoes/wildcard.php
-Tutorial dev: herechoes-tutorial.html (en servidor junto a wildcard.php)
+await prefs.setBool('settings_has_new_terms', true);
+// Nuevos T&C sin backend:
+static const bool _hasNewTerms = false; // → true en settings_screen.dart
 ```
 
 ---
 
 ## Git Tags
 ```
-v1.0-pre-language        ✅
-v1.1-payment-ui          ✅
-v1.2-onboarding-wildcard ✅
-v1.3-wildcard-admin      ✅
-v1.4-share-favorites     ✅
-v1.5-notifications       ✅ sesión 9
+v1.0 → v1.5-notifications ✅
 ```
 
 ---
 
 ## Pendientes
 
-### Alta prioridad
-- [ ] `legal_content.json`: reemplazar lorem ipsum con contenido real
-- [ ] Conectar `PaymentScreen` / `PaymentMethodScreen` con RevenueCat
-- [ ] Cancelar suscripción → conectar RevenueCat (UI lista)
-- [ ] ⚠️ Token GitHub expira **Apr 11 2026** — renovar
+### Alta prioridad — PRÓXIMA SESIÓN
+- [ ] Campo cupón de descuento en `add_card_screen.dart`
+- [ ] JSON de cupones con código, % descuento, validez
+- [ ] ⚠️ Token GitHub expira **Apr 11 2026**
+- [ ] RevenueCat — integración real suscripciones
+- [ ] `legal_content.json`: reemplazar lorem ipsum
 
 ### Media prioridad
 - [ ] Apple Sign In: Xcode + Apple Developer Console
 - [ ] Google Sign In: Firebase + config nativa
-- [ ] Backend: verificar si email existe → login vs registro
-- [ ] Flujo Plan Familiar: invitación por email (requiere backend)
+- [ ] Flujo Plan Familiar: invitación por email
 - [ ] Detección moneda por locale (hardcoded CLP)
-- [ ] Avatar Settings → foto real con auth (Apple/Google devuelven photoURL)
-- [ ] `short_bio_es` vacío en varios registros JSON — completar
+- [ ] Avatar Settings → foto real con auth
 
 ### Antes de producción
 - [ ] Eliminar sección Dev/Debug de `settings_screen.dart`
-- [ ] Verificar 118 imágenes en GitHub cargan correctamente
-- [ ] Cambio de plan: flujo downgrade
-- [ ] Subir imagen real de wildcard y probar en dispositivo
+- [ ] Verificar 118 imágenes en GitHub
+- [ ] Flujo downgrade de plan
 
 ---
 
 ## Next Development Focus (sesión 10)
-1. RevenueCat — integración real de suscripciones
-2. Apple Sign In / Google Sign In
-3. Detección moneda por locale
+1. Campo código de promoción en `add_card_screen.dart`
+2. JSON de cupones + lógica de validación
+3. Conexión con RevenueCat
