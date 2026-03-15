@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/language_provider.dart';
 import '../../core/subscription_provider.dart';
+import '../../core/currency_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../widgets/system/app_button.dart';
 import 'plan_type.dart';
@@ -127,28 +128,29 @@ class PaymentMethodBody extends StatelessWidget {
       ? (isEnglish ? "Individual Plan" : "Plan Individual")
       : (isEnglish ? "Family Plan" : "Plan Familiar");
 
-  int get _basePrice =>
-      planType == PlanType.individual ? 9900 : 16500;
+  int _basePrice(BuildContext context) {
+    final pricing = context.read<CurrencyProvider>().pricing;
+    return planType == PlanType.individual
+        ? pricing.individualAnnual
+        : pricing.familyAnnual;
+  }
 
-  int get _discountedPrice {
-    if (couponCode == null || couponValue == null) return _basePrice;
+  int _discountedPrice(BuildContext context) {
+    final base = _basePrice(context);
+    if (couponCode == null || couponValue == null) return base;
     if (couponType == 'percent') {
-      return (_basePrice * (100 - couponValue!) / 100).round();
+      return (base * (100 - couponValue!) / 100).round();
     }
-    return (_basePrice - couponValue!).clamp(0, _basePrice);
+    return (base - couponValue!).clamp(0, base);
   }
 
-  String _formatCLP(int amount) {
-    final s = amount.toString();
-    final result = StringBuffer();
-    for (int i = 0; i < s.length; i++) {
-      if (i > 0 && (s.length - i) % 3 == 0) result.write('.');
-      result.write(s[i]);
-    }
-    return 'CLP ${result.toString()}';
+  String _formatAmount(BuildContext context, int amount) {
+    final pricing = context.read<CurrencyProvider>().pricing;
+    return pricing.format(amount);
   }
 
-  String get _planPrice => _formatCLP(_basePrice);
+  String _planPrice(BuildContext context) =>
+      _formatAmount(context, _basePrice(context));
 
   @override
   Widget build(BuildContext context) {
@@ -168,8 +170,7 @@ class PaymentMethodBody extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: const Color(0xFFE9E9E9),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                      color: const Color(0xFFDFDFDF), width: 1),
+                  border: Border.all(color: const Color(0xFFDFDFDF), width: 1),
                 ),
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -191,7 +192,7 @@ class PaymentMethodBody extends StatelessWidget {
                                 fontSize: 16, fontWeight: FontWeight.w500,
                                 height: 1.0, letterSpacing: -0.2,
                                 color: const Color(0xFF404040))),
-                        Text(_planPrice,
+                        Text(_planPrice(context),
                             style: GoogleFonts.inter(
                                 fontSize: 13, fontWeight: FontWeight.w600,
                                 color: const Color(0xFF222222))),
@@ -220,14 +221,11 @@ class PaymentMethodBody extends StatelessWidget {
                             MaterialPageRoute(
                                 builder: (_) => const PlanSelectionScreen())),
                         borderRadius: BorderRadius.circular(12),
-                        splashColor:
-                            const Color(0xFFE1002D).withOpacity(0.12),
-                        highlightColor:
-                            const Color(0xFFE1002D).withOpacity(0.06),
+                        splashColor: const Color(0xFFE1002D).withOpacity(0.12),
+                        highlightColor: const Color(0xFFE1002D).withOpacity(0.06),
                         child: Container(
                           decoration: BoxDecoration(
-                            border: Border.all(
-                                color: const Color(0xFFE1002D)),
+                            border: Border.all(color: const Color(0xFFE1002D)),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           padding: const EdgeInsets.symmetric(
@@ -273,15 +271,14 @@ class PaymentMethodBody extends StatelessWidget {
                                   ? 'Coupon $couponCode applied'
                                   : 'Cupón $couponCode aplicado',
                               style: GoogleFonts.inter(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13, fontWeight: FontWeight.w600,
                                   color: const Color(0xFF1A6B3C)),
                             ),
                             const SizedBox(height: 3),
                             Text(
                               isEnglish
-                                  ? 'You pay ${_formatCLP(_discountedPrice)} for the first $couponTrialMonths month${couponTrialMonths > 1 ? "s" : ""}. From month ${couponTrialMonths + 1}, regular price ${_formatCLP(_basePrice)}/mo applies.'
-                                  : 'Pagas ${_formatCLP(_discountedPrice)} por ${couponTrialMonths == 1 ? "el primer mes" : "los primeros $couponTrialMonths meses"}. Desde el mes ${couponTrialMonths + 1} se cobra el precio normal de ${_formatCLP(_basePrice)}/mes.',
+                                  ? 'You pay ${_formatAmount(context, _discountedPrice(context))} for the first $couponTrialMonths month${couponTrialMonths > 1 ? "s" : ""}. From month ${couponTrialMonths + 1}, regular price ${_planPrice(context)}/mo applies.'
+                                  : 'Pagas ${_formatAmount(context, _discountedPrice(context))} por ${couponTrialMonths == 1 ? "el primer mes" : "los primeros $couponTrialMonths meses"}. Desde el mes ${couponTrialMonths + 1} se cobra el precio normal de ${_planPrice(context)}/mes.',
                               style: GoogleFonts.inter(
                                   fontSize: 11,
                                   color: const Color(0xFF1A6B3C),
@@ -341,8 +338,7 @@ class PaymentMethodBody extends StatelessWidget {
                               style: GoogleFonts.inter(
                                   fontSize: 15, fontWeight: FontWeight.w500,
                                   color: const Color(0xFF1A1A1A))),
-                          Text(
-                              "${isEnglish ? "Expires" : "Vence"} $cardExpiry",
+                          Text("${isEnglish ? "Expires" : "Vence"} $cardExpiry",
                               style: GoogleFonts.inter(
                                   fontSize: 12,
                                   color: const Color(0xFF888888))),
@@ -373,9 +369,7 @@ class PaymentMethodBody extends StatelessWidget {
           bottom: bottomPadding + 40,
           left: 24, right: 24,
           child: AppButton(
-            label: isEnglish
-                ? "Cancel subscription"
-                : "Cancelar suscripción",
+            label: isEnglish ? "Cancel subscription" : "Cancelar suscripción",
             onPressed: () => _showCancelDialog(context),
             isOutlined: true,
           ),
@@ -388,8 +382,7 @@ class PaymentMethodBody extends StatelessWidget {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         backgroundColor: Colors.white,
         contentPadding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
         content: Column(
@@ -407,9 +400,7 @@ class PaymentMethodBody extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              isEnglish
-                  ? "Cancel subscription?"
-                  : "¿Cancelar suscripción?",
+              isEnglish ? "Cancel subscription?" : "¿Cancelar suscripción?",
               textAlign: TextAlign.center,
               style: GoogleFonts.inter(
                   fontSize: 20, fontWeight: FontWeight.w600,
@@ -426,9 +417,7 @@ class PaymentMethodBody extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             AppButton(
-              label: isEnglish
-                  ? "Keep subscription"
-                  : "Mantener suscripción",
+              label: isEnglish ? "Keep subscription" : "Mantener suscripción",
               onPressed: () => Navigator.pop(context),
             ),
             const SizedBox(height: 12),

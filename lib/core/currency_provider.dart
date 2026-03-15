@@ -112,9 +112,9 @@ class AppPricing {
     'ARS': AppPricing(
       currencyCode: 'ARS',
       symbol: 'ARS',
-      individualAnnual: 9900,
-      individualTrial:  16800,
-      familyAnnual:     16500,
+      individualAnnual: 8990,
+      individualTrial:  14990,
+      familyAnnual:     13990,
     ),
   };
 
