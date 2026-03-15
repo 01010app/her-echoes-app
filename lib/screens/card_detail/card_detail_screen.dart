@@ -8,6 +8,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/language_provider.dart';
 import '../../core/subscription_provider.dart';
 import '../../core/favorites_provider.dart';
@@ -739,9 +740,22 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                               subtitle: isEnglish
                                   ? "Incorrect info, copyright, deceased?"
                                   : "¿Info incorrecta, copyright, fallecida?",
-                              onTap: () { _closeMenu(); },
-                            ),
-                          ],
+                              onTap: () async {
+                                  _closeMenu();
+                                  final name = (widget.woman['full_name'] ?? '').toString();
+                                  final id   = (widget.woman['woman_id'] ?? '').toString();
+                                  final subject = Uri.encodeComponent(
+                                      isEnglish ? 'Report issue: $name' : 'Reportar problema: $name');
+                                  final body = Uri.encodeComponent(
+                                      isEnglish
+                                          ? 'Woman ID: $id\n\nDescribe the issue:\n'
+                                          : 'ID: $id\n\nDescribe el problema:\n');
+                                  final uri = Uri.parse(
+                                      'mailto:herechoes.info@callmehector.cl?subject=$subject&body=$body');
+                                  if (await canLaunchUrl(uri)) await launchUrl(uri);
+                                },
+                              ),
+                            ],
                         ),
                       ),
                     ),
