@@ -1,0 +1,37 @@
+{
+  "project_info": {
+    "project_number": "769185908716",
+    "project_id": "herechoes-dca3d",
+    "storage_bucket": "herechoes-dca3d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:769185908716:android:e8771f628605d9508ba2c9",
+        "android_client_info": {
+          "package_name": "cl.callmehector.herechoes"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDQtxWovZkgx0C0_yKUH5qdMkt-r1_tndo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "769185908716-fg9b44votu6v93t8kh2m908hs71r3t9e.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "cl.callmehector.herechoes"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
