@@ -1,5 +1,5 @@
 # HerEchoes — Estado Actual del Proyecto
-**Última actualización:** 2026-03-16 (sesión 13)
+**Última actualización:** 2026-03-17 (sesión 13)
 
 ---
 
@@ -23,9 +23,9 @@
 
 ## Bundle ID ✅ sesión 13
 `cl.callmehector.herechoes`
-- Registrado en Apple Developer (Certificates, Identifiers & Profiles)
+- Registrado en Apple Developer
 - Configurado en Xcode → Runner → Signing & Capabilities
-- Team: Héctor Astete
+- Team: Héctor Astete (7H4G6LP6K5)
 
 ---
 
@@ -39,7 +39,10 @@ shared_preferences: ^2.2.2
 flutter_local_notifications: ^18.0.1
 timezone: ^0.9.4
 url_launcher: ^6.3.1
-purchases_flutter: ^9.14.0        ✅ sesión 13
+purchases_flutter: ^9.14.0       ✅ sesión 13
+sign_in_with_apple: ^7.0.1       ✅ sesión 13
+firebase_core: ^4.5.0            ✅ sesión 13
+google_sign_in: ^6.2.1           ✅ sesión 13
 ```
 
 ---
@@ -57,7 +60,7 @@ lib/
 │   ├── card_detail/card_detail_screen.dart
 │   ├── favorites/favorites_screen.dart
 │   ├── login/
-│   │   ├── login_screen.dart
+│   │   ├── login_screen.dart          ✅ sesión 13: Apple + Google Sign In
 │   │   ├── onboarding_screen.dart
 │   │   ├── email_login_screen.dart
 │   │   ├── forgot_password_screen.dart
@@ -86,11 +89,16 @@ lib/
 │   └── settings/settings_divider, container, item, section_title
 └── services/daily_suggestions_engine.dart
 
+ios/
+├── Runner/
+│   ├── GoogleService-Info.plist       ✅ sesión 13: Firebase config
+│   └── Info.plist                     ✅ sesión 13: CFBundleURLTypes Google
+
 assets/
 ├── data/her_echoes.json
 ├── data/wildcard.json
 ├── images/home/, system/, onboarding/
-├── images/cards/                       ⚠️ 22.7MB local — pendiente resolver
+├── images/cards/                      ✅ 244 imágenes en GitHub
 └── content/legal_content.json
 ```
 
@@ -112,38 +120,60 @@ assets/
 | Trial Mensual | `cl.callmehector.herechoes.trial` | $17.990 | No |
 
 ### Packages RevenueCat (offering: default)
-| Identifier | Producto conectado |
+| Identifier | Producto |
 |---|---|
 | `individual` | Individual Mensual |
 | `familiar` | Familiar Mensual |
 | `trial` | Trial Mensual |
 
-### Cómo funciona la compra
-1. `plan_selection_screen.dart` llama `Purchases.getOfferings()`
-2. Selecciona el package según plan elegido (`individual`, `trial`, `familiar`)
-3. Llama `subscriptionProvider.purchasePackage(package)`
-4. RevenueCat → Apple sheet nativo → confirma compra
-5. `subscription_provider.dart` verifica entitlement `pro` y actualiza `isPro`
-6. Navega de vuelta al inicio si éxito
-
 ### In-App Purchase Key
 - Key ID: `ZL6S5CVZY3`
 - Issuer ID: `0736adc9-024c-4b51-8881-73c9815df30f`
-- Archivo .p8: descargado y subido a RevenueCat ✅
+
+---
+
+## Firebase ✅ sesión 13
+- Proyecto: `herechoes-dca3d`
+- Bundle ID: `cl.callmehector.herechoes`
+- GoogleService-Info.plist en Xcode ✅
+- CFBundleURLTypes con REVERSED_CLIENT_ID en Info.plist ✅
+- iOS deployment target: 15.0 (actualizado en Podfile)
+
+---
+
+## Google Sign In ✅ sesión 13
+- Paquete: `google_sign_in: ^6.2.1`
+- Client ID iOS: `769185908716-fg9b44votu6v93t8kh2m908hs71r3t9e.apps.googleusercontent.com`
+- REVERSED_CLIENT_ID: `com.googleusercontent.apps.769185908716-fg9b44votu6v93t8kh2m908hs71r3t9e`
+- Flujo probado en simulador ✅
+- Por ahora va directo al Home — sin backend real aún
+- ⚠️ Cliente OAuth Android pendiente (requiere SHA-1 del keystore)
+
+---
+
+## Apple Sign In ✅ sesión 13
+- Paquete: `sign_in_with_apple: ^7.0.1`
+- Capability agregada en Xcode ✅
+- Probado en simulador (muestra "Inicia sesión en Configuración") ✅
+- En dispositivo real muestra sheet nativo Apple
 
 ---
 
 ## App Store Connect ✅ sesión 13
-- App creada: **HerEchoes**
+- App creada: HerEchoes
 - Bundle ID: `cl.callmehector.herechoes`
-- Grupo suscripciones: **HerEchoes Pro**
-- 3 suscripciones configuradas con idioma ES y precios CLP base
+- Grupo suscripciones: HerEchoes Pro
+- 3 suscripciones configuradas
+
+---
+
+## AppIcon ✅ sesión 13
+- Todos los tamaños configurados en Xcode
+- `assets/images/system/app_icon.png` agregado
 
 ---
 
 ## Sistema de Moneda ✅
-
-### Monedas soportadas
 | Código | Individual | Trial | Familiar |
 |---|---|---|---|
 | CLP | 9.900 | 16.800 | 16.500 |
@@ -152,78 +182,24 @@ assets/
 | MXN | 199 | 349 | 329 |
 | ARS | 8.990 | 14.990 | 13.990 |
 
-⚠️ Los precios reales en App Store Connect son $9.990 CLP / $17.990 CLP (tiers de Apple). Los precios en CurrencyProvider son referenciales para mostrar en UI antes de que RevenueCat retorne el precio real.
+⚠️ Precios reales App Store: $9.990 / $17.990 CLP
 
 ---
 
 ## Sistema de Cupones ✅
-- `coupons.json` — `https://callmehector.cl/apps/herechoes/coupons.json`
-- `coupons.php` — `https://callmehector.cl/apps/herechoes/coupons.php`
+- `https://callmehector.cl/apps/herechoes/coupons.php`
 
-| Código | Tipo | Valor | Meses | Max usos |
-|---|---|---|---|---|
-| INFLUENCER2026 | percent | 30% | 1 | 100 |
-| REGALO100 | percent | 100% | 1 | 1 |
-| DESCUENTO3000 | fixed | CLP 3.000 | 3 | ilimitado |
-
----
-
-## Nota sobre woman_id duplicados
-`wangari_maathai_01` aparece en dos fechas distintas (nacimiento y Nobel).
-- Funciona correctamente
-- En favoritos: al guardar una, ambas aparecen como favoritas — comportamiento aceptado
+| Código | Tipo | Valor | Meses |
+|---|---|---|---|
+| INFLUENCER2026 | percent | 30% | 1 |
+| REGALO100 | percent | 100% | 1 |
+| DESCUENTO3000 | fixed | CLP 3.000 | 3 |
 
 ---
 
 ## Wildcard
 - Panel admin: `https://callmehector.cl/apps/herechoes/wildcard.php`
-- ⚠️ Token GitHub `herechoes-wildcard` expira **Apr 11 2026** — renovar antes
-
----
-
-## E-Card / Share ✅
-- `_ShareECard` 1080×1080px en `card_detail_screen.dart`
-- ✅ Dispositivo real: sheet nativo — ⚠️ Simulator: solo "Guardar"
-
----
-
-## Notificaciones locales ✅
-- Diaria 9:00 AM — key `notifications_enabled`
-- `AppDelegate.swift` actualizado
-- ⚠️ Solo funciona en dispositivo real
-
----
-
-## Eliminar cuenta ✅
-- Dialog confirmación en Settings
-- Limpia todo SharedPreferences con `prefs.clear()`
-- Vuelve al inicio (onboarding)
-
----
-
-## Reportar problema ✅
-- Botón en menú de `card_detail_screen.dart`
-- Email: `herechoes.info@callmehector.cl`
-- ⚠️ En Simulator no abre nada — en dispositivo real abre Mail/Gmail
-
----
-
-## Sistema punto rojo Settings ✅
-```dart
-await prefs.setBool('settings_has_card_issue', true);
-await prefs.setBool('settings_has_new_terms', true);
-static const bool _hasNewTerms = false; // → true en settings_screen.dart
-```
-
----
-
-## Estados error tarjeta (simulados, AddCardScreen)
-| Número | Error |
-|---|---|
-| `4000 0000 0000 0002` | Rechazada |
-| `4000 0000 0000 9995` | Sin fondos |
-| Cualquier + `00/00` | Expirada |
-| Cualquier + CVV `000` | CVV inválido |
+- ⚠️ Token GitHub `herechoes-wildcard` expira **Apr 11 2026** — renovar
 
 ---
 
@@ -249,7 +225,9 @@ v1.6-coupons             ✅
 v1.7-coupon-reminder     ✅
 v1.8-currency            ✅
 v1.9-cleanup             ✅
-v2.0-revenuecat          ⬜ pendiente hacer después de esta sesión
+v2.0-revenuecat          ✅ sesión 13
+v2.1-apple-signin        ✅ sesión 13
+v2.2-google-signin       ✅ sesión 13
 ```
 
 ---
@@ -258,29 +236,33 @@ v2.0-revenuecat          ⬜ pendiente hacer después de esta sesión
 
 ### Alta prioridad
 - [ ] ⚠️ Token GitHub expira **Apr 11 2026** — renovar
-- [ ] Apple Sign In (cuenta Apple Developer activa ✅)
-- [ ] Probar compra real con Sandbox en dispositivo físico
+- [ ] Cliente OAuth Android (SHA-1 keystore pendiente)
+- [ ] Probar compra real Sandbox en dispositivo físico
 - [ ] Cancelar suscripción → conectar RevenueCat (UI lista)
+- [ ] Android: Google Play Console + RevenueCat Android
 
 ### Media prioridad
-- [ ] Google Sign In: Firebase + config nativa
 - [ ] Backend: verificar si email existe → login vs registro
 - [ ] Flujo Plan Familiar: invitación por email
 - [ ] Avatar Settings → foto real con auth
 - [ ] `short_bio_es` vacío en varios registros JSON
-- [ ] Resolver imágenes locales (22.7MB) — evaluar si eliminar carpeta local y usar solo GitHub
+- [ ] Google Sign In — guardar usuario en backend real
 
-### Antes de producción
-- [ ] Subir binario a App Store Connect (primer build)
-- [ ] AppIcon configurado
+### Antes de producción iOS
+- [ ] Subir primer binario a App Store Connect (TestFlight)
 - [ ] Privacy Nutrition Labels en App Store Connect
-- [ ] Verificar imágenes GitHub cargan en dispositivo real
+- [ ] Verificar imágenes GitHub en dispositivo real
 - [ ] Flujo downgrade de plan
-- [ ] Bundle ID en Xcode ✅ ya configurado
+
+### Antes de producción Android
+- [ ] Crear app en Google Play Console
+- [ ] Configurar RevenueCat Android
+- [ ] Keystore de producción Android
+- [ ] `google-services.json` para Android
 
 ---
 
 ## Next Development Focus (sesión 14)
-1. Apple Sign In
+1. Cliente OAuth Android + SHA-1
 2. Probar compra Sandbox en dispositivo real
-3. Evaluar y resolver carpeta images/cards local (22.7MB)
+3. Subir primer build a TestFlight
