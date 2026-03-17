@@ -6,6 +6,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:purchases_flutter/purchases_flutter.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 import 'core/language_provider.dart';
 import 'core/subscription_provider.dart';
@@ -15,11 +16,11 @@ import 'screens/login/login_screen.dart';
 import 'screens/login/onboarding_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'services/daily_suggestions_engine.dart';
-
 import 'core/currency_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
   await _initRevenueCat();
   runApp(
     MultiProvider(
@@ -83,7 +84,8 @@ class _MyAppState extends State<MyApp> {
     }
 
     try {
-      final res = await http.get(Uri.parse(_wildcardUrl))
+      final res = await http
+          .get(Uri.parse(_wildcardUrl))
           .timeout(const Duration(seconds: 6));
       if (res.statusCode == 200) {
         final wcDecoded = json.decode(res.body);

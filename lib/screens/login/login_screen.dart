@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'dart:io' show Platform;
 import '../home/home_screen.dart';
 import 'email_login_screen.dart';
@@ -28,6 +29,8 @@ class _LoginScreenState extends State<LoginScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _patternController;
   late bool _isSpanish;
+
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
 
   @override
   void initState() {
@@ -76,18 +79,26 @@ class _LoginScreenState extends State<LoginScreen>
 
   Future<void> _signInWithApple() async {
     try {
-      final credential = await SignInWithApple.getAppleIDCredential(
+      await SignInWithApple.getAppleIDCredential(
         scopes: [
           AppleIDAuthorizationScopes.email,
           AppleIDAuthorizationScopes.fullName,
         ],
       );
-      // Credencial obtenida — por ahora simplemente va al Home
-      // Cuando haya backend real, aquí se envía el token
       if (mounted) _goHome();
     } catch (e) {
-      // Usuario canceló o error — no hacer nada
       print('Apple Sign In cancelado: $e');
+    }
+  }
+
+  Future<void> _signInWithGoogle() async {
+    try {
+      final account = await _googleSignIn.signIn();
+      if (account != null && mounted) {
+        _goHome();
+      }
+    } catch (e) {
+      print('Google Sign In error: $e');
     }
   }
 
@@ -167,7 +178,7 @@ class _LoginScreenState extends State<LoginScreen>
                   label: _isSpanish
                       ? 'Continuar con Google'
                       : 'Continue with Google',
-                  onTap: () {},
+                  onTap: _signInWithGoogle,
                 ),
                 const SizedBox(height: 8),
                 _LoginButton(
@@ -190,44 +201,30 @@ class _LoginScreenState extends State<LoginScreen>
                     ),
                     children: _isSpanish
                         ? const [
-                            TextSpan(
-                                text:
-                                    'Al continuar estarás aceptando los '),
+                            TextSpan(text: 'Al continuar estarás aceptando los '),
                             TextSpan(
                               text: 'Términos y condiciones,',
-                              style: TextStyle(
-                                  decoration: TextDecoration.underline),
+                              style: TextStyle(decoration: TextDecoration.underline),
                             ),
-                            TextSpan(
-                                text: ' y confirmas que leíste la '),
+                            TextSpan(text: ' y confirmas que leíste la '),
                             TextSpan(
                               text: 'Política de privacidad,',
-                              style: TextStyle(
-                                  decoration: TextDecoration.underline),
+                              style: TextStyle(decoration: TextDecoration.underline),
                             ),
-                            TextSpan(
-                                text:
-                                    ' donde se explican las ofertas y promociones.'),
+                            TextSpan(text: ' donde se explican las ofertas y promociones.'),
                           ]
                         : const [
-                            TextSpan(
-                                text: 'By continuing you agree to our '),
+                            TextSpan(text: 'By continuing you agree to our '),
                             TextSpan(
                               text: 'Terms and Conditions,',
-                              style: TextStyle(
-                                  decoration: TextDecoration.underline),
+                              style: TextStyle(decoration: TextDecoration.underline),
                             ),
-                            TextSpan(
-                                text:
-                                    ' and confirm you have read our '),
+                            TextSpan(text: ' and confirm you have read our '),
                             TextSpan(
                               text: 'Privacy Policy,',
-                              style: TextStyle(
-                                  decoration: TextDecoration.underline),
+                              style: TextStyle(decoration: TextDecoration.underline),
                             ),
-                            TextSpan(
-                                text:
-                                    ' which explains our offers and promotions.'),
+                            TextSpan(text: ' which explains our offers and promotions.'),
                           ],
                   ),
                 ),
