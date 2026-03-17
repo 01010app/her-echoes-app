@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
 
 import '../../core/language_provider.dart';
 import '../../core/currency_provider.dart';
+import '../../core/subscription_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../widgets/system/app_button.dart';
 import 'plan_type.dart';
-import 'add_card_screen.dart';
 
 export 'plan_type.dart';
 
@@ -22,6 +23,47 @@ class PlanSelectionScreen extends StatefulWidget {
 class _PlanSelectionScreenState extends State<PlanSelectionScreen> {
   PlanType _selected = PlanType.individual;
   bool _freeTrial = true;
+  bool _loading = false;
+
+  Future<void> _handlePurchase() async {
+    setState(() => _loading = true);
+    try {
+      final offerings = await Purchases.getOfferings();
+      final current = offerings.current;
+      if (current == null) throw Exception('No offerings');
+
+      Package? package;
+      if (_selected == PlanType.individual && _freeTrial) {
+        package = current.availablePackages
+            .firstWhere((p) => p.identifier == 'trial',
+                orElse: () => current.availablePackages.first);
+      } else if (_selected == PlanType.individual) {
+        package = current.availablePackages
+            .firstWhere((p) => p.identifier == 'individual',
+                orElse: () => current.availablePackages.first);
+      } else {
+        package = current.availablePackages
+            .firstWhere((p) => p.identifier == 'familiar',
+                orElse: () => current.availablePackages.first);
+      }
+
+      final subProvider =
+          Provider.of<SubscriptionProvider>(context, listen: false);
+      final success = await subProvider.purchasePackage(package);
+
+      if (success && mounted) {
+        Navigator.popUntil(context, (route) => route.isFirst);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString())),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -88,7 +130,7 @@ class _PlanSelectionScreenState extends State<PlanSelectionScreen> {
                         selected: _selected == PlanType.individual,
                         title: isEnglish ? "Individual Plan" : "Plan Individual",
                         price: individualPrice,
-                        periodicity: isEnglish ? "Annual" : "Anual",
+                        periodicity: isEnglish ? "Monthly" : "Mensual",
                         trailLabel: isEnglish
                             ? "With 7-day free trial"
                             : "Con prueba gratuita de 7 días",
@@ -104,7 +146,7 @@ class _PlanSelectionScreenState extends State<PlanSelectionScreen> {
                         selected: _selected == PlanType.family,
                         title: isEnglish ? "Family Plan" : "Plan Familiar",
                         price: familyPrice,
-                        periodicity: isEnglish ? "Annual" : "Anual",
+                        periodicity: isEnglish ? "Monthly" : "Mensual",
                         onTap: () =>
                             setState(() => _selected = PlanType.family),
                       ),
@@ -114,23 +156,14 @@ class _PlanSelectionScreenState extends State<PlanSelectionScreen> {
                 Positioned(
                   bottom: bottomPadding + 16,
                   left: 24, right: 24,
-                  child: AppButton(
-                    label: isEnglish
-                        ? "Add payment method"
-                        : "Agregar medio de pago",
-                    onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => AddCardScreen(
-                          selectedPlan: _selected,
-                          freeTrial: _freeTrial,
-                          planPrice: _selected == PlanType.individual
-                              ? individualPrice
-                              : familyPrice,
+                  child: _loading
+                      ? const Center(
+                          child: CircularProgressIndicator(
+                              color: Color(0xFFE1002D)))
+                      : AppButton(
+                          label: isEnglish ? "Subscribe" : "Suscribirme",
+                          onPressed: _handlePurchase,
                         ),
-                      ),
-                    ),
-                  ),
                 ),
               ],
             ),
@@ -243,11 +276,6 @@ class _PlanCard extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(periodicity,
-                          style: GoogleFonts.inter(
-                              fontSize: 14, fontWeight: FontWeight.w400,
-                              height: 1.14,
-                              color: const Color(0xFF444444))),
                       Text(periodicity,
                           style: GoogleFonts.inter(
                               fontSize: 14, fontWeight: FontWeight.w400,

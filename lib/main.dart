@@ -3,6 +3,9 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:io';
+
+import 'package:purchases_flutter/purchases_flutter.dart';
 
 import 'core/language_provider.dart';
 import 'core/subscription_provider.dart';
@@ -15,7 +18,9 @@ import 'services/daily_suggestions_engine.dart';
 
 import 'core/currency_provider.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await _initRevenueCat();
   runApp(
     MultiProvider(
       providers: [
@@ -27,6 +32,17 @@ void main() {
       child: const MyApp(),
     ),
   );
+}
+
+Future<void> _initRevenueCat() async {
+  await Purchases.setLogLevel(LogLevel.debug);
+  PurchasesConfiguration config;
+  if (Platform.isIOS) {
+    config = PurchasesConfiguration('appl_KDuVwOmljiRmgUegeqjadtfAjRA');
+  } else {
+    return;
+  }
+  await Purchases.configure(config);
 }
 
 class MyApp extends StatefulWidget {
@@ -51,7 +67,6 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> loadJson() async {
-    // her_echoes.json — siempre local (asset)
     try {
       final response =
           await rootBundle.loadString('assets/data/her_echoes.json');
@@ -67,7 +82,6 @@ class _MyAppState extends State<MyApp> {
       allWomen = [];
     }
 
-    // wildcard.json — primero intenta GitHub, fallback a asset local
     try {
       final res = await http.get(Uri.parse(_wildcardUrl))
           .timeout(const Duration(seconds: 6));
