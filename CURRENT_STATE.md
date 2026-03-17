@@ -266,3 +266,17 @@ v2.2-google-signin       ✅ sesión 13
 1. Cliente OAuth Android + SHA-1
 2. Probar compra Sandbox en dispositivo real
 3. Subir primer build a TestFlight
+
+---
+## Google Sign In ✅ sesión 13
+...
+- ⚠️ Cliente OAuth Android pendiente
+- Debug keystore SHA-256: `02:96:0E:A5:61:6A:B8:5C:45:22:5C:2F:EC:EF:93:A5:E5:C1:38:B4:D8:00:8E:9B:CA:3A:8A:19:D1:FE:B6:57`
+- Debug keystore ubicación: `~/.android/debug.keystore`
+
+---
+## Next Development Focus (sesión 14)
+1. Cliente OAuth Android — usar SHA-256 ya generado
+2. Agregar app Android en Firebase → descargar google-services.json
+3. Probar compra Sandbox en dispositivo real
+4. Subir primer build a TestFlight
