@@ -23,6 +23,7 @@ class LegalContentScreen extends StatefulWidget {
 
 class _LegalContentScreenState extends State<LegalContentScreen> {
   Map<String, dynamic>? _data;
+  bool _loaded = false;
 
   @override
   void initState() {
@@ -31,18 +32,31 @@ class _LegalContentScreenState extends State<LegalContentScreen> {
   }
 
   Future<void> _load() async {
-    final data = await ContentService.loadLegalContent();
-    setState(() {
-      _data = data[widget.contentKey];
-    });
+    try {
+      final data = await ContentService.loadLegalContent();
+      setState(() {
+        _data = data[widget.contentKey];
+        _loaded = true;
+      });
+    } catch (e) {
+      setState(() => _loaded = true);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final topPadding = MediaQuery.of(context).padding.top;
-    final isEnglish = context.watch<LanguageProvider>().isEnglish;
-    final lang = isEnglish ? "en" : "es";
-    final content = _data?[lang];
+    final isEnglish  = context.watch<LanguageProvider>().isEnglish;
+    final lang       = isEnglish ? "en" : "es";
+    final content    = _data?[lang];
+
+    String headerTitle = '';
+    if (widget.contentKey == 'terms') {
+      headerTitle = isEnglish ? 'Terms & Conditions' : 'Términos y Condiciones';
+    } else if (widget.contentKey == 'privacy') {
+      headerTitle = isEnglish ? 'Privacy Policy' : 'Política de Privacidad';
+    }
+    final displayTitle = content?['title'] ?? headerTitle;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -58,18 +72,13 @@ class _LegalContentScreenState extends State<LegalContentScreen> {
                 GestureDetector(
                   onTap: () => Navigator.pop(context),
                   child: Container(
-                    width: 44,
-                    height: 44,
+                    width: 44, height: 44,
                     decoration: BoxDecoration(
-                      color: AppColors.background,
-                      shape: BoxShape.circle,
-                    ),
+                        color: AppColors.background, shape: BoxShape.circle),
                     child: Center(
                       child: PhosphorIcon(
-                        PhosphorIcons.arrowLeft(PhosphorIconsStyle.bold),
-                        size: 20,
-                        color: AppColors.accent,
-                      ),
+                          PhosphorIcons.arrowLeft(PhosphorIconsStyle.bold),
+                          size: 20, color: AppColors.accent),
                     ),
                   ),
                 ),
@@ -77,16 +86,13 @@ class _LegalContentScreenState extends State<LegalContentScreen> {
                 Expanded(
                   child: Center(
                     child: Text(
-                      content?['title'] ?? '',
+                      displayTitle,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: GoogleFonts.inter(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        height: 1.5,
-                        letterSpacing: -0.5,
-                        color: const Color(0xFF404040),
-                      ),
+                          fontSize: 18, fontWeight: FontWeight.w600,
+                          height: 1.5, letterSpacing: -0.5,
+                          color: const Color(0xFF404040)),
                     ),
                   ),
                 ),
@@ -95,19 +101,31 @@ class _LegalContentScreenState extends State<LegalContentScreen> {
             ),
           ),
           Expanded(
-            child: content == null
+            child: !_loaded
                 ? const Center(
-                    child: CircularProgressIndicator(
-                      color: Color(0xFFE1002D),
-                    ),
+                    child: CircularProgressIndicator(color: Color(0xFFE1002D)),
                   )
-                : SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(16, 24, 16, 32),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: _buildBlocks(content),
-                    ),
-                  ),
+                : content == null
+                    ? Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(32),
+                          child: Text(
+                            isEnglish
+                                ? 'Content not available.'
+                                : 'Contenido no disponible.',
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.inter(
+                                fontSize: 15, color: const Color(0xFF888888)),
+                          ),
+                        ),
+                      )
+                    : SingleChildScrollView(
+                        padding: const EdgeInsets.fromLTRB(16, 24, 16, 32),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: _buildBlocks(content),
+                        ),
+                      ),
           ),
         ],
       ),
@@ -120,16 +138,13 @@ class _LegalContentScreenState extends State<LegalContentScreen> {
       switch (block['type']) {
         case 'h2':
           return Padding(
-            padding: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.only(top: 8, bottom: 8),
             child: Text(
               block['text'],
               style: GoogleFonts.inter(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                height: 1.4,
-                letterSpacing: -0.5,
-                color: const Color(0xFF000000),
-              ),
+                  fontSize: 18, fontWeight: FontWeight.w600,
+                  height: 1.4, letterSpacing: -0.5,
+                  color: const Color(0xFF000000)),
             ),
           );
         case 'p':
@@ -139,12 +154,9 @@ class _LegalContentScreenState extends State<LegalContentScreen> {
             child: Text(
               block['text'],
               style: GoogleFonts.inter(
-                fontSize: 16,
-                fontWeight: FontWeight.w400,
-                height: 1.6,
-                letterSpacing: -0.5,
-                color: const Color(0xFF434343),
-              ),
+                  fontSize: 16, fontWeight: FontWeight.w400,
+                  height: 1.6, letterSpacing: -0.5,
+                  color: const Color(0xFF434343)),
             ),
           );
       }

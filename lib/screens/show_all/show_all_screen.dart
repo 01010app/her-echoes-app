@@ -42,7 +42,6 @@ class _ShowAllScreenState extends State<ShowAllScreen> {
   Widget build(BuildContext context) {
     final userIsPro = context.watch<SubscriptionProvider>().isPro;
 
-    // Wildcards marcadas, siempre accesibles
     final wildcardItems = widget.wildcards.map((w) {
       return {...w, '_is_wildcard': true};
     }).toList();
@@ -51,7 +50,6 @@ class _ShowAllScreenState extends State<ShowAllScreen> {
         .where((w) => (w['image_card_ID'] ?? '').toString().isNotEmpty)
         .toList();
 
-    // Wildcards primero
     final women = [...wildcardItems, ...regularWomen];
 
     final titles = women.map((w) => '').toList();
@@ -77,6 +75,11 @@ class _ShowAllScreenState extends State<ShowAllScreen> {
               imageUrl,
               fit: BoxFit.cover,
               alignment: Alignment.topCenter,
+              errorBuilder: (_, __, ___) => Image.network(
+                'https://raw.githubusercontent.com/01010app/her-echoes-app/main/images/cards/not_found.webp',
+                fit: BoxFit.cover,
+                alignment: Alignment.topCenter,
+              ),
             ),
           ),
 
@@ -98,7 +101,7 @@ class _ShowAllScreenState extends State<ShowAllScreen> {
 
           Positioned(
             left: 24,
-            right: 24,
+            right: 16,
             bottom: 16,
             child: AnimatedDefaultTextStyle(
               duration: const Duration(milliseconds: 250),
@@ -138,7 +141,10 @@ class _ShowAllScreenState extends State<ShowAllScreen> {
     return Container(
       color: const Color(0xFFF5F5F5),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.only(
+          top: 24,
+          bottom: 0,
+        ),
         child: VerticalCardPager(
           titles: titles,
           images: images.toList(),

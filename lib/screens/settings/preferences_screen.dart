@@ -83,7 +83,7 @@ class PreferencesScreen extends StatelessWidget {
                   ),
                   const SettingsDivider(),
                   _PreferencesItem(
-                    label: isEnglish ? "Language & Currency" : "Idioma y Moneda",
+                    label: isEnglish ? "Language" : "Idioma",
                     onTap: () => Navigator.push(
                       context,
                       MaterialPageRoute(

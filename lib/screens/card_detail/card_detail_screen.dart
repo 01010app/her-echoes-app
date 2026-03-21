@@ -893,6 +893,11 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
               imageUrl,
               fit: BoxFit.cover,
               alignment: Alignment.topCenter,
+              errorBuilder: (_, __, ___) => Image.network(
+                'https://raw.githubusercontent.com/01010app/her-echoes-app/main/images/cards/not_found.webp',
+                fit: BoxFit.cover,
+                alignment: Alignment.topCenter,
+              ),
             ),
           ),
         ),

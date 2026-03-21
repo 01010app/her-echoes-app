@@ -4,7 +4,6 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/language_provider.dart';
-import '../../core/currency_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../widgets/settings/settings_list_container.dart';
 import '../../widgets/settings/settings_divider.dart';
@@ -16,17 +15,8 @@ class LanguageScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final lang       = context.watch<LanguageProvider>();
-    final currency   = context.watch<CurrencyProvider>();
     final topPadding = MediaQuery.of(context).padding.top;
     final isEnglish  = lang.isEnglish;
-
-    const currencies = [
-      {'code': 'CLP', 'label': 'CLP — Peso chileno'},
-      {'code': 'USD', 'label': 'USD — US Dollar'},
-      {'code': 'EUR', 'label': 'EUR — Euro'},
-      {'code': 'MXN', 'label': 'MXN — Peso mexicano'},
-      {'code': 'ARS', 'label': 'ARS — Peso argentino'},
-    ];
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -56,7 +46,7 @@ class LanguageScreen extends StatelessWidget {
                 Expanded(
                   child: Center(
                     child: Text(
-                      isEnglish ? "Language & Currency" : "Idioma y Moneda",
+                      isEnglish ? "Language" : "Idioma",
                       style: GoogleFonts.inter(
                           fontSize: 18, fontWeight: FontWeight.w600,
                           height: 1.5, letterSpacing: -0.5,
@@ -75,8 +65,6 @@ class LanguageScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-
-                  // ── Idioma ───────────────────────────────
                   SettingsSectionTitle(
                     title: isEnglish ? "Language" : "Idioma",
                   ),
@@ -95,56 +83,6 @@ class LanguageScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-
-                  const SizedBox(height: 32),
-
-                  // ── Moneda ───────────────────────────────
-                  SettingsSectionTitle(
-                    title: isEnglish ? "Currency" : "Moneda",
-                  ),
-                  SettingsListContainer(
-                    children: [
-                      for (int i = 0; i < currencies.length; i++) ...[
-                        if (i > 0) const SettingsDivider(),
-                        _SelectRow(
-                          label: currencies[i]['label']!,
-                          selected: currency.currency == currencies[i]['code'],
-                          onTap: () => currency.setCurrency(currencies[i]['code']!),
-                        ),
-                      ],
-                      const SettingsDivider(),
-                      // Opción auto
-                      Padding(
-                        padding: const EdgeInsets.only(
-                            top: 14, bottom: 14, right: 16),
-                        child: GestureDetector(
-                          onTap: () => currency.resetToAuto(),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  isEnglish
-                                      ? "Auto-detect from device"
-                                      : "Detectar automáticamente",
-                                  style: GoogleFonts.inter(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w400,
-                                      color: AppColors.accent),
-                                ),
-                              ),
-                              PhosphorIcon(
-                                PhosphorIcons.arrowsClockwise(
-                                    PhosphorIconsStyle.bold),
-                                size: 18,
-                                color: AppColors.accent,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-
                   const SizedBox(height: 32),
                 ],
               ),
@@ -193,63 +131,6 @@ class _ToggleRow extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _SelectRow extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _SelectRow({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Padding(
-        padding: const EdgeInsets.only(top: 14, bottom: 14, right: 16),
-        child: Row(
-          children: [
-            Container(
-              width: 20, height: 20,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: selected
-                      ? const Color(0xFFE1002D)
-                      : const Color(0xFFCCCCCC),
-                  width: 2,
-                ),
-              ),
-              child: selected
-                  ? Center(
-                      child: Container(
-                        width: 8, height: 8,
-                        decoration: const BoxDecoration(
-                            color: Color(0xFFE1002D),
-                            shape: BoxShape.circle),
-                      ),
-                    )
-                  : null,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(label,
-                  style: GoogleFonts.inter(
-                      fontSize: 15, fontWeight: FontWeight.w400,
-                      height: 1.5,
-                      color: const Color(0xFF404040))),
-            ),
-          ],
-        ),
       ),
     );
   }

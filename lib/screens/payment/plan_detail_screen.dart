@@ -2,29 +2,36 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/language_provider.dart';
 import '../../core/subscription_provider.dart';
-import '../../core/currency_provider.dart';
 import '../../core/theme/app_colors.dart';
-import 'plan_selection_screen.dart';
 
 class PlanDetailScreen extends StatelessWidget {
   const PlanDetailScreen({super.key});
+
+  Future<void> _openAppleSubscriptions(BuildContext context) async {
+    final uri = Uri.parse('https://apps.apple.com/account/subscriptions');
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final topPadding = MediaQuery.of(context).padding.top;
     final isEnglish  = context.watch<LanguageProvider>().isEnglish;
-    final isPro      = context.watch<SubscriptionProvider>().isPro;
-    final pricing    = context.watch<CurrencyProvider>().pricing;
+    final sub        = context.watch<SubscriptionProvider>();
+    final isPro      = sub.isPro;
 
-    final planName  = isPro
-        ? (isEnglish ? "Individual Plan" : "Plan Individual")
-        : (isEnglish ? "No active plan" : "Sin plan activo");
-    final planPrice = isPro
-        ? pricing.format(pricing.individualAnnual)
-        : "—";
+    final activePackage = sub.activePackage;
+    final planName      = activePackage?.storeProduct.title
+        ?? (isPro
+            ? (isEnglish ? "Pro Plan" : "Plan Pro")
+            : (isEnglish ? "No active plan" : "Sin plan activo"));
+    final planPrice  = activePackage?.storeProduct.priceString ?? "—";
+    final planPeriod = isEnglish ? "Monthly" : "Mensual";
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -54,7 +61,7 @@ class PlanDetailScreen extends StatelessWidget {
                 Expanded(
                   child: Center(
                     child: Text(
-                      isEnglish ? "Plan Details" : "Detalle Plan",
+                      isEnglish ? "My Subscription" : "Mi Suscripción",
                       style: GoogleFonts.inter(
                           fontSize: 18, fontWeight: FontWeight.w600,
                           height: 1.5, letterSpacing: -0.5,
@@ -73,8 +80,7 @@ class PlanDetailScreen extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: const Color(0xFFE9E9E9),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                      color: const Color(0xFFDFDFDF), width: 1),
+                  border: Border.all(color: const Color(0xFFDFDFDF), width: 1),
                 ),
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -106,11 +112,11 @@ class PlanDetailScreen extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(isEnglish ? "Periodicity" : "Periodicidad",
+                        Text(isEnglish ? "Billing" : "Periodicidad",
                             style: GoogleFonts.inter(
                                 fontSize: 14, fontWeight: FontWeight.w400,
                                 color: const Color(0xFF222222))),
-                        Text(isEnglish ? "Annual" : "Anual",
+                        Text(planPeriod,
                             style: GoogleFonts.inter(
                                 fontSize: 14, fontWeight: FontWeight.w400,
                                 color: const Color(0xFF222222))),
@@ -121,28 +127,33 @@ class PlanDetailScreen extends StatelessWidget {
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(12),
                       child: InkWell(
-                        onTap: () => Navigator.push(context,
-                            MaterialPageRoute(
-                                builder: (_) => const PlanSelectionScreen())),
+                        onTap: () => _openAppleSubscriptions(context),
                         borderRadius: BorderRadius.circular(12),
-                        splashColor:
-                            const Color(0xFFE1002D).withOpacity(0.12),
+                        splashColor: const Color(0xFFE1002D).withOpacity(0.12),
                         child: Container(
                           decoration: BoxDecoration(
-                            border: Border.all(
-                                color: const Color(0xFFE1002D)),
+                            border: Border.all(color: const Color(0xFFE1002D)),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           padding: const EdgeInsets.symmetric(
                               horizontal: 16, vertical: 8),
                           child: Text(
-                            isEnglish ? "Change Plan" : "Cambiar de Plan",
+                            isEnglish ? "Manage Subscription" : "Gestionar Suscripción",
                             style: GoogleFonts.inter(
                                 fontSize: 14, fontWeight: FontWeight.w600,
                                 color: const Color(0xFFE1002D)),
                           ),
                         ),
                       ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      isEnglish
+                          ? "To cancel or change your plan, manage your subscription from your App Store account settings."
+                          : "Para cancelar o cambiar tu plan, gestiona tu suscripción desde los ajustes de tu cuenta en App Store.",
+                      style: GoogleFonts.inter(
+                          fontSize: 12, fontWeight: FontWeight.w400,
+                          color: const Color(0xFF888888), height: 1.5),
                     ),
                   ],
                 ),

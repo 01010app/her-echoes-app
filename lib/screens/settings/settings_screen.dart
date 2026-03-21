@@ -14,7 +14,6 @@ import '../../widgets/settings/settings_divider.dart';
 import '../../widgets/system/app_button.dart';
 import 'legal_content_screen.dart';
 import 'preferences_screen.dart';
-import '../payment/payment_screen.dart';
 import '../payment/plan_detail_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -109,8 +108,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final topPadding    = MediaQuery.of(context).padding.top;
     final bottomPadding = MediaQuery.of(context).padding.bottom;
     final isEnglish     = context.watch<LanguageProvider>().isEnglish;
-    final isPro         = context.watch<SubscriptionProvider>().isPro;
-    final hasCardIssue  = isPro && false;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -162,7 +159,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 children: [
                   const SizedBox(height: 24),
 
-                  // ── Perfil ──────────────────────────────────
                   if (_userName.isNotEmpty) ...[
                     SettingsListContainer(
                       children: [
@@ -199,28 +195,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ],
 
                   SettingsSectionTitle(
-                    title: isEnglish
-                        ? "System Settings"
-                        : "Configuración del sistema",
+                    title: isEnglish ? "System Settings" : "Configuración del sistema",
                   ),
-
                   SettingsListContainer(
                     children: [
                       SettingsListItem(
                         icon: PhosphorIcons.slidersHorizontal,
                         label: isEnglish ? "Preferences" : "Preferencias",
                         onTap: () => Navigator.push(context,
-                            MaterialPageRoute(
-                                builder: (_) => const PreferencesScreen())),
-                      ),
-                      const SettingsDivider(),
-                      SettingsListItem(
-                        icon: PhosphorIcons.creditCard,
-                        label: isEnglish ? "Payment method" : "Medio de pago",
-                        hasNotification: hasCardIssue,
-                        onTap: () => Navigator.push(context,
-                            MaterialPageRoute(
-                                builder: (_) => PaymentScreen())),
+                            MaterialPageRoute(builder: (_) => const PreferencesScreen())),
                       ),
                     ],
                   ),
@@ -228,26 +211,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   const SizedBox(height: 32),
 
                   SettingsSectionTitle(
-                    title: isEnglish ? "About Us" : "Nosotros",
+                    title: "Legal",
                   ),
-
                   SettingsListContainer(
                     children: [
                       SettingsListItem(
-                        icon: PhosphorIcons.userFocus,
-                        label: isEnglish ? "About Us" : "Acerca de Nosotros",
+                        icon: PhosphorIcons.shieldCheck,
+                        label: isEnglish ? "Privacy Policy" : "Política de Privacidad",
                         onTap: () => Navigator.push(context,
                             MaterialPageRoute(
                                 builder: (_) => LegalContentScreen(
-                                    contentKey: "about",
+                                    contentKey: "privacy",
                                     language: isEnglish ? "en" : "es"))),
                       ),
                       const SettingsDivider(),
                       SettingsListItem(
                         icon: PhosphorIcons.fileText,
-                        label: isEnglish
-                            ? "Terms & Conditions"
-                            : "Términos y Condiciones",
+                        label: isEnglish ? "Terms & Conditions" : "Términos y Condiciones",
                         hasNotification: _hasNewTerms,
                         onTap: () => Navigator.push(context,
                             MaterialPageRoute(
@@ -261,17 +241,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   const SizedBox(height: 32),
 
                   SettingsSectionTitle(
-                    title: isEnglish ? "Plan Details" : "Detalle Plan",
+                    title: isEnglish ? "Subscription" : "Suscripción",
                   ),
-
                   SettingsListContainer(
                     children: [
                       SettingsListItem(
                         icon: PhosphorIcons.file,
-                        label: isEnglish ? "Individual Plan" : "Plan Individual",
+                        label: isEnglish ? "My Subscription" : "Mi Suscripción",
                         onTap: () => Navigator.push(context,
-                            MaterialPageRoute(
-                                builder: (_) => const PlanDetailScreen())),
+                            MaterialPageRoute(builder: (_) => const PlanDetailScreen())),
                       ),
                     ],
                   ),
@@ -290,7 +268,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
 
                   const SizedBox(height: 24),
-
                   Center(
                     child: Text(
                       "Version 1.0.0",
@@ -300,7 +277,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           color: const Color(0xFF787575)),
                     ),
                   ),
-
                   SizedBox(height: bottomPadding + 24),
                 ],
               ),
