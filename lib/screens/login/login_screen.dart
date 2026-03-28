@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'dart:io' show Platform;
 import '../home/home_screen.dart';
 import 'email_login_screen.dart';
@@ -200,31 +202,67 @@ class _LoginScreenState extends State<LoginScreen>
                       color: Colors.white.withOpacity(0.80),
                     ),
                     children: _isSpanish
-                        ? const [
-                            TextSpan(text: 'Al continuar estarás aceptando los '),
+                        ? [
+                            const TextSpan(
+                                text: 'Al continuar estarás aceptando los '),
                             TextSpan(
                               text: 'Términos y condiciones,',
-                              style: TextStyle(decoration: TextDecoration.underline),
+                              style: const TextStyle(
+                                  decoration: TextDecoration.underline),
+                              recognizer: TapGestureRecognizer()
+                                ..onTap = () => launchUrl(
+                                      Uri.parse(
+                                          'https://callmehector.cl/apps/herechoes/terminos.html'),
+                                      mode: LaunchMode.externalApplication,
+                                    ),
                             ),
-                            TextSpan(text: ' y confirmas que leíste la '),
+                            const TextSpan(
+                                text: ' y confirmas que leíste la '),
                             TextSpan(
                               text: 'Política de privacidad,',
-                              style: TextStyle(decoration: TextDecoration.underline),
+                              style: const TextStyle(
+                                  decoration: TextDecoration.underline),
+                              recognizer: TapGestureRecognizer()
+                                ..onTap = () => launchUrl(
+                                      Uri.parse(
+                                          'https://callmehector.cl/apps/herechoes/privacidad.html'),
+                                      mode: LaunchMode.externalApplication,
+                                    ),
                             ),
-                            TextSpan(text: ' donde se explican las ofertas y promociones.'),
+                            const TextSpan(
+                                text:
+                                    ' donde se explican las ofertas y promociones.'),
                           ]
-                        : const [
-                            TextSpan(text: 'By continuing you agree to our '),
+                        : [
+                            const TextSpan(
+                                text: 'By continuing you agree to our '),
                             TextSpan(
                               text: 'Terms and Conditions,',
-                              style: TextStyle(decoration: TextDecoration.underline),
+                              style: const TextStyle(
+                                  decoration: TextDecoration.underline),
+                              recognizer: TapGestureRecognizer()
+                                ..onTap = () => launchUrl(
+                                      Uri.parse(
+                                          'https://callmehector.cl/apps/herechoes/terminos.html'),
+                                      mode: LaunchMode.externalApplication,
+                                    ),
                             ),
-                            TextSpan(text: ' and confirm you have read our '),
+                            const TextSpan(
+                                text: ' and confirm you have read our '),
                             TextSpan(
                               text: 'Privacy Policy,',
-                              style: TextStyle(decoration: TextDecoration.underline),
+                              style: const TextStyle(
+                                  decoration: TextDecoration.underline),
+                              recognizer: TapGestureRecognizer()
+                                ..onTap = () => launchUrl(
+                                      Uri.parse(
+                                          'https://callmehector.cl/apps/herechoes/privacidad.html'),
+                                      mode: LaunchMode.externalApplication,
+                                    ),
                             ),
-                            TextSpan(text: ' which explains our offers and promotions.'),
+                            const TextSpan(
+                                text:
+                                    ' which explains our offers and promotions.'),
                           ],
                   ),
                 ),
