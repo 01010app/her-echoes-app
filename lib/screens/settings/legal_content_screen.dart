@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/language_provider.dart';
 import '../../core/theme/app_colors.dart';
-import '../../services/content_service.dart';
 
 class LegalContentScreen extends StatefulWidget {
   final String contentKey;
@@ -22,33 +22,34 @@ class LegalContentScreen extends StatefulWidget {
 }
 
 class _LegalContentScreenState extends State<LegalContentScreen> {
-  Map<String, dynamic>? _data;
-  bool _loaded = false;
+  bool _loading = true;
 
   @override
   void initState() {
     super.initState();
-    _load();
+    _openUrl();
   }
 
-  Future<void> _load() async {
-    try {
-      final data = await ContentService.loadLegalContent();
-      setState(() {
-        _data = data[widget.contentKey];
-        _loaded = true;
-      });
-    } catch (e) {
-      setState(() => _loaded = true);
+  Future<void> _openUrl() async {
+    final url = widget.contentKey == 'terms'
+        ? 'https://callmehector.cl/apps/herechoes/terminos.html'
+        : 'https://callmehector.cl/apps/herechoes/privacidad.html';
+
+    await launchUrl(
+      Uri.parse(url),
+      mode: LaunchMode.externalApplication,
+    );
+
+    if (mounted) {
+      setState(() => _loading = false);
+      Navigator.pop(context);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final topPadding = MediaQuery.of(context).padding.top;
-    final isEnglish  = context.watch<LanguageProvider>().isEnglish;
-    final lang       = isEnglish ? "en" : "es";
-    final content    = _data?[lang];
+    final isEnglish = context.watch<LanguageProvider>().isEnglish;
 
     String headerTitle = '';
     if (widget.contentKey == 'terms') {
@@ -56,7 +57,6 @@ class _LegalContentScreenState extends State<LegalContentScreen> {
     } else if (widget.contentKey == 'privacy') {
       headerTitle = isEnglish ? 'Privacy Policy' : 'Política de Privacidad';
     }
-    final displayTitle = content?['title'] ?? headerTitle;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -72,13 +72,15 @@ class _LegalContentScreenState extends State<LegalContentScreen> {
                 GestureDetector(
                   onTap: () => Navigator.pop(context),
                   child: Container(
-                    width: 44, height: 44,
+                    width: 44,
+                    height: 44,
                     decoration: BoxDecoration(
                         color: AppColors.background, shape: BoxShape.circle),
                     child: Center(
                       child: PhosphorIcon(
                           PhosphorIcons.arrowLeft(PhosphorIconsStyle.bold),
-                          size: 20, color: AppColors.accent),
+                          size: 20,
+                          color: AppColors.accent),
                     ),
                   ),
                 ),
@@ -86,12 +88,14 @@ class _LegalContentScreenState extends State<LegalContentScreen> {
                 Expanded(
                   child: Center(
                     child: Text(
-                      displayTitle,
+                      headerTitle,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: GoogleFonts.inter(
-                          fontSize: 18, fontWeight: FontWeight.w600,
-                          height: 1.5, letterSpacing: -0.5,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          height: 1.5,
+                          letterSpacing: -0.5,
                           color: const Color(0xFF404040)),
                     ),
                   ),
@@ -101,65 +105,14 @@ class _LegalContentScreenState extends State<LegalContentScreen> {
             ),
           ),
           Expanded(
-            child: !_loaded
-                ? const Center(
-                    child: CircularProgressIndicator(color: Color(0xFFE1002D)),
-                  )
-                : content == null
-                    ? Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(32),
-                          child: Text(
-                            isEnglish
-                                ? 'Content not available.'
-                                : 'Contenido no disponible.',
-                            textAlign: TextAlign.center,
-                            style: GoogleFonts.inter(
-                                fontSize: 15, color: const Color(0xFF888888)),
-                          ),
-                        ),
-                      )
-                    : SingleChildScrollView(
-                        padding: const EdgeInsets.fromLTRB(16, 24, 16, 32),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: _buildBlocks(content),
-                        ),
-                      ),
+            child: Center(
+              child: _loading
+                  ? const CircularProgressIndicator(color: Color(0xFFE1002D))
+                  : const SizedBox.shrink(),
+            ),
           ),
         ],
       ),
     );
-  }
-
-  List<Widget> _buildBlocks(Map<String, dynamic> content) {
-    final List blocks = content['content'] ?? [];
-    return blocks.map<Widget>((block) {
-      switch (block['type']) {
-        case 'h2':
-          return Padding(
-            padding: const EdgeInsets.only(top: 8, bottom: 8),
-            child: Text(
-              block['text'],
-              style: GoogleFonts.inter(
-                  fontSize: 18, fontWeight: FontWeight.w600,
-                  height: 1.4, letterSpacing: -0.5,
-                  color: const Color(0xFF000000)),
-            ),
-          );
-        case 'p':
-        default:
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 16),
-            child: Text(
-              block['text'],
-              style: GoogleFonts.inter(
-                  fontSize: 16, fontWeight: FontWeight.w400,
-                  height: 1.6, letterSpacing: -0.5,
-                  color: const Color(0xFF434343)),
-            ),
-          );
-      }
-    }).toList();
   }
 }
