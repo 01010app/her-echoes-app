@@ -5,7 +5,6 @@ import 'package:provider/provider.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 
 import '../../core/language_provider.dart';
-import '../../core/currency_provider.dart';
 import '../../core/subscription_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../widgets/system/app_button.dart';
@@ -24,27 +23,78 @@ class _PlanSelectionScreenState extends State<PlanSelectionScreen> {
   PlanType _selected = PlanType.individual;
   bool _freeTrial = true;
   bool _loading = false;
+  bool _restoring = false;
+  bool _loadingOfferings = true;
 
-  Future<void> _handlePurchase() async {
-    setState(() => _loading = true);
+  Package? _individualPackage;
+  Package? _trialPackage;
+  Package? _familiarPackage;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadOfferings();
+  }
+
+  Future<void> _loadOfferings() async {
     try {
       final offerings = await Purchases.getOfferings();
       final current = offerings.current;
-      if (current == null) throw Exception('No offerings');
+      if (current != null) {
+        setState(() {
+          _individualPackage = current.availablePackages
+              .where((p) => p.identifier == 'individual')
+              .firstOrNull;
+          _trialPackage = current.availablePackages
+              .where((p) => p.identifier == 'trial')
+              .firstOrNull;
+          _familiarPackage = current.availablePackages
+              .where((p) => p.identifier == 'familiar')
+              .firstOrNull;
+        });
+      }
+    } catch (e) {
+      debugPrint('loadOfferings error: $e');
+    } finally {
+      if (mounted) setState(() => _loadingOfferings = false);
+    }
+  }
 
+  String _individualPrice() {
+    if (_loadingOfferings) return '...';
+    if (_freeTrial) {
+      return _trialPackage?.storeProduct.priceString ?? '—';
+    }
+    return _individualPackage?.storeProduct.priceString ?? '—';
+  }
+
+  String _familiarPrice() {
+    if (_loadingOfferings) return '...';
+    return _familiarPackage?.storeProduct.priceString ?? '—';
+  }
+
+  Future<void> _handlePurchase() async {
+    final isEnglish = context.read<LanguageProvider>().isEnglish;
+    setState(() => _loading = true);
+    try {
       Package? package;
       if (_selected == PlanType.individual && _freeTrial) {
-        package = current.availablePackages
-            .firstWhere((p) => p.identifier == 'trial',
-                orElse: () => current.availablePackages.first);
+        package = _trialPackage ?? _individualPackage;
       } else if (_selected == PlanType.individual) {
-        package = current.availablePackages
-            .firstWhere((p) => p.identifier == 'individual',
-                orElse: () => current.availablePackages.first);
+        package = _individualPackage ?? _trialPackage;
       } else {
-        package = current.availablePackages
-            .firstWhere((p) => p.identifier == 'familiar',
-                orElse: () => current.availablePackages.first);
+        package = _familiarPackage;
+      }
+
+      if (package == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(isEnglish
+                ? 'Plans are temporarily unavailable. Please try again later.'
+                : 'Los planes no están disponibles en este momento. Inténtalo más tarde.'),
+          ));
+        }
+        return;
       }
 
       final subProvider =
@@ -54,14 +104,58 @@ class _PlanSelectionScreenState extends State<PlanSelectionScreen> {
       if (success && mounted) {
         Navigator.popUntil(context, (route) => route.isFirst);
       }
+    } on PurchasesErrorCode catch (e) {
+      if (e == PurchasesErrorCode.purchaseCancelledError) return;
+      if (mounted) {
+        final isEnglish = context.read<LanguageProvider>().isEnglish;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(isEnglish
+              ? 'There was a problem processing your purchase. Please try again.'
+              : 'Hubo un problema al procesar tu compra. Inténtalo nuevamente.'),
+        ));
+      }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
-        );
+        final isEnglish = context.read<LanguageProvider>().isEnglish;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(isEnglish
+              ? 'There was a problem processing your purchase. Please try again.'
+              : 'Hubo un problema al procesar tu compra. Inténtalo nuevamente.'),
+        ));
       }
     } finally {
       if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _handleRestore() async {
+    final isEnglish = context.read<LanguageProvider>().isEnglish;
+    setState(() => _restoring = true);
+    try {
+      final subProvider =
+          Provider.of<SubscriptionProvider>(context, listen: false);
+      final success = await subProvider.restorePurchases();
+      if (!mounted) return;
+      if (success) {
+        Navigator.popUntil(context, (route) => route.isFirst);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(isEnglish
+              ? 'No active subscription found.'
+              : 'No se encontró una suscripción activa.'),
+        ));
+      }
+    } catch (e) {
+      if (mounted) {
+        final isEnglish = context.read<LanguageProvider>().isEnglish;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(isEnglish
+              ? 'Could not restore purchases. Please try again.'
+              : 'No se pudieron restaurar las compras. Inténtalo nuevamente.'),
+        ));
+      }
+    } finally {
+      if (mounted) setState(() => _restoring = false);
     }
   }
 
@@ -70,12 +164,6 @@ class _PlanSelectionScreenState extends State<PlanSelectionScreen> {
     final topPadding    = MediaQuery.of(context).padding.top;
     final bottomPadding = MediaQuery.of(context).padding.bottom;
     final isEnglish     = context.watch<LanguageProvider>().isEnglish;
-    final pricing       = context.watch<CurrencyProvider>().pricing;
-
-    final individualPrice = _freeTrial
-        ? pricing.format(pricing.individualTrial)
-        : pricing.format(pricing.individualAnnual);
-    final familyPrice = pricing.format(pricing.familyAnnual);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -105,7 +193,7 @@ class _PlanSelectionScreenState extends State<PlanSelectionScreen> {
                 Expanded(
                   child: Center(
                     child: Text(
-                      isEnglish ? "Subscribe to a Plan" : "Suscríbete a un Plan",
+                      isEnglish ? 'Subscribe to a Plan' : 'Suscríbete a un Plan',
                       style: GoogleFonts.inter(
                           fontSize: 18, fontWeight: FontWeight.w600,
                           height: 1.5, letterSpacing: -0.5,
@@ -118,55 +206,85 @@ class _PlanSelectionScreenState extends State<PlanSelectionScreen> {
             ),
           ),
           Expanded(
-            child: Stack(
-              children: [
-                SingleChildScrollView(
-                  padding: EdgeInsets.only(
-                      left: 16, right: 16, top: 24,
-                      bottom: bottomPadding + 100),
-                  child: Column(
+            child: _loadingOfferings
+                ? const Center(
+                    child: CircularProgressIndicator(color: Color(0xFFE1002D)))
+                : Stack(
                     children: [
-                      _PlanCard(
-                        selected: _selected == PlanType.individual,
-                        title: isEnglish ? "Individual Plan" : "Plan Individual",
-                        price: individualPrice,
-                        periodicity: isEnglish ? "Monthly" : "Mensual",
-                        trailLabel: isEnglish
-                            ? "With 7-day free trial"
-                            : "Con prueba gratuita de 7 días",
-                        showTrialToggle: true,
-                        trialEnabled: _freeTrial,
-                        onTrialToggle: (val) =>
-                            setState(() => _freeTrial = val),
-                        onTap: () =>
-                            setState(() => _selected = PlanType.individual),
+                      SingleChildScrollView(
+                        padding: EdgeInsets.only(
+                            left: 16, right: 16, top: 24,
+                            bottom: bottomPadding + 140),
+                        child: Column(
+                          children: [
+                            _PlanCard(
+                              selected: _selected == PlanType.individual,
+                              title: isEnglish ? 'Individual Plan' : 'Plan Individual',
+                              price: _individualPrice(),
+                              periodicity: isEnglish ? 'Annual' : 'Anual',
+                              trailLabel: isEnglish
+                                  ? 'With 7-day free trial'
+                                  : 'Con prueba gratuita de 7 días',
+                              showTrialToggle: true,
+                              trialEnabled: _freeTrial,
+                              onTrialToggle: (val) =>
+                                  setState(() => _freeTrial = val),
+                              onTap: () =>
+                                  setState(() => _selected = PlanType.individual),
+                            ),
+                            const SizedBox(height: 12),
+                            _PlanCard(
+                              selected: _selected == PlanType.family,
+                              title: isEnglish ? 'Family Plan' : 'Plan Familiar',
+                              price: _familiarPrice(),
+                              periodicity: isEnglish ? 'Annual' : 'Anual',
+                              onTap: () =>
+                                  setState(() => _selected = PlanType.family),
+                            ),
+                          ],
+                        ),
                       ),
-                      const SizedBox(height: 12),
-                      _PlanCard(
-                        selected: _selected == PlanType.family,
-                        title: isEnglish ? "Family Plan" : "Plan Familiar",
-                        price: familyPrice,
-                        periodicity: isEnglish ? "Monthly" : "Mensual",
-                        onTap: () =>
-                            setState(() => _selected = PlanType.family),
+                      Positioned(
+                        bottom: bottomPadding + 16,
+                        left: 24, right: 24,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (_loading)
+                              const Center(
+                                child: CircularProgressIndicator(
+                                    color: Color(0xFFE1002D)),
+                              )
+                            else
+                              AppButton(
+                                label: isEnglish ? 'Subscribe' : 'Suscribirme',
+                                onPressed: _handlePurchase,
+                              ),
+                            const SizedBox(height: 12),
+                            GestureDetector(
+                              onTap: _restoring ? null : _handleRestore,
+                              child: _restoring
+                                  ? const SizedBox(
+                                      height: 20, width: 20,
+                                      child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: Color(0xFFE1002D)),
+                                    )
+                                  : Text(
+                                      isEnglish
+                                          ? 'Restore purchases'
+                                          : 'Restaurar compras',
+                                      style: GoogleFonts.inter(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                          color: const Color(0xFFE1002D)),
+                                    ),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
-                ),
-                Positioned(
-                  bottom: bottomPadding + 16,
-                  left: 24, right: 24,
-                  child: _loading
-                      ? const Center(
-                          child: CircularProgressIndicator(
-                              color: Color(0xFFE1002D)))
-                      : AppButton(
-                          label: isEnglish ? "Subscribe" : "Suscribirme",
-                          onPressed: _handlePurchase,
-                        ),
-                ),
-              ],
-            ),
           ),
         ],
       ),

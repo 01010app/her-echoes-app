@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/language_provider.dart';
@@ -18,6 +19,22 @@ class PlanDetailScreen extends StatelessWidget {
     }
   }
 
+  String _periodLabel(Package? package, bool isEnglish) {
+    if (package == null) return isEnglish ? 'Annual' : 'Anual';
+    final period = package.storeProduct.subscriptionPeriod;
+    if (period == null) return isEnglish ? 'Annual' : 'Anual';
+    if (period.contains('Y') || period.contains('y')) {
+      return isEnglish ? 'Annual' : 'Anual';
+    }
+    if (period.contains('M') || period.contains('m')) {
+      return isEnglish ? 'Monthly' : 'Mensual';
+    }
+    if (period.contains('W') || period.contains('w')) {
+      return isEnglish ? 'Weekly' : 'Semanal';
+    }
+    return isEnglish ? 'Annual' : 'Anual';
+  }
+
   @override
   Widget build(BuildContext context) {
     final topPadding = MediaQuery.of(context).padding.top;
@@ -28,10 +45,10 @@ class PlanDetailScreen extends StatelessWidget {
     final activePackage = sub.activePackage;
     final planName      = activePackage?.storeProduct.title
         ?? (isPro
-            ? (isEnglish ? "Pro Plan" : "Plan Pro")
-            : (isEnglish ? "No active plan" : "Sin plan activo"));
-    final planPrice  = activePackage?.storeProduct.priceString ?? "—";
-    final planPeriod = isEnglish ? "Monthly" : "Mensual";
+            ? (isEnglish ? 'Pro Plan' : 'Plan Pro')
+            : (isEnglish ? 'No active plan' : 'Sin plan activo'));
+    final planPrice  = activePackage?.storeProduct.priceString ?? '—';
+    final planPeriod = _periodLabel(activePackage, isEnglish);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -61,7 +78,7 @@ class PlanDetailScreen extends StatelessWidget {
                 Expanded(
                   child: Center(
                     child: Text(
-                      isEnglish ? "My Subscription" : "Mi Suscripción",
+                      isEnglish ? 'My Subscription' : 'Mi Suscripción',
                       style: GoogleFonts.inter(
                           fontSize: 18, fontWeight: FontWeight.w600,
                           height: 1.5, letterSpacing: -0.5,
@@ -87,7 +104,7 @@ class PlanDetailScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      isEnglish ? "Contracted Plan" : "Plan contratado",
+                      isEnglish ? 'Contracted Plan' : 'Plan contratado',
                       style: GoogleFonts.inter(
                           fontSize: 11, fontWeight: FontWeight.w600,
                           height: 1.4, letterSpacing: -0.5,
@@ -97,11 +114,13 @@ class PlanDetailScreen extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(planName,
-                            style: GoogleFonts.inter(
-                                fontSize: 16, fontWeight: FontWeight.w500,
-                                height: 1.0, letterSpacing: -0.2,
-                                color: const Color(0xFF404040))),
+                        Expanded(
+                          child: Text(planName,
+                              style: GoogleFonts.inter(
+                                  fontSize: 16, fontWeight: FontWeight.w500,
+                                  height: 1.0, letterSpacing: -0.2,
+                                  color: const Color(0xFF404040))),
+                        ),
                         Text(planPrice,
                             style: GoogleFonts.inter(
                                 fontSize: 13, fontWeight: FontWeight.w600,
@@ -112,7 +131,7 @@ class PlanDetailScreen extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(isEnglish ? "Billing" : "Periodicidad",
+                        Text(isEnglish ? 'Billing' : 'Periodicidad',
                             style: GoogleFonts.inter(
                                 fontSize: 14, fontWeight: FontWeight.w400,
                                 color: const Color(0xFF222222))),
@@ -138,7 +157,7 @@ class PlanDetailScreen extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 16, vertical: 8),
                           child: Text(
-                            isEnglish ? "Manage Subscription" : "Gestionar Suscripción",
+                            isEnglish ? 'Manage Subscription' : 'Gestionar Suscripción',
                             style: GoogleFonts.inter(
                                 fontSize: 14, fontWeight: FontWeight.w600,
                                 color: const Color(0xFFE1002D)),
@@ -149,8 +168,8 @@ class PlanDetailScreen extends StatelessWidget {
                     const SizedBox(height: 12),
                     Text(
                       isEnglish
-                          ? "To cancel or change your plan, manage your subscription from your App Store account settings."
-                          : "Para cancelar o cambiar tu plan, gestiona tu suscripción desde los ajustes de tu cuenta en App Store.",
+                          ? 'To cancel or change your plan, manage your subscription from your App Store account settings.'
+                          : 'Para cancelar o cambiar tu plan, gestiona tu suscripción desde los ajustes de tu cuenta en App Store.',
                       style: GoogleFonts.inter(
                           fontSize: 12, fontWeight: FontWeight.w400,
                           color: const Color(0xFF888888), height: 1.5),

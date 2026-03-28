@@ -31,6 +31,7 @@ class _UpsellModalFreeState extends State<UpsellModalFree> {
   Package? _pkgFamiliar;
 
   bool _promoLoading = false;
+  bool _restoring = false;
 
   @override
   void initState() {
@@ -42,15 +43,6 @@ class _UpsellModalFreeState extends State<UpsellModalFree> {
     try {
       final offerings = await Purchases.getOfferings();
       final current = offerings.current;
-
-      // DEBUG — pégame en el chat lo que aparece en Terminal
-      debugPrint('=== OFFERINGS current: $current ===');
-      if (current != null) {
-        for (final p in current.availablePackages) {
-          debugPrint('Package identifier: "${p.identifier}" | precio: ${p.storeProduct.priceString}');
-        }
-      }
-
       if (current == null) {
         if (mounted) setState(() => _loadingOfferings = false);
         return;
@@ -62,8 +54,6 @@ class _UpsellModalFreeState extends State<UpsellModalFree> {
         if (p.identifier == _kPkgTrial)      trial = p;
         if (p.identifier == _kPkgFamiliar)   fam   = p;
       }
-
-      debugPrint('ind: $ind | trial: $trial | fam: $fam');
 
       if (mounted) {
         setState(() {
@@ -96,6 +86,37 @@ class _UpsellModalFreeState extends State<UpsellModalFree> {
         Provider.of<SubscriptionProvider>(context, listen: false);
     final success = await subProvider.purchasePackage(pkg);
     if (success && mounted) Navigator.pop(context);
+  }
+
+  Future<void> _handleRestore() async {
+    final isEnglish = context.read<LanguageProvider>().isEnglish;
+    setState(() => _restoring = true);
+    try {
+      final subProvider =
+          Provider.of<SubscriptionProvider>(context, listen: false);
+      final success = await subProvider.restorePurchases();
+      if (!mounted) return;
+      if (success) {
+        Navigator.pop(context);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(isEnglish
+              ? 'No active subscription found.'
+              : 'No se encontró una suscripción activa.'),
+        ));
+      }
+    } catch (e) {
+      if (mounted) {
+        final isEnglish = context.read<LanguageProvider>().isEnglish;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(isEnglish
+              ? 'Could not restore purchases. Please try again.'
+              : 'No se pudieron restaurar las compras. Inténtalo nuevamente.'),
+        ));
+      }
+    } finally {
+      if (mounted) setState(() => _restoring = false);
+    }
   }
 
   Future<void> _redeemPromo() async {
@@ -251,7 +272,7 @@ class _UpsellModalFreeState extends State<UpsellModalFree> {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              isEnglish ? "Monthly" : "Mensual",
+                              isEnglish ? "Annual" : "Anual",
                               style: GoogleFonts.inter(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w400,
@@ -371,7 +392,7 @@ class _UpsellModalFreeState extends State<UpsellModalFree> {
                                   MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                  isEnglish ? "Monthly" : "Mensual",
+                                  isEnglish ? "Annual" : "Anual",
                                   style: GoogleFonts.inter(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w400,
@@ -454,6 +475,27 @@ class _UpsellModalFreeState extends State<UpsellModalFree> {
                       label: isEnglish ? "Subscribe" : "Suscribirme",
                       onPressed:
                           _activePackage != null ? _handlePurchase : null,
+                    ),
+            ),
+
+            // ── Restaurar compras ────────────────────────────────────────
+            const SizedBox(height: 12),
+            GestureDetector(
+              onTap: _restoring ? null : _handleRestore,
+              child: _restoring
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Color(0xFFE1002D)),
+                    )
+                  : Text(
+                      isEnglish ? "Restore purchases" : "Restaurar compras",
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: const Color(0xFFE1002D),
+                      ),
                     ),
             ),
           ],

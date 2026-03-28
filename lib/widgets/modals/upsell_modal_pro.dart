@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
+
 import '../../core/language_provider.dart';
-import '../../screens/payment/plan_type.dart';
-import '../../screens/payment/add_card_screen.dart';
+import '../../core/subscription_provider.dart';
+import '../../screens/payment/plan_selection_screen.dart';
 import '../system/app_button.dart';
 
 class UpsellModalPro extends StatefulWidget {
@@ -21,12 +23,70 @@ class UpsellModalPro extends StatefulWidget {
 
 class _UpsellModalProState extends State<UpsellModalPro> {
   bool _remindMe = true;
+  bool _loadingOfferings = true;
+  bool _restoring = false;
+  Package? _pkgFamiliar;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadOfferings();
+  }
+
+  Future<void> _loadOfferings() async {
+    try {
+      final offerings = await Purchases.getOfferings();
+      final current = offerings.current;
+      if (current != null) {
+        setState(() {
+          _pkgFamiliar = current.availablePackages
+              .where((p) => p.identifier == 'familiar')
+              .firstOrNull;
+        });
+      }
+    } catch (e) {
+      debugPrint('UpsellModalPro _loadOfferings error: $e');
+    } finally {
+      if (mounted) setState(() => _loadingOfferings = false);
+    }
+  }
+
+  Future<void> _handleRestore() async {
+    final isEnglish = context.read<LanguageProvider>().isEnglish;
+    setState(() => _restoring = true);
+    try {
+      final subProvider =
+          Provider.of<SubscriptionProvider>(context, listen: false);
+      final success = await subProvider.restorePurchases();
+      if (!mounted) return;
+      if (success) {
+        Navigator.pop(context);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(isEnglish
+              ? 'No active subscription found.'
+              : 'No se encontró una suscripción activa.'),
+        ));
+      }
+    } catch (e) {
+      if (mounted) {
+        final isEnglish = context.read<LanguageProvider>().isEnglish;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(isEnglish
+              ? 'Could not restore purchases. Please try again.'
+              : 'No se pudieron restaurar las compras. Inténtalo nuevamente.'),
+        ));
+      }
+    } finally {
+      if (mounted) setState(() => _restoring = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final isEnglish = context.watch<LanguageProvider>().isEnglish;
     final bottomPadding = MediaQuery.of(context).padding.bottom;
-    const currency = 'CLP';
+    final familiarPrice = _pkgFamiliar?.storeProduct.priceString ?? '—';
 
     return Container(
       width: double.infinity,
@@ -83,76 +143,58 @@ class _UpsellModalProState extends State<UpsellModalPro> {
             ),
           ),
           const SizedBox(height: 32),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Container(
-              height: 72,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFF3F5),
-                border: Border.all(
-                  color: const Color(0xFFF70F3D),
-                  width: 2,
+
+          if (_loadingOfferings)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 16),
+              child: CircularProgressIndicator(color: Color(0xFFE1002D)),
+            )
+          else
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFF3F5),
+                  border: Border.all(
+                    color: const Color(0xFFF70F3D),
+                    width: 2,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
                 ),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        isEnglish ? "Family" : "Familiar",
-                        style: GoogleFonts.inter(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                          height: 1.0,
-                          color: const Color(0xFF1B1B1B),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            isEnglish ? "Family Plan" : "Plan Familiar",
+                            style: GoogleFonts.inter(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              height: 1.0,
+                              color: const Color(0xFF1B1B1B),
+                            ),
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        currency,
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          height: 1.0,
-                          color: const Color(0xFFE20000),
-                        ),
-                      ),
-                      const SizedBox(width: 2),
-                      Expanded(
-                        child: Text(
-                          "16.500",
+                        Text(
+                          familiarPrice,
                           style: GoogleFonts.inter(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                             height: 1.0,
-                            letterSpacing: -0.2,
                             color: const Color(0xFFE20000),
                           ),
                         ),
-                      ),
-                      SizedBox(
-                        width: 120,
-                        child: Text(
-                          "($currency 1.375/mes)",
-                          textAlign: TextAlign.right,
-                          style: GoogleFonts.inter(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                            height: 1.0,
-                            color: const Color(0xFF1B1B1B),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          isEnglish ? "Annual billing" : "Anual",
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          isEnglish ? "Annual" : "Anual",
                           style: GoogleFonts.inter(
                             fontSize: 14,
                             fontWeight: FontWeight.w400,
@@ -160,22 +202,22 @@ class _UpsellModalProState extends State<UpsellModalPro> {
                             color: const Color(0xFF222222),
                           ),
                         ),
-                      ),
-                      Text(
-                        isEnglish ? "Up to 3 people" : "Hasta 3 personas",
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w400,
-                          height: 1.0,
-                          color: const Color(0xFF1B1B1B),
+                        Text(
+                          isEnglish ? "Up to 3 people" : "Hasta 3 personas",
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w400,
+                            height: 1.0,
+                            color: const Color(0xFF1B1B1B),
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                ],
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
+
           const SizedBox(height: 16),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -186,11 +228,7 @@ class _UpsellModalProState extends State<UpsellModalPro> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => const AddCardScreen(
-                      selectedPlan: PlanType.family,
-                      freeTrial: false,
-                      planPrice: "CLP 16.500",
-                    ),
+                    builder: (_) => const PlanSelectionScreen(),
                   ),
                 );
               },
@@ -229,6 +267,25 @@ class _UpsellModalProState extends State<UpsellModalPro> {
                 ),
               ],
             ),
+          ),
+          const SizedBox(height: 12),
+          GestureDetector(
+            onTap: _restoring ? null : _handleRestore,
+            child: _restoring
+                ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2, color: Color(0xFFE1002D)),
+                  )
+                : Text(
+                    isEnglish ? "Restore purchases" : "Restaurar compras",
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: const Color(0xFFE1002D),
+                    ),
+                  ),
           ),
           SizedBox(height: 8 + bottomPadding),
         ],
