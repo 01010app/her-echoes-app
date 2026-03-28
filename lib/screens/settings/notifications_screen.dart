@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -43,8 +44,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       requestSoundPermission: false,
     );
     await _notificationsPlugin.initialize(
-      const InitializationSettings(
-          android: androidSettings, iOS: iosSettings),
+      const InitializationSettings(android: androidSettings, iOS: iosSettings),
     );
 
     final prefs = await SharedPreferences.getInstance();
@@ -68,22 +68,34 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 
   Future<bool> _requestPermission() async {
-    final plugin = _notificationsPlugin.resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>();
-    if (plugin == null) return true;
-    final granted = await plugin.requestPermissions(
-      alert: true,
-      badge: true,
-      sound: true,
-    );
-    return granted ?? true;
+    if (Platform.isIOS) {
+      final plugin = _notificationsPlugin
+          .resolvePlatformSpecificImplementation<
+              IOSFlutterLocalNotificationsPlugin>();
+      if (plugin == null) return true;
+      final granted = await plugin.requestPermissions(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+      return granted ?? true;
+    } else if (Platform.isAndroid) {
+      final plugin = _notificationsPlugin
+          .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>();
+      if (plugin == null) return true;
+      final granted = await plugin.requestNotificationsPermission();
+      return granted ?? true;
+    }
+    return true;
   }
 
   Future<void> _scheduleDaily(bool isEnglish) async {
     await _notificationsPlugin.cancel(_notifId);
 
     final now = tz.TZDateTime.now(tz.local);
-    var scheduled = tz.TZDateTime(
-        tz.local, now.year, now.month, now.day, 9, 0);
+    var scheduled =
+        tz.TZDateTime(tz.local, now.year, now.month, now.day, 9, 0);
     if (scheduled.isBefore(now)) {
       scheduled = scheduled.add(const Duration(days: 1));
     }
@@ -178,8 +190,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               child: SettingsListContainer(
                 children: [
                   Padding(
-                    padding: const EdgeInsets.only(
-                        top: 16, bottom: 16, right: 16),
+                    padding:
+                        const EdgeInsets.only(top: 16, bottom: 16, right: 16),
                     child: Row(
                       children: [
                         Expanded(
