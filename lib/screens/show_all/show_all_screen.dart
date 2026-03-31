@@ -25,6 +25,8 @@ class ShowAllScreen extends StatefulWidget {
 
 class _ShowAllScreenState extends State<ShowAllScreen> {
   int _focusedIndex = 0;
+  static const int _pageSize = 30;
+  int _loadedCount = _pageSize;
 
   void _showUpsell(BuildContext context) {
     showModalBottomSheet(
@@ -50,7 +52,10 @@ class _ShowAllScreenState extends State<ShowAllScreen> {
         .where((w) => (w['image_card_ID'] ?? '').toString().isNotEmpty)
         .toList();
 
-    final women = [...wildcardItems, ...regularWomen];
+    final allWomen = [...wildcardItems, ...regularWomen];
+
+    // Lazy loading — solo mostramos _loadedCount items
+    final women = allWomen.take(_loadedCount).toList();
 
     final titles = women.map((w) => '').toList();
 
@@ -68,13 +73,13 @@ class _ShowAllScreenState extends State<ShowAllScreen> {
       return Stack(
         fit: StackFit.expand,
         children: [
-
           ClipRRect(
             borderRadius: BorderRadius.circular(20),
             child: Image.network(
               imageUrl,
               fit: BoxFit.cover,
               alignment: Alignment.topCenter,
+              cacheWidth: 400,
               errorBuilder: (_, __, ___) => Image.network(
                 'https://raw.githubusercontent.com/01010app/her-echoes-app/main/images/cards/not_found.webp',
                 fit: BoxFit.cover,
@@ -82,7 +87,6 @@ class _ShowAllScreenState extends State<ShowAllScreen> {
               ),
             ),
           ),
-
           ClipRRect(
             borderRadius: BorderRadius.circular(20),
             child: Container(
@@ -98,7 +102,6 @@ class _ShowAllScreenState extends State<ShowAllScreen> {
               ),
             ),
           ),
-
           Positioned(
             left: 24,
             right: 16,
@@ -119,21 +122,18 @@ class _ShowAllScreenState extends State<ShowAllScreen> {
               ),
             ),
           ),
-
           if (isWildcard)
             const Positioned(
               top: 16,
               left: 16,
               child: WildcardBadge(),
             ),
-
           if (isPro)
             const Positioned(
               top: 16,
               right: 16,
               child: ProBadge(),
             ),
-
         ],
       );
     });
@@ -141,18 +141,23 @@ class _ShowAllScreenState extends State<ShowAllScreen> {
     return Container(
       color: const Color(0xFFF5F5F5),
       child: Padding(
-        padding: const EdgeInsets.only(
-          top: 24,
-          bottom: 0,
-        ),
+        padding: const EdgeInsets.only(top: 24, bottom: 0),
         child: VerticalCardPager(
           titles: titles,
           images: images.toList(),
           textStyle: const TextStyle(fontSize: 0),
           onPageChanged: (page) {
+            final index = (page ?? 0).round();
             setState(() {
-              _focusedIndex = (page ?? 0).round();
+              _focusedIndex = index;
             });
+            // Carga más items cuando se acerca al final
+            if (index >= _loadedCount - 8 && _loadedCount < allWomen.length) {
+              setState(() {
+                _loadedCount = (_loadedCount + _pageSize)
+                    .clamp(0, allWomen.length);
+              });
+            }
           },
           onSelectedItem: (index) {
             final woman = women[index];
