@@ -1302,39 +1302,46 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
     final isFav = womanId.isNotEmpty ? favoritesProvider.isFavorite(womanId) : false;
     final favAdded = isPro && isFav;
     final isWildcard = widget.woman['_is_wildcard'] == true;
+    final isAndroid = Platform.isAndroid;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+      padding: EdgeInsets.fromLTRB(16, 16, 16, isAndroid ? 24 : 0),
       child: Row(
         children: [
           Expanded(
-            child: AppButton(
-              label: _isSharing
-                  ? (isEnglish ? "Preparing..." : "Preparando...")
-                  : (isEnglish ? "Share" : "Compartir"),
-              isOutlined: true,
-              onPressed: _isSharing ? () {} : _shareCard,
+            child: SizedBox(
+              height: isAndroid ? 48 : 52,
+              child: AppButton(
+                label: _isSharing
+                    ? (isEnglish ? "Preparing..." : "Preparando...")
+                    : (isEnglish ? "Share" : "Compartir"),
+                isOutlined: true,
+                onPressed: _isSharing ? () {} : _shareCard,
+              ),
             ),
           ),
           if (!isWildcard) ...[
             const SizedBox(width: 8),
             Expanded(
-              child: AppButton(
-                label: isPro
-                    ? (isFav
-                        ? (isEnglish ? "Added ♥" : "Añadido ♥")
-                        : (isEnglish ? "Add to Favorites" : "Añadir a Favoritas"))
-                    : (isEnglish ? "Add to Favorites" : "Añadir a Favoritas"),
-                onPressed: favAdded
-                    ? () {}
-                    : () {
-                        if (isPro) {
-                          favoritesProvider.toggle(widget.woman);
-                          if (!isFav) _showFavoriteConfirmation();
-                        } else {
-                          _showUpsell();
-                        }
-                      },
+              child: SizedBox(
+                height: isAndroid ? 48 : 52,
+                child: AppButton(
+                  label: isPro
+                      ? (isFav
+                          ? (isEnglish ? "Added ♥" : "Añadido ♥")
+                          : (isEnglish ? "Add to Favorites" : "Añadir a Favoritas"))
+                      : (isEnglish ? "Add to Favorites" : "Añadir a Favoritas"),
+                  onPressed: favAdded
+                      ? () {}
+                      : () {
+                          if (isPro) {
+                            favoritesProvider.toggle(widget.woman);
+                            if (!isFav) _showFavoriteConfirmation();
+                          } else {
+                            _showUpsell();
+                          }
+                        },
+                ),
               ),
             ),
           ],
