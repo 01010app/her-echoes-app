@@ -212,7 +212,7 @@ class _LoginScreenState extends State<LoginScreen>
                               recognizer: TapGestureRecognizer()
                                 ..onTap = () => launchUrl(
                                       Uri.parse(
-                                          'https://callmehector.cl/apps/herechoes/terminos.html'),
+                                          'https://callmehector.cl/apps/herechoes/terms.html'),
                                       mode: LaunchMode.externalApplication,
                                     ),
                             ),
@@ -225,7 +225,7 @@ class _LoginScreenState extends State<LoginScreen>
                               recognizer: TapGestureRecognizer()
                                 ..onTap = () => launchUrl(
                                       Uri.parse(
-                                          'https://callmehector.cl/apps/herechoes/privacidad.html'),
+                                          'https://callmehector.cl/apps/herechoes/privacy.html'),
                                       mode: LaunchMode.externalApplication,
                                     ),
                             ),
@@ -243,7 +243,7 @@ class _LoginScreenState extends State<LoginScreen>
                               recognizer: TapGestureRecognizer()
                                 ..onTap = () => launchUrl(
                                       Uri.parse(
-                                          'https://callmehector.cl/apps/herechoes/terminos.html'),
+                                          'https://callmehector.cl/apps/herechoes/terms.html'),
                                       mode: LaunchMode.externalApplication,
                                     ),
                             ),
@@ -256,7 +256,7 @@ class _LoginScreenState extends State<LoginScreen>
                               recognizer: TapGestureRecognizer()
                                 ..onTap = () => launchUrl(
                                       Uri.parse(
-                                          'https://callmehector.cl/apps/herechoes/privacidad.html'),
+                                          'https://callmehector.cl/apps/herechoes/privacy.html'),
                                       mode: LaunchMode.externalApplication,
                                     ),
                             ),

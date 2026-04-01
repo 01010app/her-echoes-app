@@ -741,21 +741,24 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                                   ? "Incorrect info, copyright, deceased?"
                                   : "¿Info incorrecta, copyright, fallecida?",
                               onTap: () async {
-                                  _closeMenu();
-                                  final name = (widget.woman['full_name'] ?? '').toString();
-                                  final id   = (widget.woman['woman_id'] ?? '').toString();
-                                  final subject = Uri.encodeComponent(
-                                      isEnglish ? 'Report issue: $name' : 'Reportar problema: $name');
-                                  final body = Uri.encodeComponent(
-                                      isEnglish
-                                          ? 'Woman ID: $id\n\nDescribe the issue:\n'
-                                          : 'ID: $id\n\nDescribe el problema:\n');
-                                  final uri = Uri.parse(
-                                      'mailto:herechoes.info@callmehector.cl?subject=$subject&body=$body');
-                                  if (await canLaunchUrl(uri)) await launchUrl(uri);
-                                },
-                              ),
-                            ],
+                                _closeMenu();
+                                final name = (widget.woman['full_name'] ?? '').toString();
+                                final id   = (widget.woman['woman_id'] ?? '').toString();
+
+                                final uri = Uri(
+                                  scheme: 'mailto',
+                                  path: 'herechoes.info@callmehector.cl',
+                                  query: Uri.encodeFull(
+                                    isEnglish
+                                        ? 'subject=Report issue: $name&body=Woman ID: $id\n\nDescribe the issue:\n'
+                                        : 'subject=Reportar problema: $name&body=ID: $id\n\nDescribe el problema:\n',
+                                  ),
+                                );
+
+                                await launchUrl(uri, mode: LaunchMode.externalApplication);
+                              },
+                            ),
+                          ], // 👈 ESTO FALTABA
                         ),
                       ),
                     ),

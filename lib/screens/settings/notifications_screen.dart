@@ -57,35 +57,42 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     if (newValue) {
       final granted = await _requestPermission();
       if (!granted) return;
-      await _scheduleDaily(isEnglish);
-    } else {
-      await _notificationsPlugin.cancel(_notifId);
     }
 
+    // Actualizar estado inmediatamente después de tener permiso
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_prefKey, newValue);
+    if (!mounted) return;
     setState(() => _notificationsEnabled = newValue);
+
+    // Programar (o cancelar) en background — si falla, el toggle ya está activo
+    try {
+      if (newValue) {
+        await _scheduleDaily(isEnglish);
+      } else {
+        await _notificationsPlugin.cancel(_notifId);
+      }
+    } catch (e) {
+      debugPrint('[Notifications] Error: $e');
+    }
   }
 
   Future<bool> _requestPermission() async {
     if (Platform.isIOS) {
-      final plugin = _notificationsPlugin
-          .resolvePlatformSpecificImplementation<
-              IOSFlutterLocalNotificationsPlugin>();
+      final IOSFlutterLocalNotificationsPlugin? plugin =
+          _notificationsPlugin.resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>();
       if (plugin == null) return true;
-      final granted = await plugin.requestPermissions(
-        alert: true,
-        badge: true,
-        sound: true,
+      final bool? granted = await plugin.requestPermissions(
+        alert: true, badge: true, sound: true,
       );
       return granted ?? true;
     } else if (Platform.isAndroid) {
-      final plugin = _notificationsPlugin
-          .resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin>();
-      if (plugin == null) return true;
-      final granted = await plugin.requestNotificationsPermission();
-      return granted ?? true;
+      final AndroidFlutterLocalNotificationsPlugin? plugin =
+          _notificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+      // Mostramos el diálogo pero ignoramos el resultado — MIUI reporta false
+      // aunque el usuario acepte. El permiso real se resuelve igual.
+      await plugin?.requestNotificationsPermission();
+      return true; // siempre continuamos en Android
     }
     return true;
   }
@@ -123,7 +130,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           priority: Priority.high,
         ),
       ),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
       matchDateTimeComponents: DateTimeComponents.time,

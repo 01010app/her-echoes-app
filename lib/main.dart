@@ -40,9 +40,11 @@ Future<void> _initRevenueCat() async {
   PurchasesConfiguration config;
   if (Platform.isIOS) {
     config = PurchasesConfiguration('appl_KDuVwOmljiRmgUegeqjadtfAjRA');
-  } else {
-    return;
-  }
+  } else if (Platform.isAndroid) {
+      config = PurchasesConfiguration('goog_chSzVTtDJfNcfIfRHepJqITjste');
+    } else {
+      return;
+    }
   await Purchases.configure(config);
 }
 
