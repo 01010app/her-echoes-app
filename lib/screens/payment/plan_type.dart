@@ -1,1 +1,1 @@
-enum PlanType { individual, family }
+enum PlanType { individual, family, trial }

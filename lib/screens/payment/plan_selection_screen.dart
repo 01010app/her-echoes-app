@@ -21,7 +21,6 @@ class PlanSelectionScreen extends StatefulWidget {
 
 class _PlanSelectionScreenState extends State<PlanSelectionScreen> {
   PlanType _selected = PlanType.individual;
-  bool _freeTrial = true;
   bool _loading = false;
   bool _restoring = false;
   bool _loadingOfferings = true;
@@ -62,10 +61,23 @@ class _PlanSelectionScreenState extends State<PlanSelectionScreen> {
 
   String _individualPrice() {
     if (_loadingOfferings) return '...';
-    if (_freeTrial) {
-      return _trialPackage?.storeProduct.priceString ?? '—';
-    }
     return _individualPackage?.storeProduct.priceString ?? '—';
+  }
+
+  String _individualPricePerMonth() {
+    if (_loadingOfferings) return '';
+    final product = _individualPackage?.storeProduct;
+    if (product == null) return '';
+    final annual = product.price;
+    final monthly = annual / 12;
+    final raw = product.priceString;
+    final symbol = raw.replaceAll(RegExp(r'[\d.,\s]'), '').trim();
+    return '($symbol${monthly.toStringAsFixed(0)}/mes)';
+  }
+
+  String _trialPrice() {
+    if (_loadingOfferings) return '...';
+    return _trialPackage?.storeProduct.priceString ?? '—';
   }
 
   String _familiarPrice() {
@@ -78,10 +90,10 @@ class _PlanSelectionScreenState extends State<PlanSelectionScreen> {
     setState(() => _loading = true);
     try {
       Package? package;
-      if (_selected == PlanType.individual && _freeTrial) {
-        package = _trialPackage ?? _individualPackage;
-      } else if (_selected == PlanType.individual) {
-        package = _individualPackage ?? _trialPackage;
+      if (_selected == PlanType.individual) {
+        package = _individualPackage;
+      } else if (_selected == PlanType.trial) {
+        package = _trialPackage;
       } else {
         package = _familiarPackage;
       }
@@ -216,30 +228,37 @@ class _PlanSelectionScreenState extends State<PlanSelectionScreen> {
                             left: 16, right: 16, top: 24,
                             bottom: bottomPadding + 140),
                         child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            // Plan Individual
                             _PlanCard(
                               selected: _selected == PlanType.individual,
                               title: isEnglish ? 'Individual Plan' : 'Plan Individual',
                               price: _individualPrice(),
-                              periodicity: isEnglish ? 'Annual' : 'Anual',
-                              trailLabel: isEnglish
-                                  ? 'With 7-day free trial'
-                                  : 'Con prueba gratuita de 7 días',
-                              showTrialToggle: true,
-                              trialEnabled: _freeTrial,
-                              onTrialToggle: (val) =>
-                                  setState(() => _freeTrial = val),
-                              onTap: () =>
-                                  setState(() => _selected = PlanType.individual),
+                              subtitle: isEnglish ? 'Annual' : 'Anual',
+                              trailing: _individualPricePerMonth(),
+                              onTap: () => setState(() => _selected = PlanType.individual),
                             ),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: 8),
+                            // Plan Familiar
                             _PlanCard(
                               selected: _selected == PlanType.family,
                               title: isEnglish ? 'Family Plan' : 'Plan Familiar',
                               price: _familiarPrice(),
-                              periodicity: isEnglish ? 'Annual' : 'Anual',
-                              onTap: () =>
-                                  setState(() => _selected = PlanType.family),
+                              subtitle: isEnglish ? 'Annual' : 'Anual',
+                              trailing: isEnglish ? 'Up to 3 people' : 'Hasta 3 personas',
+                              onTap: () => setState(() => _selected = PlanType.family),
+                            ),
+                            const SizedBox(height: 24),
+                            // Plan Trial — separado visualmente
+                            _PlanCard(
+                              selected: _selected == PlanType.trial,
+                              title: isEnglish ? 'Individual Trial Plan' : 'Plan Individual Trial',
+                              price: _trialPrice(),
+                              subtitle: isEnglish
+                                  ? '7-day free trial. Then renews annually.'
+                                  : '7 días de prueba gratis. Luego se renueva anualmente.',
+                              onTap: () => setState(() => _selected = PlanType.trial),
                             ),
                           ],
                         ),
@@ -257,7 +276,7 @@ class _PlanSelectionScreenState extends State<PlanSelectionScreen> {
                               )
                             else
                               AppButton(
-                                label: isEnglish ? 'Subscribe' : 'Suscribirme',
+                                label: isEnglish ? 'Subscribe' : 'Suscribirse',
                                 onPressed: _handlePurchase,
                               ),
                             const SizedBox(height: 12),
@@ -296,22 +315,16 @@ class _PlanCard extends StatelessWidget {
   final bool selected;
   final String title;
   final String price;
-  final String periodicity;
-  final String? trailLabel;
-  final bool showTrialToggle;
-  final bool trialEnabled;
-  final ValueChanged<bool>? onTrialToggle;
+  final String subtitle;
+  final String? trailing;
   final VoidCallback onTap;
 
   const _PlanCard({
     required this.selected,
     required this.title,
     required this.price,
-    required this.periodicity,
-    this.trailLabel,
-    this.showTrialToggle = false,
-    this.trialEnabled = false,
-    this.onTrialToggle,
+    required this.subtitle,
+    this.trailing,
     required this.onTap,
   });
 
@@ -334,8 +347,7 @@ class _PlanCard extends StatelessWidget {
                 blurRadius: 8, offset: const Offset(0, 2)),
           ],
         ),
-        padding: const EdgeInsets.only(
-            left: 8, top: 16, right: 16, bottom: 12),
+        padding: const EdgeInsets.only(left: 8, top: 16, right: 16, bottom: 12),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -393,42 +405,26 @@ class _PlanCard extends StatelessWidget {
                   const SizedBox(height: 8),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(periodicity,
-                          style: GoogleFonts.inter(
-                              fontSize: 14, fontWeight: FontWeight.w400,
-                              height: 1.14,
-                              color: const Color(0xFF444444))),
+                      Expanded(
+                        child: Text(subtitle,
+                            style: GoogleFonts.inter(
+                                fontSize: 13, fontWeight: FontWeight.w400,
+                                height: 1.3,
+                                color: const Color(0xFF444444))),
+                      ),
+                      if (trailing != null && trailing!.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(left: 8),
+                          child: Text(trailing!,
+                              style: GoogleFonts.inter(
+                                  fontSize: 12, fontWeight: FontWeight.w400,
+                                  height: 1.0,
+                                  color: const Color(0xFF888888))),
+                        ),
                     ],
                   ),
-                  if (showTrialToggle && trailLabel != null) ...[
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(trailLabel!,
-                              style: GoogleFonts.inter(
-                                  fontSize: 13, fontWeight: FontWeight.w500,
-                                  height: 1.5, letterSpacing: -0.5,
-                                  color: const Color(0xFF434343))),
-                        ),
-                        GestureDetector(
-                          onTap: () => onTrialToggle?.call(!trialEnabled),
-                          child: PhosphorIcon(
-                            trialEnabled
-                                ? PhosphorIcons.toggleRight(
-                                    PhosphorIconsStyle.fill)
-                                : PhosphorIcons.toggleLeft(
-                                    PhosphorIconsStyle.fill),
-                            size: 36,
-                            color: trialEnabled
-                                ? const Color(0xFFF70F3D)
-                                : const Color(0xFF949494),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
                 ],
               ),
             ),

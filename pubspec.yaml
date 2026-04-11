@@ -2,7 +2,7 @@ name: herechoes
 description: "A new Flutter project."
 publish_to: 'none'
 
-version: 1.0.0+9
+version: 1.0.0+10
 
 environment:
   sdk: ^3.11.1
@@ -30,6 +30,7 @@ dependencies:
   sign_in_with_apple: ^7.0.1
   firebase_core: ^4.5.0
   google_sign_in: ^6.2.1
+  webview_flutter: ^4.13.1
 
 dev_dependencies:
   flutter_test:

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../core/language_provider.dart';
 import '../../core/theme/app_colors.dart';
@@ -22,28 +22,30 @@ class LegalContentScreen extends StatefulWidget {
 }
 
 class _LegalContentScreenState extends State<LegalContentScreen> {
+  late final WebViewController _controller;
   bool _loading = true;
 
   @override
   void initState() {
     super.initState();
-    _openUrl();
-  }
 
-  Future<void> _openUrl() async {
     final url = widget.contentKey == 'terms'
         ? 'https://callmehector.cl/apps/herechoes/terminos.html'
         : 'https://callmehector.cl/apps/herechoes/privacidad.html';
 
-    await launchUrl(
-      Uri.parse(url),
-      mode: LaunchMode.externalApplication,
-    );
-
-    if (mounted) {
-      setState(() => _loading = false);
-      Navigator.pop(context);
-    }
+    _controller = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onPageFinished: (_) {
+            if (mounted) setState(() => _loading = false);
+          },
+          onWebResourceError: (_) {
+            if (mounted) setState(() => _loading = false);
+          },
+        ),
+      )
+      ..loadRequest(Uri.parse(url));
   }
 
   @override
@@ -105,10 +107,14 @@ class _LegalContentScreenState extends State<LegalContentScreen> {
             ),
           ),
           Expanded(
-            child: Center(
-              child: _loading
-                  ? const CircularProgressIndicator(color: Color(0xFFE1002D))
-                  : const SizedBox.shrink(),
+            child: Stack(
+              children: [
+                WebViewWidget(controller: _controller),
+                if (_loading)
+                  const Center(
+                    child: CircularProgressIndicator(color: Color(0xFFE1002D)),
+                  ),
+              ],
             ),
           ),
         ],
