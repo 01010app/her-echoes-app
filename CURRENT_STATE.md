@@ -389,3 +389,41 @@ v3.1-android-revenuecat-complete ✅ sesión 20
 - [ ] Sandbox Tester separado para reviewer Apple
 - [ ] Migrar her_echoes.json a carga remota desde GitHub
 - [ ] Completar JSON julio → diciembre
+
+### Sesión 22 — Estado actualizado
+Build iOS
+
+Build 10 subido y enviado a revisión Apple (11 abr 2026, 21:49)
+Rechazado build 10 — mismos problemas + nuevos
+Fixes aplicados sin nuevo build:
+
+Imágenes promocionales eliminadas de las 3 suscripciones anuales (Individual, Trial, Familiar)
+Link Términos de uso agregado en descripción App Store: https://callmehector.cl/apps/herechoes/terminos.html
+"Suscripción mensual" corregida a "Suscripción anual" en descripción
+Respondido a Apple explicando retiro de planes mensuales y que imágenes promocionales son opcionales
+
+
+Re-enviado a revisión (11 abr 2026, 21:49) — Pendiente de revisión
+
+pubspec.yaml
+
+version: 1.0.0+10 (iOS y Android)
+
+Android — Build 10
+
+SHA-256 del keystore de producción registrado en Firebase: EE:ED:33:63:D9:1E:50:6B:96:5D:2A:8A:62:C2:3D:4D:F7:19:E8:E6:43:79:C7:28:55:38:EC:44:F9:01:8B:54
+google-services.json actualizado en el proyecto
+AAB build 10 subido a Prueba cerrada Alpha — en revisión
+Bug reportado: Google Sign-In en Android no funciona — modal se cierra sin autenticar. Fix aplicado: SHA-256 registrado en Firebase. Pendiente verificar si se resuelve con build 10.
+
+Google Play — Prueba cerrada
+
+13 testers en Lista testers 001
+Enlace enviado a todos — pendiente que acepten y descarguen
+Contador Panel de control: 0 testers aceptados (actualizacion puede tardar 24hrs)
+Build 10 en revisión — pendiente publicación
+
+Git
+
+Tag v3.2-apple-review-fixes ✅
+⚠️ Pendiente crear tag v3.3-firebase-sha-fix después de confirmar que Google Sign-In funciona
