@@ -1,5 +1,5 @@
 # HerEchoes — Estado Actual del Proyecto
-**Última actualización:** 2026-04-10 (sesión 21)
+**Última actualización:** 2026-04-12 (sesión 22)
 
 ---
 
@@ -53,10 +53,8 @@ vertical_card_pager: (ver pubspec) ✅ usado en show_all_screen
 webview_flutter: ^4.13.1         ✅ sesión 21: para mostrar términos y privacidad dentro de la app
 ```
 
-**versión actual pubspec iOS:** `version: 1.0.0+6` (build 6 generado, aún NO subido a App Store Connect)
-**versión actual pubspec Android:** `version: 1.0.0+9` (versionCode Android = 9, en prueba interna)
-
-⚠️ Antes de subir el IPA de iOS hay que incrementar a `version: 1.0.0+7`
+**versión actual pubspec:** `version: 1.0.0+10`
+⚠️ Antes de subir el próximo AAB hay que incrementar a `version: 1.0.0+11`
 
 ---
 
@@ -167,29 +165,20 @@ estos productos fueron retirados y reemplazados por los anuales.
 - La imagen promocional de las suscripciones en App Store Connect era igual al ícono de la app
 - **Fix requerido:** Subir imagen promocional distinta al ícono en cada suscripción (1024x1024px)
 - Esta imagen es OPCIONAL — si no se activa "promocionar en App Store" no bloquea la revisión
-- ⚠️ Pendiente: crear y subir imagen promocional para las suscripciones anuales
+- ⚠️ Fix aplicado: imágenes promocionales eliminadas de las 3 suscripciones anuales
 
 ### Guideline 3.1.2(c) parte 1 — Links de Términos y Privacidad no funcionan
 - `legal_content_screen.dart` usaba `LaunchMode.externalApplication` (abría Safari)
 - En sandbox de Apple, Safari no está disponible → pantalla mostraba "Contenido no disponible"
 - **Fix aplicado sesión 21:** Reescrito con `WebViewWidget` — carga el contenido dentro de la app ✅
-- Verificado: al abrir desde iPhone físico (iOS 26) sí carga la web correctamente
 
 ### Guideline 3.1.2(c) parte 2 — Toggle de prueba gratuita confuso
 - El diseño anterior tenía un toggle dentro del Plan Individual para activar/desactivar el trial
 - Apple dice que es confuso y puede llevar a malentendidos sobre el cargo automático
 - **Fix aplicado sesión 21:** Rediseño completo — el trial es ahora una tarjeta separada ✅
-  - Plan Individual (sin trial) — Anual
-  - Plan Familiar — Anual — Hasta 3 personas
-  - [24px de separación]
-  - Plan Individual Trial — 7 días gratis, luego se renueva anualmente
-- Aplicado en: `plan_selection_screen.dart` y `upsell_modal_free.dart`
 
 ### Guideline 2.1(b) — Botón "Suscribirme" no respondía
-- Apple reportó que al tocar "Suscribirme" no ocurría ninguna acción
-- Dispositivo: iPad Air M3, iPadOS 26.4
 - Posible causa: productos con estado DEVELOPER_ACTION_NEEDED en App Store Connect
-- Todos los productos (mensuales retirados + anuales activos) tienen este estado
 - El estado se resetea automáticamente al incluirlos en un nuevo envío con build aprobado
 - ⚠️ En el próximo envío: incluir explícitamente los 3 productos anuales en la sección
   "Compras dentro de la app y suscripciones" del envío
@@ -211,14 +200,6 @@ estos productos fueron retirados y reemplazados por los anuales.
 - **Offering default:** ✅ 3 packages con producto iOS y Android mapeados
 - **Precios verificados en Redmi:** ✅
 
-### Lección aprendida — "Credentials need attention"
-El error NO era de propagación. La cuenta de servicio tenía permisos de **cuenta** en Google Play Console pero no estaba vinculada a la **aplicación** Her Echoes. Fix: Usuarios y permisos → cuenta de servicio → pestaña "Permisos de la aplicación" → Añadir aplicación → Her Echoes.
-
-### Configuración Google Cloud
-- **Proyecto:** HerEchoes (`herechoes-dca3d`)
-- **API habilitada:** Google Play Android Developer API ✅
-- **Service Account:** `revenuecat-android@herechoes-dca3d.iam.gserviceaccount.com` ✅
-
 ### Packages (offering: default) ✅
 | Identifier | Producto iOS | Producto Android |
 |---|---|---|
@@ -230,7 +211,16 @@ El error NO era de propagación. La cuenta de servicio tenía permisos de **cuen
 
 ## App Store Connect
 
-### Builds iOS
+### Estado iOS — Build 10
+- Build 10 enviado a revisión Apple: 11 abr 2026, 21:49
+- Estado: ⏳ En revisión (re-enviado después de fixes sin nuevo build)
+- Fixes aplicados sin nuevo build:
+  - Imágenes promocionales eliminadas de las 3 suscripciones anuales
+  - Link Términos de uso agregado en descripción App Store
+  - "Suscripción mensual" corregida a "Suscripción anual" en descripción
+  - Respondido a Apple explicando retiro de planes mensuales
+
+### Builds iOS historial
 | Build | Fecha | Estado |
 |---|---|---|
 | 1.0.0 (1) | 18-03-2026 | Rechazado — Guideline 2.1(b) |
@@ -238,17 +228,7 @@ El error NO era de propagación. La cuenta de servicio tenía permisos de **cuen
 | 1.0.0 (3) | 27-03-2026 | Finalizado |
 | 1.0.0 (4) | 28-03-2026 | Finalizado |
 | 1.0.0 (5) | 05-04-2026 | ❌ Rechazado — Guidelines 2.1(b), 2.3.2, 3.1.2(c) |
-| 1.0.0 (6) | ⏳ Generado localmente — aún NO subido a App Store Connect |
-| 1.0.0 (7) | ⏳ Pendiente — incrementar build number y generar IPA |
-
-### Qué incluye el build 7 (próximo a subir)
-- ✅ WebView para Términos y Privacidad (fix rechazo 3.1.2c)
-- ✅ Pantalla de planes rediseñada sin toggle (fix rechazo 3.1.2c parte 2)
-- ✅ plan_type.dart con PlanType.trial
-- ✅ upsell_modal_free.dart rediseñado sin toggle
-- ✅ lazy loading en Show All (30 items, +30 al scroll)
-- ✅ JSON actualizado hasta 30 de junio (365 entradas)
-- ✅ webview_flutter ^4.13.1 agregado al pubspec
+| 1.0.0 (10) | 11-04-2026 | ⏳ En revisión |
 
 ### Sandbox Tester
 - Email: `valar.disghulis@gmail.com` — País: Chile
@@ -269,11 +249,12 @@ El error NO era de propagación. La cuenta de servicio tenía permisos de **cuen
 
 ### Prueba interna
 - Canal: **Activo**
-- Última versión: **9 (1.0.0)** ✅
+- Última versión: **9 (1.0.0)**
 
 ### Prueba cerrada Alpha
-- Canal: **Activo** — versión 9 (1.0.0), última actualización 8 abr 2026
-- Cambios en revisión: lanzamiento completo + 176 países + resto del mundo
+- Canal: **Activo**
+- Build 10 (1.0.0): en revisión por Google (subido 12 abr 2026)
+- ⚠️ Build 10 AÚN NO publicado — en revisión al momento de esta sesión
 
 ### Historial AABs
 | versionCode | Estado |
@@ -282,14 +263,60 @@ El error NO era de propagación. La cuenta de servicio tenía permisos de **cuen
 | 4 | Fix MainActivity + lazy loading + button fix |
 | 5-7 | Saltados |
 | 8 | Fix notifications + mailto + RevenueCat API key |
-| 9 | ✅ En prueba interna y prueba cerrada Alpha — versión actual |
+| 9 | En prueba interna y prueba cerrada Alpha |
+| 10 | En revisión — incluye google-services.json con SHA-256 keystore de subida |
+| 11 | ⏳ Próximo a subir — incluye google-services.json con SHA-256 firma de Google Play |
 
 ### Tester interno
 - Email: `01010.herechoes@gmail.com`
 
-### Prueba cerrada (OBLIGATORIA para producción)
-- Requiere: 12 testers + 14 días activos
-- Estado: ⏳ pendiente
+### Testers prueba cerrada
+- 13 testers en Lista testers 001
+- 1 tester ha aceptado participar al momento de esta sesión
+- Requiere: 12 testers activos + 14 días para solicitar acceso a producción
+
+---
+
+## 🔴 BUG CRÍTICO: Google Sign-In no funciona en Android
+
+### Síntoma
+El modal de Google Sign-In se abre y se cierra sin autenticar. El usuario no puede loguearse con su cuenta Google en Android.
+
+### Causa raíz (descubierta sesión 22)
+Firebase necesita el SHA-256 del **certificado de firma de Google Play** (el que Google usa para re-firmar la app al distribuirla). Este SHA es DISTINTO al SHA-256 del keystore local de subida.
+
+Google Play App Signing re-firma todos los AABs con su propio certificado antes de distribuirlos. Firebase valida el origen del request usando este SHA. Si solo está registrado el SHA del keystore de subida, Firebase rechaza los requests que vienen de la app distribuida por Google Play.
+
+### Los dos SHA-256 que existen (Google Play Console → Integridad de la app → Firma de aplicaciones)
+
+| Certificado | SHA-256 | Rol |
+|---|---|---|
+| Clave de firma de aplicación (Google Play) | `62:DB:13:B5:EB:32:22:CF:8A:6F:A1:2D:9D:7C:AC:32:D1:CE:00:F1:93:BF:6B:72:6F:EF:C4:17:8C:27:AF:2E` | El que usa Google para distribuir — **este es el que faltaba** |
+| Clave de subida (keystore local) | `EE:ED:33:63:D9:1E:50:6B:96:5D:2A:8A:62:C2:3D:4D:F7:19:E8:E6:43:79:C7:28:55:38:EC:44:F9:01:8B:54` | El que registramos en sesión anterior — necesario pero no suficiente |
+
+### Fixes aplicados en sesión 22
+1. ✅ SHA-256 de firma de Google Play agregado en Firebase Console → HerEchoes → HerEchoes Android → Huellas digitales del certificado SHA
+2. ✅ `google-services.json` descargado y reemplazado en `android/app/google-services.json`
+3. ✅ AAB compilado exitosamente (`flutter build appbundle --release`) — 50.4MB
+4. ⏳ **PENDIENTE:** Incrementar pubspec a `version: 1.0.0+11` y subir AAB build 11 a Prueba cerrada Alpha
+
+### Plan de acción — próximos pasos inmediatos
+1. Incrementar versión en pubspec.yaml: `version: 1.0.0+11`
+2. Compilar nuevo AAB: `flutter build appbundle --release`
+3. Subir build 11 a Google Play Console → Prueba cerrada Alpha
+4. Esperar aprobación de Google (~horas)
+5. Pedir a un tester que actualice la app desde Play Store y pruebe Google Sign-In
+6. Si funciona → crear tag `v3.3-firebase-sha-fix` (el tag actual apunta al commit con solo el SHA de subida, pero el fix real es el build 11)
+
+### ⚠️ Nota importante sobre el tag v3.3
+El tag `v3.3-firebase-sha-fix` ya fue creado y pusheado, pero apunta al commit que solo tenía el SHA de subida registrado. El fix real (SHA de firma de Google Play) está en el commit con el nuevo google-services.json. Considerar crear `v3.4-firebase-play-signing-sha-fix` después de confirmar que funciona.
+
+---
+
+## Firebase — Huellas SHA registradas (estado actual) ✅
+En Firebase Console → HerEchoes → Configuración → HerEchoes Android:
+1. `ee:ed:33:63:d9:1e:50:6b:96:5d:2a:8a:62:c2:3d:4d:f7:19:e8:e6:43:79:c7:28:55:38:ec:44:f9:01:8b:54` — SHA-256 keystore de subida
+2. `62:db:13:b5:eb:32:22:cf:8a:6f:a1:2d:9d:7c:ac:32:d1:ce:00:f1:93:bf:6b:72:6f:ef:c4:17:8c:27:af:2e` — SHA-256 firma de Google Play ✅ agregado sesión 22
 
 ---
 
@@ -309,19 +336,20 @@ flutter run --device-id IP:PUERTO
 - Total: 365 entradas ✅ sesión 21
 - Cobertura: marzo → 30 de junio ✅
 - ⚠️ Pendiente: completar julio → diciembre
+- ⚠️ Pendiente: migrar a carga remota desde GitHub (para evitar builds por cada actualización de contenido)
 
 ---
 
 ## Imágenes en GitHub ✅
 URL: `https://raw.githubusercontent.com/01010app/her-echoes-app/main/images/cards/${rawId}.webp`
 
-### Imágenes subidas sesión 21 (34) — incluidas en JSON hasta jun 30:
+### Imágenes subidas sesión 21 (34):
 abbagnato, bachmann, baker_02, baxter_02, carter_03, colvin, cornaro, desai, donohoe, dorio,
 dunbar, hajiwon, horne_02, kidman, kristeva, larmore, massari, mcaleese, mcdormand, mink,
 murray, ning, randall, robertson, ruge, saldana, satir, sheinbaum, soraya, sotomayor,
 tunney, willard, yingluck, ziegesar
 
-### Imágenes subidas sesiones anteriores — ya en JSON:
+### Imágenes subidas sesiones anteriores:
 (sesión 19: baker, barnes, bath, bening, blau, bondfield, bourgeois, bourkewhite, coleman_02,
 drabble, jackson, jolie, keller_02, klum, lenglen, mahler, marshall, menzel, montessori,
 quatro, swenson, washington, west)
@@ -333,7 +361,7 @@ owens, portman, reuben, sayers, sissi, tyler, venus, yourcenar)
 
 ## Wildcard ✅
 - Cargado desde GitHub en tiempo real
-- Token `herechoes-wildcard`: **SIN fecha de expiración** ✅ (verificado sesión 21 — el CURRENT_STATE anterior estaba equivocado)
+- Token `herechoes-wildcard`: **SIN fecha de expiración** ✅
 
 ---
 
@@ -346,9 +374,6 @@ Cupones:     https://callmehector.cl/apps/herechoes/coupons.php
 Privacidad:  https://callmehector.cl/apps/herechoes/privacidad.html
 Términos:    https://callmehector.cl/apps/herechoes/terminos.html
 ```
-
-⚠️ Nota: las URLs reales del servidor usan `privacidad.html` y `terminos.html` (en español),
-no `privacy.html` ni `terms.html`. El legal_content_screen.dart ya apunta a las URLs correctas.
 
 ---
 
@@ -367,63 +392,27 @@ v2.8-login-links-fix             ✅
 v2.9-android-legal-fixes         ✅
 v3.0-android-revenuecat-setup    ✅ sesión 19
 v3.1-android-revenuecat-complete ✅ sesión 20
+v3.2-apple-review-fixes          ✅ sesión 22
+v3.3-firebase-sha-fix            ✅ sesión 22 — ⚠️ apunta al SHA de subida solamente, fix incompleto
 ```
-⚠️ Pendiente crear tag para sesión 21 después de subir build 7
+⚠️ Pendiente crear tag `v3.4-firebase-play-signing-sha-fix` después de confirmar que Google Sign-In funciona con build 11
 
 ---
 
 ## Pendientes
 
-### URGENTE — Próximos pasos inmediatos
-- [ ] Incrementar build number a 7 en pubspec.yaml
-- [ ] Generar IPA (`flutter build ipa`)
-- [ ] Subir IPA a App Store Connect via Transporter
-- [ ] En el envío: incluir los 3 productos anuales en "Compras dentro de la app y suscripciones"
-- [ ] Responder a Apple en el hilo del rechazo explicando que los productos mensuales fueron retirados
-- [ ] Crear tag git `v3.2-apple-review-fixes`
+### URGENTE — Próximo paso inmediato
+- [ ] Incrementar pubspec.yaml a `version: 1.0.0+11`
+- [ ] Compilar AAB: `flutter build appbundle --release`
+- [ ] Subir build 11 a Google Play Console → Prueba cerrada Alpha
+- [ ] Esperar aprobación Google y pedir a testers que actualicen
+- [ ] Confirmar que Google Sign-In funciona
+- [ ] Crear tag `v3.4-firebase-play-signing-sha-fix`
 
 ### Media prioridad
 - [ ] Crear imagen promocional 1024x1024px para suscripciones (fix guideline 2.3.2)
 - [ ] Show All — márgenes laterales
-- [ ] Prueba cerrada Google Play (12 testers, 14 días)
+- [ ] Prueba cerrada Google Play (12 testers activos, 14 días)
 - [ ] Sandbox Tester separado para reviewer Apple
 - [ ] Migrar her_echoes.json a carga remota desde GitHub
 - [ ] Completar JSON julio → diciembre
-
-### Sesión 22 — Estado actualizado
-Build iOS
-
-Build 10 subido y enviado a revisión Apple (11 abr 2026, 21:49)
-Rechazado build 10 — mismos problemas + nuevos
-Fixes aplicados sin nuevo build:
-
-Imágenes promocionales eliminadas de las 3 suscripciones anuales (Individual, Trial, Familiar)
-Link Términos de uso agregado en descripción App Store: https://callmehector.cl/apps/herechoes/terminos.html
-"Suscripción mensual" corregida a "Suscripción anual" en descripción
-Respondido a Apple explicando retiro de planes mensuales y que imágenes promocionales son opcionales
-
-
-Re-enviado a revisión (11 abr 2026, 21:49) — Pendiente de revisión
-
-pubspec.yaml
-
-version: 1.0.0+10 (iOS y Android)
-
-Android — Build 10
-
-SHA-256 del keystore de producción registrado en Firebase: EE:ED:33:63:D9:1E:50:6B:96:5D:2A:8A:62:C2:3D:4D:F7:19:E8:E6:43:79:C7:28:55:38:EC:44:F9:01:8B:54
-google-services.json actualizado en el proyecto
-AAB build 10 subido a Prueba cerrada Alpha — en revisión
-Bug reportado: Google Sign-In en Android no funciona — modal se cierra sin autenticar. Fix aplicado: SHA-256 registrado en Firebase. Pendiente verificar si se resuelve con build 10.
-
-Google Play — Prueba cerrada
-
-13 testers en Lista testers 001
-Enlace enviado a todos — pendiente que acepten y descarguen
-Contador Panel de control: 0 testers aceptados (actualizacion puede tardar 24hrs)
-Build 10 en revisión — pendiente publicación
-
-Git
-
-Tag v3.2-apple-review-fixes ✅
-⚠️ Pendiente crear tag v3.3-firebase-sha-fix después de confirmar que Google Sign-In funciona
