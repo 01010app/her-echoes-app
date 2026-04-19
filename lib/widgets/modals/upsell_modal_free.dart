@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/language_provider.dart';
 import '../../core/subscription_provider.dart';
@@ -130,6 +131,13 @@ class _UpsellModalFreeState extends State<UpsellModalFree> {
     } catch (_) {
     } finally {
       if (mounted) setState(() => _promoLoading = false);
+    }
+  }
+
+  Future<void> _launchUrl(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.inAppWebView);
     }
   }
 
@@ -274,6 +282,40 @@ class _UpsellModalFreeState extends State<UpsellModalFree> {
                         color: const Color(0xFFE1002D),
                       ),
                     ),
+            ),
+            const SizedBox(height: 10),
+            // ── Links legales exigidos por Apple (Guideline 3.1.2c) ──
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                GestureDetector(
+                  onTap: () => _launchUrl(
+                      'https://callmehector.cl/apps/herechoes/terminos.html'),
+                  child: Text(
+                    isEnglish ? 'Terms of Use' : 'Términos de uso',
+                    style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w400,
+                        color: const Color(0xFF888888),
+                        decoration: TextDecoration.underline),
+                  ),
+                ),
+                Text('  ·  ',
+                    style: GoogleFonts.inter(
+                        fontSize: 12, color: const Color(0xFF888888))),
+                GestureDetector(
+                  onTap: () => _launchUrl(
+                      'https://callmehector.cl/apps/herechoes/privacidad.html'),
+                  child: Text(
+                    isEnglish ? 'Privacy Policy' : 'Política de privacidad',
+                    style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w400,
+                        color: const Color(0xFF888888),
+                        decoration: TextDecoration.underline),
+                  ),
+                ),
+              ],
             ),
           ],
           SizedBox(height: 13 + bottomPadding),

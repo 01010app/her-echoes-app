@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/language_provider.dart';
 import '../../core/subscription_provider.dart';
@@ -79,6 +80,13 @@ class _UpsellModalProState extends State<UpsellModalPro> {
       }
     } finally {
       if (mounted) setState(() => _restoring = false);
+    }
+  }
+
+  Future<void> _launchUrl(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.inAppWebView);
     }
   }
 
@@ -286,6 +294,40 @@ class _UpsellModalProState extends State<UpsellModalPro> {
                       color: const Color(0xFFE1002D),
                     ),
                   ),
+          ),
+          const SizedBox(height: 10),
+          // ── Links legales exigidos por Apple (Guideline 3.1.2c) ──
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              GestureDetector(
+                onTap: () => _launchUrl(
+                    'https://callmehector.cl/apps/herechoes/terminos.html'),
+                child: Text(
+                  isEnglish ? 'Terms of Use' : 'Términos de uso',
+                  style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w400,
+                      color: const Color(0xFF888888),
+                      decoration: TextDecoration.underline),
+                ),
+              ),
+              Text('  ·  ',
+                  style: GoogleFonts.inter(
+                      fontSize: 12, color: const Color(0xFF888888))),
+              GestureDetector(
+                onTap: () => _launchUrl(
+                    'https://callmehector.cl/apps/herechoes/privacidad.html'),
+                child: Text(
+                  isEnglish ? 'Privacy Policy' : 'Política de privacidad',
+                  style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w400,
+                      color: const Color(0xFF888888),
+                      decoration: TextDecoration.underline),
+                ),
+              ),
+            ],
           ),
           SizedBox(height: 8 + bottomPadding),
         ],

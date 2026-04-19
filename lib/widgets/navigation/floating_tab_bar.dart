@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
@@ -20,10 +22,24 @@ class FloatingTabBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final isEnglish = context.watch<LanguageProvider>().isEnglish;
 
+    // En Android, algunos dispositivos (ej. Xiaomi con HyperOS) usan barra de
+    // navegación semitransparente en modo edge-to-edge. En ese modo el sistema
+    // reporta padding.bottom = 0, pero la barra física sigue presente como overlay.
+    // viewPadding.bottom sí reporta la altura física real independientemente del modo.
+    double bottomOffset;
+    if (Platform.isAndroid) {
+      final double navBarHeight = MediaQuery.of(context).viewPadding.bottom;
+      // Si hay barra física (3 botones o semitransparente), posicionamos encima + 8px.
+      // Si es navegación por gestos (navBarHeight ≈ 0), usamos 24px como en iOS.
+      bottomOffset = navBarHeight > 0 ? navBarHeight + 8 : 24;
+    } else {
+      bottomOffset = 24;
+    }
+
     return Positioned(
       left: 0,
       right: 0,
-      bottom: 24,
+      bottom: bottomOffset,
       child: Center(
         child: Container(
           width: 300,
