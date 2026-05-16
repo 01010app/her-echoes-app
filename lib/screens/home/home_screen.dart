@@ -27,12 +27,14 @@ class HomeScreen extends StatefulWidget {
   final List<Map<String, dynamic>> allWomen;
   final List<Map<String, dynamic>> todaysWomen;
   final List<Map<String, dynamic>> wildcards;
+  final Set<String> todaysFreeIds;
 
   const HomeScreen({
     super.key,
     required this.suggestions,
     required this.allWomen,
     required this.todaysWomen,
+    required this.todaysFreeIds,
     this.wildcards = const [],
   });
 
@@ -44,8 +46,6 @@ class _HomeScreenState extends State<HomeScreen> {
   int currentIndex = 0;
   bool hasSettingsNotification = false;
 
-  // ── Claves SharedPreferences que generan notificación en el ícono ──
-  // Agregar aquí cualquier nueva clave booleana que signifique "hay algo pendiente"
   static const List<String> _notificationKeys = [
     'settings_has_card_issue',
     'settings_has_new_terms',
@@ -134,7 +134,6 @@ class _HomeScreenState extends State<HomeScreen> {
       context,
       MaterialPageRoute(builder: (_) => const SettingsScreen()),
     );
-    // Al volver de Settings re-chequea por si cambió algo
     _checkSettingsNotification();
   }
 
@@ -182,6 +181,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: ShowAllScreen(
                 allWomen: widget.allWomen,
                 wildcards: widget.wildcards,
+                todaysFreeIds: widget.todaysFreeIds,
               ),
             );
           },
@@ -208,11 +208,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
         return Stack(
           children: [
-
-            // 1. FONDO
             Container(color: const Color(0xFFF5F5F5)),
-
-            // 2. IMAGEN DECORATIVA
             Positioned(
               bottom: 265,
               left: 0,
@@ -228,8 +224,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-
-            // 3. DEGRADADO
             Positioned(
               bottom: 265,
               left: 0,
@@ -247,8 +241,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-
-            // 4. TÍTULO
             Positioned(
               top: titleTop,
               left: 24,
@@ -262,8 +254,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-
-            // 5. BANNER UPSELL
             Positioned(
               top: bannerTop,
               left: 24,
@@ -290,8 +280,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       onTap: _showUpsell,
                     ),
             ),
-
-            // 6. CARRUSEL
             Positioned(
               top: carouselTop,
               left: 0,
@@ -309,9 +297,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     final imageUrl = rawId.startsWith('http')
                         ? rawId
                         : "https://raw.githubusercontent.com/01010app/her-echoes-app/main/images/cards/$rawId.webp";
-                    final isContentPro = woman['is_free'] != "VERDADERO";
-                    final blocked = isContentPro && !isPro;
                     final isWildcard = woman['_is_wildcard'] == true;
+                    final womanId = (woman['woman_id'] ?? '').toString();
+                    final blocked = !isPro &&
+                        !isWildcard &&
+                        !widget.todaysFreeIds.contains(womanId);
 
                     return HomeMiniCard(
                       fullName: woman['full_name'] ?? '',

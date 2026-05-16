@@ -3,11 +3,11 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/language_provider.dart';
 import '../../core/subscription_provider.dart';
 import '../../screens/payment/plan_selection_screen.dart';
+import '../../screens/settings/legal_content_screen.dart';
 import '../system/app_button.dart';
 
 class UpsellModalPro extends StatefulWidget {
@@ -83,11 +83,14 @@ class _UpsellModalProState extends State<UpsellModalPro> {
     }
   }
 
-  Future<void> _launchUrl(String url) async {
-    final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.inAppWebView);
-    }
+  void _openLegal(String key) {
+    final isEnglish = context.read<LanguageProvider>().isEnglish;
+    Navigator.push(context, MaterialPageRoute(
+      builder: (_) => LegalContentScreen(
+        contentKey: key,
+        language: isEnglish ? 'en' : 'es',
+      ),
+    ));
   }
 
   @override
@@ -151,7 +154,6 @@ class _UpsellModalProState extends State<UpsellModalPro> {
             ),
           ),
           const SizedBox(height: 32),
-
           if (_loadingOfferings)
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 16),
@@ -225,7 +227,6 @@ class _UpsellModalProState extends State<UpsellModalPro> {
                 ),
               ),
             ),
-
           const SizedBox(height: 16),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -296,13 +297,11 @@ class _UpsellModalProState extends State<UpsellModalPro> {
                   ),
           ),
           const SizedBox(height: 10),
-          // ── Links legales exigidos por Apple (Guideline 3.1.2c) ──
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               GestureDetector(
-                onTap: () => _launchUrl(
-                    'https://callmehector.cl/apps/herechoes/terminos.html'),
+                onTap: () => _openLegal('terms'),
                 child: Text(
                   isEnglish ? 'Terms of Use' : 'Términos de uso',
                   style: GoogleFonts.inter(
@@ -316,8 +315,7 @@ class _UpsellModalProState extends State<UpsellModalPro> {
                   style: GoogleFonts.inter(
                       fontSize: 12, color: const Color(0xFF888888))),
               GestureDetector(
-                onTap: () => _launchUrl(
-                    'https://callmehector.cl/apps/herechoes/privacidad.html'),
+                onTap: () => _openLegal('privacy'),
                 child: Text(
                   isEnglish ? 'Privacy Policy' : 'Política de privacidad',
                   style: GoogleFonts.inter(

@@ -14,12 +14,14 @@ class LoginScreen extends StatefulWidget {
   final List<Map<String, dynamic>> todaysWomen;
   final List<Map<String, dynamic>> suggestions;
   final List<Map<String, dynamic>> wildcards;
+  final Set<String> todaysFreeIds;
 
   const LoginScreen({
     super.key,
     required this.allWomen,
     required this.todaysWomen,
     required this.suggestions,
+    required this.todaysFreeIds,
     this.wildcards = const [],
   });
 
@@ -60,6 +62,7 @@ class _LoginScreenState extends State<LoginScreen>
           todaysWomen: widget.todaysWomen,
           suggestions: widget.suggestions,
           wildcards: widget.wildcards,
+          todaysFreeIds: widget.todaysFreeIds,
         ),
       ),
     );
@@ -74,6 +77,7 @@ class _LoginScreenState extends State<LoginScreen>
           todaysWomen: widget.todaysWomen,
           suggestions: widget.suggestions,
           wildcards: widget.wildcards,
+          todaysFreeIds: widget.todaysFreeIds,
         ),
       ),
     );
@@ -212,7 +216,7 @@ class _LoginScreenState extends State<LoginScreen>
                               recognizer: TapGestureRecognizer()
                                 ..onTap = () => launchUrl(
                                       Uri.parse(
-                                          'https://callmehector.cl/apps/herechoes/terms.html'),
+                                          'https://callmehector.cl/apps/herechoes/terminos.html'),
                                       mode: LaunchMode.externalApplication,
                                     ),
                             ),
@@ -225,7 +229,7 @@ class _LoginScreenState extends State<LoginScreen>
                               recognizer: TapGestureRecognizer()
                                 ..onTap = () => launchUrl(
                                       Uri.parse(
-                                          'https://callmehector.cl/apps/herechoes/privacy.html'),
+                                          'https://callmehector.cl/apps/herechoes/privacidad.html'),
                                       mode: LaunchMode.externalApplication,
                                     ),
                             ),

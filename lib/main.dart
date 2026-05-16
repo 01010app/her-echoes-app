@@ -41,10 +41,10 @@ Future<void> _initRevenueCat() async {
   if (Platform.isIOS) {
     config = PurchasesConfiguration('appl_KDuVwOmljiRmgUegeqjadtfAjRA');
   } else if (Platform.isAndroid) {
-      config = PurchasesConfiguration('goog_chSzVTtDJfNcfIfRHepJqITjste');
-    } else {
-      return;
-    }
+    config = PurchasesConfiguration('goog_chSzVTtDJfNcfIfRHepJqITjste');
+  } else {
+    return;
+  }
   await Purchases.configure(config);
 }
 
@@ -142,6 +142,12 @@ class _MyAppState extends State<MyApp> {
     final todaysWomen =
         allWomen.where((w) => w["event_date"] == todayKey).toList();
 
+    // IDs desbloqueados para usuarios free: solo la mujer del día con is_free == "VERDADERO"
+    final todaysFreeIds = todaysWomen
+        .where((w) => w['is_free'] == 'VERDADERO')
+        .map((w) => (w['woman_id'] ?? '').toString())
+        .toSet();
+
     final suggestions = DailySuggestionsEngine.generateSuggestions(
       todaysWomen: todaysWomen,
       fullDataset: allWomen,
@@ -174,6 +180,7 @@ class _MyAppState extends State<MyApp> {
             return LoginScreen(
               allWomen: allWomen,
               todaysWomen: todaysWomen,
+              todaysFreeIds: todaysFreeIds,
               suggestions: suggestions,
               wildcards: wildcards,
             );
@@ -182,6 +189,7 @@ class _MyAppState extends State<MyApp> {
           return OnboardingScreen(
             allWomen: allWomen,
             todaysWomen: todaysWomen,
+            todaysFreeIds: todaysFreeIds,
             suggestions: suggestions,
             wildcards: wildcards,
           );

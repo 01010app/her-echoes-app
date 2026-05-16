@@ -11,12 +11,14 @@ class OnboardingScreen extends StatefulWidget {
   final List<Map<String, dynamic>> todaysWomen;
   final List<Map<String, dynamic>> suggestions;
   final List<Map<String, dynamic>> wildcards;
+  final Set<String> todaysFreeIds;
 
   const OnboardingScreen({
     super.key,
     required this.allWomen,
     required this.todaysWomen,
     required this.suggestions,
+    required this.todaysFreeIds,
     this.wildcards = const [],
   });
 
@@ -46,6 +48,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           todaysWomen: widget.todaysWomen,
           suggestions: widget.suggestions,
           wildcards: widget.wildcards,
+          todaysFreeIds: widget.todaysFreeIds,
         ),
       ),
     );
@@ -65,7 +68,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       body: Column(
         children: [
           SizedBox(height: topPadding),
-
           Expanded(
             child: PageView.builder(
               controller: _pageController,
@@ -74,7 +76,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               itemBuilder: (_, i) => _SlidePage(slide: slides[i]),
             ),
           ),
-
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: List.generate(slides.length, (i) {
@@ -93,9 +94,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               );
             }),
           ),
-
           const SizedBox(height: 24),
-
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: AnimatedOpacity(
@@ -107,7 +106,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
             ),
           ),
-
           SizedBox(height: bottomPadding + 16),
         ],
       ),
@@ -124,24 +122,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         descriptionParts: isEnglish
             ? [
                 const TextSpan(text: "Get suggestions to discover new stories every day in "),
-                TextSpan(
-                  text: "Home",
-                  style: GoogleFonts.inter(
-                    fontWeight: FontWeight.w500,
-                    color: const Color(0xFF222222),
-                  ),
-                ),
+                TextSpan(text: "Home", style: GoogleFonts.inter(fontWeight: FontWeight.w500, color: const Color(0xFF222222))),
                 const TextSpan(text: "."),
               ]
             : [
                 const TextSpan(text: "Obtén sugerencias para descubrir nuevas historias todos los días en el "),
-                TextSpan(
-                  text: "Home",
-                  style: GoogleFonts.inter(
-                    fontWeight: FontWeight.w500,
-                    color: const Color(0xFF222222),
-                  ),
-                ),
+                TextSpan(text: "Home", style: GoogleFonts.inter(fontWeight: FontWeight.w500, color: const Color(0xFF222222))),
                 const TextSpan(text: "."),
               ],
       ),
@@ -153,24 +139,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         descriptionParts: isEnglish
             ? [
                 const TextSpan(text: "Every day at least 3 women's legacies in "),
-                TextSpan(
-                  text: "Daily Echo",
-                  style: GoogleFonts.inter(
-                    fontWeight: FontWeight.w500,
-                    color: const Color(0xFF222222),
-                  ),
-                ),
+                TextSpan(text: "Daily Echo", style: GoogleFonts.inter(fontWeight: FontWeight.w500, color: const Color(0xFF222222))),
                 const TextSpan(text: "."),
               ]
             : [
                 const TextSpan(text: "Todos los días al menos 3 legados de mujeres en "),
-                TextSpan(
-                  text: "Eco diario",
-                  style: GoogleFonts.inter(
-                    fontWeight: FontWeight.w500,
-                    color: const Color(0xFF222222),
-                  ),
-                ),
+                TextSpan(text: "Eco diario", style: GoogleFonts.inter(fontWeight: FontWeight.w500, color: const Color(0xFF222222))),
                 const TextSpan(text: "."),
               ],
       ),
@@ -182,24 +156,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         descriptionParts: isEnglish
             ? [
                 const TextSpan(text: "Access hundreds of different stories, all together in "),
-                TextSpan(
-                  text: "See all",
-                  style: GoogleFonts.inter(
-                    fontWeight: FontWeight.w500,
-                    color: const Color(0xFF222222),
-                  ),
-                ),
+                TextSpan(text: "See all", style: GoogleFonts.inter(fontWeight: FontWeight.w500, color: const Color(0xFF222222))),
                 const TextSpan(text: "."),
               ]
             : [
                 const TextSpan(text: "Accede a cientos de diferentes historias, todas juntas en "),
-                TextSpan(
-                  text: "Ver todas",
-                  style: GoogleFonts.inter(
-                    fontWeight: FontWeight.w500,
-                    color: const Color(0xFF222222),
-                  ),
-                ),
+                TextSpan(text: "Ver todas", style: GoogleFonts.inter(fontWeight: FontWeight.w500, color: const Color(0xFF222222))),
                 const TextSpan(text: "."),
               ],
       ),
@@ -211,24 +173,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         descriptionParts: isEnglish
             ? [
                 const TextSpan(text: "Save the "),
-                TextSpan(
-                  text: "Favorite",
-                  style: GoogleFonts.inter(
-                    fontWeight: FontWeight.w500,
-                    color: const Color(0xFF222222),
-                  ),
-                ),
+                TextSpan(text: "Favorite", style: GoogleFonts.inter(fontWeight: FontWeight.w500, color: const Color(0xFF222222))),
                 const TextSpan(text: " stories that touch your heart and share them."),
               ]
             : [
                 const TextSpan(text: "Guarda las historias "),
-                TextSpan(
-                  text: "Favoritas",
-                  style: GoogleFonts.inter(
-                    fontWeight: FontWeight.w500,
-                    color: const Color(0xFF222222),
-                  ),
-                ),
+                TextSpan(text: "Favoritas", style: GoogleFonts.inter(fontWeight: FontWeight.w500, color: const Color(0xFF222222))),
                 const TextSpan(text: " que te toquen el corazón y compártelas."),
               ],
       ),
@@ -240,12 +190,7 @@ class _SlideData {
   final String title;
   final String imagePath;
   final List<TextSpan> descriptionParts;
-
-  const _SlideData({
-    required this.title,
-    required this.imagePath,
-    required this.descriptionParts,
-  });
+  const _SlideData({required this.title, required this.imagePath, required this.descriptionParts});
 }
 
 class _SlidePage extends StatelessWidget {
@@ -274,10 +219,7 @@ class _SlidePage extends StatelessWidget {
           SizedBox(
             width: 280,
             height: 285,
-            child: Image.asset(
-              slide.imagePath,
-              fit: BoxFit.contain,
-            ),
+            child: Image.asset(slide.imagePath, fit: BoxFit.contain),
           ),
           const SizedBox(height: 24),
           RichText(

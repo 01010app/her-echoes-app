@@ -12,6 +12,7 @@ class OnboardingNameScreen extends StatefulWidget {
   final List<Map<String, dynamic>> todaysWomen;
   final List<Map<String, dynamic>> suggestions;
   final List<Map<String, dynamic>> wildcards;
+  final Set<String> todaysFreeIds;
   final String email;
 
   const OnboardingNameScreen({
@@ -19,6 +20,7 @@ class OnboardingNameScreen extends StatefulWidget {
     required this.allWomen,
     required this.todaysWomen,
     required this.suggestions,
+    required this.todaysFreeIds,
     required this.email,
     this.wildcards = const [],
   });
@@ -54,6 +56,7 @@ class _OnboardingNameScreenState extends State<OnboardingNameScreen> {
           todaysWomen: widget.todaysWomen,
           suggestions: widget.suggestions,
           wildcards: widget.wildcards,
+          todaysFreeIds: widget.todaysFreeIds,
         ),
       ),
       (route) => false,

@@ -12,10 +12,12 @@ import '../card_detail/card_detail_screen.dart';
 class ShowAllScreen extends StatefulWidget {
   final List<Map<String, dynamic>> allWomen;
   final List<Map<String, dynamic>> wildcards;
+  final Set<String> todaysFreeIds;
 
   const ShowAllScreen({
     super.key,
     required this.allWomen,
+    required this.todaysFreeIds,
     this.wildcards = const [],
   });
 
@@ -40,23 +42,38 @@ class _ShowAllScreenState extends State<ShowAllScreen> {
     );
   }
 
+  bool _isBlocked(Map<String, dynamic> w, bool userIsPro) {
+    if (userIsPro) return false;
+    if (w['_is_wildcard'] == true) return false;
+    final id = (w['woman_id'] ?? '').toString();
+    return !widget.todaysFreeIds.contains(id);
+  }
+
   @override
   Widget build(BuildContext context) {
     final userIsPro = context.watch<SubscriptionProvider>().isPro;
 
-    final wildcardItems = widget.wildcards.map((w) {
-      return {...w, '_is_wildcard': true};
-    }).toList();
-
-    final regularWomen = widget.allWomen
-        .where((w) => (w['image_card_ID'] ?? '').toString().isNotEmpty)
+    // 1. Mujer(es) del día desbloqueadas — van primero
+    final todayFreeWomen = widget.allWomen
+        .where((w) =>
+            widget.todaysFreeIds.contains((w['woman_id'] ?? '').toString()) &&
+            (w['image_card_ID'] ?? '').toString().isNotEmpty)
         .toList();
 
-    final allWomen = [...wildcardItems, ...regularWomen];
+    // 2. Wildcards — van inmediatamente después
+    final wildcardItems = widget.wildcards
+        .map((w) => {...w, '_is_wildcard': true})
+        .toList();
 
-    // Lazy loading — solo mostramos _loadedCount items
+    // 3. El resto — todas las demás mujeres bloqueadas
+    final restWomen = widget.allWomen
+        .where((w) =>
+            !widget.todaysFreeIds.contains((w['woman_id'] ?? '').toString()) &&
+            (w['image_card_ID'] ?? '').toString().isNotEmpty)
+        .toList();
+
+    final allWomen = [...todayFreeWomen, ...wildcardItems, ...restWomen];
     final women = allWomen.take(_loadedCount).toList();
-
     final titles = women.map((w) => '').toList();
 
     final images = List.generate(women.length, (index) {
@@ -66,8 +83,7 @@ class _ShowAllScreenState extends State<ShowAllScreen> {
           ? rawId
           : "https://raw.githubusercontent.com/01010app/her-echoes-app/main/images/cards/$rawId.webp";
       final isWildcard = w['_is_wildcard'] == true;
-      final isContentPro = w['is_free'] != "VERDADERO";
-      final isPro = isContentPro && !userIsPro && !isWildcard;
+      final blocked = _isBlocked(w, userIsPro);
       final isFocused = index == _focusedIndex;
 
       return Stack(
@@ -128,7 +144,7 @@ class _ShowAllScreenState extends State<ShowAllScreen> {
               left: 16,
               child: WildcardBadge(),
             ),
-          if (isPro)
+          if (blocked)
             const Positioned(
               top: 16,
               right: 16,
@@ -148,22 +164,17 @@ class _ShowAllScreenState extends State<ShowAllScreen> {
           textStyle: const TextStyle(fontSize: 0),
           onPageChanged: (page) {
             final index = (page ?? 0).round();
-            setState(() {
-              _focusedIndex = index;
-            });
-            // Carga más items cuando se acerca al final
+            setState(() => _focusedIndex = index);
             if (index >= _loadedCount - 8 && _loadedCount < allWomen.length) {
               setState(() {
-                _loadedCount = (_loadedCount + _pageSize)
-                    .clamp(0, allWomen.length);
+                _loadedCount =
+                    (_loadedCount + _pageSize).clamp(0, allWomen.length);
               });
             }
           },
           onSelectedItem: (index) {
             final woman = women[index];
-            final isWildcard = woman['_is_wildcard'] == true;
-            final isContentPro = woman['is_free'] != "VERDADERO";
-            final blocked = isContentPro && !userIsPro && !isWildcard;
+            final blocked = _isBlocked(woman, userIsPro);
             if (blocked) {
               _showUpsell(context);
             } else {

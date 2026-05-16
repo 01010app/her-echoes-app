@@ -12,12 +12,14 @@ class EmailLoginScreen extends StatefulWidget {
   final List<Map<String, dynamic>> todaysWomen;
   final List<Map<String, dynamic>> suggestions;
   final List<Map<String, dynamic>> wildcards;
+  final Set<String> todaysFreeIds;
 
   const EmailLoginScreen({
     super.key,
     required this.allWomen,
     required this.todaysWomen,
     required this.suggestions,
+    required this.todaysFreeIds,
     this.wildcards = const [],
   });
 
@@ -55,6 +57,7 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
           todaysWomen: widget.todaysWomen,
           suggestions: widget.suggestions,
           wildcards: widget.wildcards,
+          todaysFreeIds: widget.todaysFreeIds,
           email: _emailController.text.trim(),
         ),
       ),
