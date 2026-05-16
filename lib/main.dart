@@ -137,7 +137,7 @@ class _MyAppState extends State<MyApp> {
 
     final now = DateTime.now();
     final todayKey =
-        "${now.month.toString().padLeft(2, '0')}/${now.day.toString().padLeft(2, '0')}";
+        "${now.day.toString().padLeft(2, '0')}/${now.month.toString().padLeft(2, '0')}";
 
     final todaysWomen =
         allWomen.where((w) => w["event_date"] == todayKey).toList();
