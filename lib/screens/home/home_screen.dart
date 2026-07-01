@@ -19,6 +19,7 @@ import '../daily_echo/daily_echo_screen.dart';
 import '../show_all/show_all_screen.dart';
 import '../favorites/favorites_screen.dart';
 import '../settings/settings_screen.dart';
+import '../../services/update_service.dart';
 
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
@@ -73,6 +74,8 @@ class _HomeScreenState extends State<HomeScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkSettingsNotification();
       _checkWeeklyProUpsell();
+      final isEnglish = context.read<LanguageProvider>().isEnglish;
+      UpdateService.checkAndPrompt(context, isEnglish: isEnglish);
     });
   }
 

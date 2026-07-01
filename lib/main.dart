@@ -136,8 +136,11 @@ class _MyAppState extends State<MyApp> {
     final langProvider = context.watch<LanguageProvider>();
 
     final now = DateTime.now();
+    // FIX: el dataset usa formato MM/DD (ej. "07/01" = 1 de julio), no DD/MM.
+    // Antes esta clave se armaba como DD/MM y nunca hacía match con event_date,
+    // dejando todaysWomen vacío y cayendo al fallback (contenido random, sin libres).
     final todayKey =
-        "${now.day.toString().padLeft(2, '0')}/${now.month.toString().padLeft(2, '0')}";
+        "${now.month.toString().padLeft(2, '0')}/${now.day.toString().padLeft(2, '0')}";
 
     final todaysWomen =
         allWomen.where((w) => w["event_date"] == todayKey).toList();

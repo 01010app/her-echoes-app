@@ -1,5 +1,44 @@
 # HerEchoes — Estado Actual del Proyecto
-**Última actualización:** 2026-04-18 (sesión 23)
+**Última actualización:** 2026-05-19 (sesión 26)
+
+---
+
+## GitHub — Identidad y Configuración ✅ sesión 25
+
+### Cuenta activa para este proyecto
+- **GitHub account:** `01010app`
+- **Email GitHub:** `01010dev.app@gmail.com`
+- **Git global config (Mac):**
+```bash
+git config --global user.name "01010app"
+git config --global user.email "01010dev.app@gmail.com"
+```
+
+### ⚠️ Segunda cuenta — NO usar para este proyecto
+- **GitHub account:** `ValarDisghulis`
+- **Email:** `hector@callmehector.cl`
+- **Uso:** solo para trabajo/organización Meedika. No tiene repos propios.
+- **Importante:** si el git config global apunta a este email, los commits aparecen como "ghost" en 01010app.
+
+### Repositorio
+- **URL:** `https://github.com/01010app/her-echoes-app.git`
+- **Visibilidad:** Public
+- **Branch:** `main`
+
+### Verificar identidad antes de cada sesión
+```bash
+git config --global user.name
+git config --global user.email
+# Debe mostrar: 01010app / 01010dev.app@gmail.com
+```
+
+---
+
+## Ubicación del proyecto
+```
+~/herechoes/
+```
+⚠️ NO está en `~/hector-studio/apps/` — está directamente en el home.
 
 ---
 
@@ -36,45 +75,73 @@
 
 ---
 
+## Versiones ✅ sesión 26
+
+| Versión | Build | Estado | Fecha |
+|---------|-------|--------|-------|
+| 1.0.0 | 13 | ✅ Live en App Store | mayo 2026 |
+| 1.0.1 | 14 | ✅ Aprobado y Live en App Store | mayo 2026 |
+
+**pubspec.yaml actual:** `version: 1.0.1+15`
+**Próximo build:** incrementar a `1.0.2+16`
+
+### ⚠️ Regla crítica para nuevos builds
+Cuando una versión YA está aprobada en App Store, Apple NO acepta nuevos builds con el mismo número de versión marketing. Se debe incrementar AMBOS:
+- **Versión marketing:** 1.0.1 → 1.0.2 (en pubspec.yaml: parte antes del +)
+- **Build number:** +15 → +16 (en pubspec.yaml: parte después del +)
+
+Si solo subes el build number sin cambiar la versión marketing, Apple rechaza con:
+`"The train version X.X.X is closed for new build submissions"`
+
+---
+
 ## Dependencias activas (pubspec.yaml)
 ```yaml
-path_provider: ^2.1.4
-share_plus: ^12.0.0
-http: ^1.2.1
+cupertino_icons: ^1.0.8
 google_fonts: ^6.2.1
+phosphor_flutter: ^2.0.1
+superellipse_shape: ^0.2.0
+flutter_svg: ^2.0.7
+vertical_card_pager: ^1.6.3
+card_stack_widget: ^0.1.6
+provider: ^6.1.2
 shared_preferences: ^2.2.2
+http: ^1.2.1
+share_plus: ^12.0.0
+path_provider: ^2.1.4
 flutter_local_notifications: ^18.0.1
 timezone: ^0.9.4
 url_launcher: ^6.3.1
-purchases_flutter: ^9.14.0       ✅ sesión 13
-sign_in_with_apple: ^7.0.1       ✅ sesión 13
-firebase_core: ^4.5.0            ✅ sesión 13
-google_sign_in: ^6.2.1           ✅ sesión 13
-vertical_card_pager: (ver pubspec) ✅ usado en show_all_screen
-webview_flutter: ^4.13.1         ✅ sesión 21: para mostrar términos y privacidad dentro de la app
+purchases_flutter: ^9.14.0
+sign_in_with_apple: ^7.0.1
+firebase_core: ^4.5.0
+google_sign_in: ^6.2.1
+webview_flutter: ^4.13.1
+package_info_plus: ^9.0.1   ← agregado sesión 26
 ```
 
-**versión actual pubspec:** `version: 1.0.0+13`
-**CURRENT_PROJECT_VERSION en pbxproj:** `13`
+---
 
-⚠️ Para incrementar build number iOS en el futuro:
-```bash
-python3 -c "
-f = open('ios/Runner.xcodeproj/project.pbxproj', 'r', encoding='utf-8')
-content = f.read()
-f.close()
-content = content.replace('CURRENT_PROJECT_VERSION = N;', 'CURRENT_PROJECT_VERSION = N+1;')
-f = open('ios/Runner.xcodeproj/project.pbxproj', 'w', encoding='utf-8')
-f.write(content)
-f.close()
-print('Listo')
-"
+## Servicios nuevos — sesión 26
+
+### UpdateService (`lib/services/update_service.dart`)
+- Consulta iTunes API con bundle ID `cl.callmehector.herechoes`
+- Compara versión instalada vs App Store usando `package_info_plus`
+- Si hay versión nueva → muestra dialog con botón "Actualizar ahora"
+- Botón abre App Store directo (App ID: `6760677188`)
+- Solo se ejecuta en iOS
+- Llamado desde `home_screen.dart` en `addPostFrameCallback`
+- Emoji del dialog: 🚀
+
+### Integración en home_screen.dart
+```dart
+WidgetsBinding.instance.addPostFrameCallback((_) {
+  _checkSettingsNotification();
+  _checkWeeklyProUpsell();
+  final isEnglish = context.read<LanguageProvider>().isEnglish;
+  UpdateService.checkAndPrompt(context, isEnglish: isEnglish);
+});
 ```
-Reemplazar N y N+1 con los números correspondientes. Luego verificar con:
-```bash
-unzip -p build/ios/ipa/*.ipa "Payload/Runner.app/Info.plist" | plutil -convert xml1 - -o - | grep -A1 CFBundleVersion
-```
-El mensaje "Build Number" del output de flutter build es MENTIRA — siempre verificar dentro del IPA.
 
 ---
 
@@ -85,238 +152,94 @@ lib/
 │   ├── favorites_provider.dart
 │   ├── language_provider.dart
 │   ├── currency_provider.dart      ⚠️ YA NO se usa para precios de IAP
-│   ├── subscription_provider.dart  ✅ sesión 13: RevenueCat real
+│   ├── subscription_provider.dart  ✅ RevenueCat real
 │   └── theme/app_colors.dart
 ├── screens/
 │   ├── card_detail/card_detail_screen.dart
-│   │                               ✅ sesión 18: _buildBottomActions corregido para Android
-│   │                               ✅ sesión 19: mailto Android fix (LaunchMode.externalApplication)
 │   ├── favorites/favorites_screen.dart
 │   ├── login/
-│   │   ├── login_screen.dart       ✅ sesión 17: links terms.html y privacy.html funcionales
+│   │   ├── login_screen.dart
 │   │   ├── onboarding_screen.dart
 │   │   ├── email_login_screen.dart
 │   │   ├── forgot_password_screen.dart
 │   │   └── onboarding_name_screen.dart
 │   ├── payment/
-│   │   ├── plan_type.dart          ✅ sesión 21: agregado PlanType.trial (antes solo individual y family)
-│   │   ├── plan_selection_screen.dart  ✅ sesión 21: rediseñado — 3 tarjetas separadas sin toggle
-│   │   │                               ✅ sesión 23: links Términos y Privacidad visibles (3.1.2c)
+│   │   ├── plan_type.dart
+│   │   ├── plan_selection_screen.dart
+│   │   ├── plan_detail_screen.dart
 │   │   ├── add_card_screen.dart        ⚠️ ya no se usa
 │   │   ├── payment_screen.dart         ⚠️ ya no se usa
-│   │   ├── payment_method_screen.dart  ⚠️ ya no se usa
-│   │   └── plan_detail_screen.dart     ✅ sesión 16
-│   ├── home/home_screen.dart
+│   │   └── payment_method_screen.dart  ⚠️ ya no se usa
+│   ├── home/home_screen.dart           ✅ UpdateService integrado sesión 26
 │   ├── daily_echo/daily_echo_screen.dart
-│   ├── show_all/show_all_screen.dart   ✅ sesión 18: lazy loading (30 items, +30 al acercarse al final)
-│   │                                   ✅ sesión 18: cacheWidth: 400 para reducir memoria Android
+│   ├── show_all/show_all_screen.dart
 │   └── settings/
 │       ├── settings_screen.dart
-│       ├── legal_content_screen.dart   ✅ sesión 21: reescrito con WebViewWidget
-│       ├── notifications_screen.dart   ✅ sesión 19: toggle fix (MIUI siempre retorna true en Android)
+│       ├── legal_content_screen.dart
+│       ├── notifications_screen.dart
 │       ├── language_screen.dart
 │       └── preferences_screen.dart
 ├── widgets/
 │   ├── cards/home_mini_card.dart, pro_badge.dart, wildcard_badge.dart
 │   ├── modals/
-│   │   ├── upsell_modal_free.dart  ✅ sesión 21: rediseñado — 3 tarjetas sin toggle, trial separado
-│   │   │                           ✅ sesión 23: links Términos y Privacidad agregados (3.1.2c)
-│   │   └── upsell_modal_pro.dart   ✅ sesión 16: precios desde RevenueCat
-│   │                               ✅ sesión 23: links Términos y Privacidad agregados (3.1.2c)
+│   │   ├── upsell_modal_free.dart
+│   │   └── upsell_modal_pro.dart
 │   ├── navigation/floating_tab_bar.dart
-│   │                               ✅ sesión 23: fix Android nav bar con viewPadding.bottom
-│   │                               (soluciona barra semitransparente en Xiaomi HyperOS)
-│   ├── system/app_button.dart      — height fijo 52px; wrappear con SizedBox(48) en Android
+│   ├── system/app_button.dart
 │   └── settings/settings_divider, container, item, section_title
-└── services/daily_suggestions_engine.dart
+└── services/
+    ├── daily_suggestions_engine.dart
+    └── update_service.dart             ✅ nuevo sesión 26
 ```
 
 ---
 
-## Android — Estructura de archivos crítica ✅ sesión 18
+## Android — Estructura de archivos crítica
 ```
 android/app/src/main/kotlin/
 ├── cl/callmehector/herechoes/
-│   └── MainActivity.kt   ✅ package cl.callmehector.herechoes (CORRECTO — usar este)
+│   └── MainActivity.kt   ✅ package correcto — usar este
 └── com/example/herechoes/
-    └── MainActivity.kt   ⚠️ archivo legacy con package incorrecto — NO eliminar pero ignorar
+    └── MainActivity.kt   ⚠️ legacy — NO eliminar pero ignorar
 ```
-El `build.gradle.kts` usa `applicationId = "cl.callmehector.herechoes"`.
-Flutter toma el MainActivity de `cl/callmehector/herechoes/`.
 
 ---
 
-## Android — Ajustes de diseño específicos ✅
-- **card_detail_screen.dart `_buildBottomActions`:**
-  - iOS: padding `fromLTRB(24, 24, 24, 0)`, botones height 52px
-  - Android: padding `fromLTRB(16, 16, 16, 24)`, botones en `SizedBox(height: 48)`
-  - ✅ Verificado en Redmi sesión 19
-
-- **floating_tab_bar.dart — bottom offset:**
-  - iOS: siempre `bottom: 24`
-  - Android con gestos (navBarHeight ≈ 0): `bottom: 24`
-  - Android con barra física/semitransparente (HyperOS, MIUI): `bottom: viewPadding.bottom + 8`
-  - ✅ Fix sesión 23 — soluciona Xiaomi 14 Note y similares
+## Android — Ajustes de diseño específicos
+- **card_detail_screen.dart:** iOS padding `fromLTRB(24,24,24,0)` / Android `fromLTRB(16,16,16,24)`
+- **floating_tab_bar.dart:** iOS `bottom: 24` / Android gestos `bottom: 24` / Android HyperOS `bottom: viewPadding.bottom + 8`
 
 ---
 
-## Modelo de Negocio IAP ✅ sesión 20
+## Modelo de Negocio IAP
 
 ### Productos ACTIVOS (anuales)
-| Nombre | Product ID iOS | Product ID Android | Precio USD | Duración | Trial |
-|---|---|---|---|---|---|
-| Individual Anual | `cl.callmehector.herechoes.individual.annual` | `cl.herechoes.individual.annual` | $8.99 | 1 año | No |
-| Trial Anual | `cl.callmehector.herechoes.trial.annual` | `cl.herechoes.trial.annual` | $12.99 | 1 año | 7 días gratis |
-| Familiar Anual | `cl.callmehector.herechoes.familiar.annual` | `cl.herechoes.familiar.annual` | $14.99 | 1 año | No |
-
-⚠️ Los Product IDs Android son distintos a iOS (más cortos). Normal — RevenueCat los mapea por separado.
-
-### Productos RETIRADOS (mensuales)
-| Nombre | Product ID | Estado App Store Connect |
-|---|---|---|
-| Individual Mensual | `cl.callmehector.herechoes.individual` | DEVELOPER_ACTION_NEEDED — retirados, Apple notificado |
-| Familiar Mensual | `cl.callmehector.herechoes.familiar` | DEVELOPER_ACTION_NEEDED — retirados, Apple notificado |
-| Trial Mensual | `cl.callmehector.herechoes.trial` | DEVELOPER_ACTION_NEEDED — retirados, Apple notificado |
-
-✅ Apple fue notificado en la respuesta al rechazo 2.1(b) — explicamos que fueron reemplazados por anuales.
+| Nombre | Product ID iOS | Product ID Android | Precio USD |
+|---|---|---|---|
+| Individual Anual | `cl.callmehector.herechoes.individual.annual` | `cl.herechoes.individual.annual` | $8.99 |
+| Trial Anual | `cl.callmehector.herechoes.trial.annual` | `cl.herechoes.trial.annual` | $12.99 |
+| Familiar Anual | `cl.callmehector.herechoes.familiar.annual` | `cl.herechoes.familiar.annual` | $14.99 |
 
 ---
 
-## Historial de rechazos Apple
-
-### Build 5 — rechazado 9 abril 2026
-- Guideline 2.1(b): botón suscribir no respondía + productos mensuales retirados
-- Guideline 2.3.2: imágenes promocionales iguales al ícono
-- Guideline 3.1.2(c): links Términos/Privacidad no funcionaban (abrían Safari en sandbox)
-
-### Build 10 — rechazado (revisado 14 abril 2026, iPad Air M2)
-- Guideline 2.1(b): ✅ resuelto con respuesta explicando retiro de mensuales
-- Guideline 2.3.2: ✅ resuelto eliminando imágenes promocionales
-- Guideline 3.1.2(c): links presentes en plan_selection_screen pero FALTABAN en upsell_modal_free y upsell_modal_pro
-
-### Build 12 — rechazado 18 abril 2026 (iPad Air M2)
-- Guideline 3.1.2(c): links aún no visibles en el modal que Apple revisó (upsell_modal_free)
-
-### Build 13 — enviado a revisión 18 abril 2026 ⏳
-- ✅ Links Términos y Privacidad agregados en upsell_modal_free y upsell_modal_pro
-- ✅ Fix Android nav bar (floating_tab_bar)
-
----
-
-## App Store Connect — Estado actual
-
-### Build iOS
-| Build | Fecha | Estado |
-|---|---|---|
-| 1.0.0 (1) | 18-03-2026 | Rechazado — Guideline 2.1(b) |
-| 1.0.0 (5) | 05-04-2026 | ❌ Rechazado — Guidelines 2.1(b), 2.3.2, 3.1.2(c) |
-| 1.0.0 (10) | 11-04-2026 | ❌ Rechazado — Guideline 3.1.2(c) |
-| 1.0.0 (12) | 17-04-2026 | ❌ Rechazado — Guideline 3.1.2(c) |
-| 1.0.0 (13) | 18-04-2026 | ⏳ En revisión |
-
-### Metadatos App Store Connect ✅
-- Imágenes promocionales: eliminadas de los 3 productos anuales ✅
-- EULA: configurada como "Contrato de licencia estándar de Apple" ✅
-- Links Términos y Privacidad: en descripción y campo EULA ✅
-- Encryption compliance: "Ninguno de los algoritmos mencionados" ✅
-- Productos anuales incluidos en el envío: ✅
-
-### Sandbox Tester
-- Email: `valar.disghulis@gmail.com` — País: Chile
-
-### Internal Testers TestFlight
-- `1.61803haz@gmail.com`
-- `hector@callmehector.cl`
-
----
-
-## RevenueCat ✅ COMPLETAMENTE CONFIGURADO (sesión 20)
-
-### iOS ✅
+## RevenueCat
 - **API Key iOS:** `appl_KDuVwOmljiRmgUegeqjadtfAjRA`
+- **API Key Android:** `goog_chSzVTtDJfNcfIfRHepJqITjste`
 - Entitlement: `pro`, Offering: `default`
 
-### Android ✅
-- **API Key Android:** `goog_chSzVTtDJfNcfIfRHepJqITjste`
-- **App Play Store:** `HerEchoes (Play Store)` — package `cl.callmehector.herechoes`
-- **Estado credentials:** ✅ Valid credentials
+---
 
-### Packages (offering: default) ✅
-| Identifier | Producto iOS | Producto Android |
-|---|---|---|
-| `individual` | `cl.callmehector.herechoes.individual.annual` | `cl.herechoes.individual.annual:individual-annual-p1y` |
-| `trial` | `cl.callmehector.herechoes.trial.annual` | `cl.herechoes.trial.annual:trial-annual-p1y` |
-| `familiar` | `cl.callmehector.herechoes.familiar.annual` | `cl.herechoes.familiar.annual:familiar-annual-p1y` |
+## Google Play Console
+- App: `cl.callmehector.herechoes`
+- Prueba cerrada Alpha: build 13 ✅
+- Testers: 12 aceptados ✅ — contador: 11 días (necesita 14 días corridos)
+- Acceso producción: disponible ~21 mayo 2026
 
 ---
 
-## Google Play Console ✅
-
-### Estado general
-- App: **Her Echoes** — `cl.callmehector.herechoes`
-- Categoría: Educación
-- Ficha Play Store: ✅ configurada
-- Cuenta de comercio Google Payments: ✅ configurada
-
-### Prueba interna
-- Canal: **Activo**
-- Última versión: **9 (1.0.0)**
-
-### Prueba cerrada Alpha
-- Canal: **Activo**
-- Build 11 (1.0.0): ✅ Publicado — disponible para testers desde 12 abr 2026
-- ⚠️ Google Sign-In: fix incluido en build 11 — pendiente confirmación de testers
-
-### Estado acceso a producción
-- Testers que aceptaron: **4 de 13** (necesitan 12)
-- Días de prueba: ~6 días (necesitan 14)
-- ⚠️ Hay que contactar a los 9 testers restantes para que acepten la invitación
-
-### Historial AABs
-| versionCode | Estado |
-|---|---|
-| 1-3 | Bug MainActivity (com.example) |
-| 4 | Fix MainActivity + lazy loading + button fix |
-| 5-7 | Saltados |
-| 8 | Fix notifications + mailto + RevenueCat API key |
-| 9 | En prueba interna |
-| 10 | Saltado (build number iOS conflicto) |
-| 11 | ✅ En prueba cerrada Alpha — incluye SHA-256 firma de Google Play |
-| 13 | ✅ En prueba cerrada Alpha — fix nav bar HyperOS/MIUI |
-
-### Tester interno
-- Email: `01010.herechoes@gmail.com`
-
-### Testers prueba cerrada
-- 13 testers en Lista testers 001
-- 4 testers han aceptado participar
-- Requiere: 12 testers activos + 14 días para solicitar acceso a producción
-
----
-
-## 🔴 BUG CRÍTICO: Google Sign-In no funciona en Android
-
-### Causa raíz (descubierta sesión 22)
-Firebase necesita el SHA-256 del **certificado de firma de Google Play**. Este SHA es DISTINTO al SHA-256 del keystore local de subida.
-
-### Los dos SHA-256
-| Certificado | SHA-256 | Rol |
-|---|---|---|
-| Clave de firma de aplicación (Google Play) | `62:DB:13:B5:EB:32:22:CF:8A:6F:A1:2D:9D:7C:AC:32:D1:CE:00:F1:93:BF:6B:72:6F:EF:C4:17:8C:27:AF:2E` | ✅ Registrado en Firebase |
-| Clave de subida (keystore local) | `EE:ED:33:63:D9:1E:50:6B:96:5D:2A:8A:62:C2:3D:4D:F7:19:E8:E6:43:79:C7:28:55:38:EC:44:F9:01:8B:54` | ✅ Registrado en Firebase |
-
-### Estado
-- ✅ Ambos SHA registrados en Firebase Console
-- ✅ google-services.json actualizado
-- ✅ Build 11 publicado en prueba cerrada
-- ⏳ Pendiente confirmación de testers que funciona
-
----
-
-## Firebase — Huellas SHA registradas ✅
-En Firebase Console → HerEchoes → Configuración → HerEchoes Android:
-1. `ee:ed:33:63:d9:1e:50:6b:96:5d:2a:8a:62:c2:3d:4d:f7:19:e8:e6:43:79:c7:28:55:38:ec:44:f9:01:8b:54` — SHA-256 keystore de subida
-2. `62:db:13:b5:eb:32:22:cf:8a:6f:a1:2d:9d:7c:ac:32:d1:ce:00:f1:93:bf:6b:72:6f:ef:c4:17:8c:27:af:2e` — SHA-256 firma de Google Play ✅
+## Firebase — SHA registradas
+1. SHA-256 keystore subida: `ee:ed:33:...`
+2. SHA-256 firma Google Play: `62:db:13:...`
 
 ---
 
@@ -325,43 +248,8 @@ En Firebase Console → HerEchoes → Configuración → HerEchoes Android:
 ~/Library/Android/sdk/platform-tools/adb pair IP:PUERTO CODIGO
 ~/Library/Android/sdk/platform-tools/adb connect IP:PUERTO
 flutter run --device-id IP:PUERTO
-~/Library/Android/sdk/platform-tools/adb -s IP:PUERTO logcat | grep -E "FATAL|Flutter|Exception"
 ```
-**Redmi A2:** Android 13 (API 33), armeabi-v7a, IP típica: 192.168.1.166
-
----
-
-## her_echoes.json
-- Cargado desde **assets locales** — cualquier cambio requiere nuevo build
-- Total: 365 entradas ✅ sesión 21
-- Cobertura: marzo → 30 de junio ✅
-- ⚠️ Pendiente: completar julio → diciembre
-- ⚠️ Pendiente: migrar a carga remota desde GitHub (para evitar builds por cada actualización de contenido)
-
----
-
-## Imágenes en GitHub ✅
-URL: `https://raw.githubusercontent.com/01010app/her-echoes-app/main/images/cards/${rawId}.webp`
-
-### Imágenes subidas sesión 21 (34):
-abbagnato, bachmann, baker_02, baxter_02, carter_03, colvin, cornaro, desai, donohoe, dorio,
-dunbar, hajiwon, horne_02, kidman, kristeva, larmore, massari, mcaleese, mcdormand, mink,
-murray, ning, randall, robertson, ruge, saldana, satir, sheinbaum, soraya, sotomayor,
-tunney, willard, yingluck, ziegesar
-
-### Imágenes subidas sesiones anteriores:
-(sesión 19: baker, barnes, bath, bening, blau, bondfield, bourgeois, bourkewhite, coleman_02,
-drabble, jackson, jolie, keller_02, klum, lenglen, mahler, marshall, menzel, montessori,
-quatro, swenson, washington, west)
-(sesión 20: apgar, bahlsen, bernhard, bhardwaj, bjork, blavatsky, brooks, burney, forrester,
-garland, gore, graf, hamilton_02, hantuchova, hunt, loving, malone, mcdaniel, mozart, oates,
-owens, portman, reuben, sayers, sissi, tyler, venus, yourcenar)
-
----
-
-## Wildcard ✅
-- Cargado desde GitHub en tiempo real
-- Token `herechoes-wildcard`: **SIN fecha de expiración** ✅
+**Redmi A2:** Android 13, armeabi-v7a
 
 ---
 
@@ -370,47 +258,48 @@ owens, portman, reuben, sayers, sissi, tyler, venus, yourcenar)
 Imágenes:    https://raw.githubusercontent.com/01010app/her-echoes-app/main/images/cards/${rawId}.webp
 Wildcard:    https://raw.githubusercontent.com/01010app/her-echoes-app/main/assets/data/wildcard.json
 Panel admin: https://callmehector.cl/apps/herechoes/wildcard.php
-Cupones:     https://callmehector.cl/apps/herechoes/coupons.php
 Privacidad:  https://callmehector.cl/apps/herechoes/privacidad.html
 Términos:    https://callmehector.cl/apps/herechoes/terminos.html
+App Store:   App ID 6760677188
 ```
 
 ---
 
-## Keystores y SHA
+## Keystores
 - **Producción Android:** `~/herechoes-release.jks`, alias: `herechoes`
 - `android/key.properties` configurado y en `.gitignore` ✅
-- **SHA-1 debug:** `3B:41:83:A1:3E:9F:35:6C:09:FF:7B:06:7D:31:45:93:2E:67:23:3F`
 
 ---
 
 ## Git Tags
 ```
-v2.6-iap-annual-fix              ✅
-v2.7-json-fix                    ✅
-v2.8-login-links-fix             ✅
-v2.9-android-legal-fixes         ✅
-v3.0-android-revenuecat-setup    ✅ sesión 19
-v3.1-android-revenuecat-complete ✅ sesión 20
-v3.2-apple-review-fixes          ✅ sesión 22
-v3.3-firebase-sha-fix            ✅ sesión 22 — ⚠️ apunta al SHA de subida solamente, fix incompleto
-v3.4-legal-links-nav-fix         ✅ sesión 23 — links legales en modales + fix Android nav bar
-v3.5-android-nav-fix             ✅ sesión 24 — fix floating_tab_bar Android nav bar
+v3.3-firebase-sha-fix            ✅
+v3.4-legal-links-nav-fix         ✅
+v3.5-android-nav-fix             ✅ build 13 — versión App Store aprobada
 ```
+
+---
+
+## Historial de rechazos Apple
+- Build 5: metadata issues
+- Build 10: RevenueCat production key faltante
+- Build 11: video con device frame, logo-pro con texto pequeño
+- Build 12: IAP unresponsive
+- Build 13: ✅ APROBADO — legal screen interno, links en modales
+- Build 14: ✅ APROBADO — en distribución
 
 ---
 
 ## Pendientes
 
 ### URGENTE
-- [ ] Confirmar que Apple aprueba build 13 (links legales en modales)
-- [ ] Contactar 2 testers Android restantes para que acepten invitación prueba cerrada
-- [ ] Confirmar que Google Sign-In funciona en build 11 (pedir a tester que pruebe)
+- [ ] Esperar 14 días de prueba cerrada Google Play (~21 mayo 2026) → solicitar acceso producción
+- [ ] Subir nuevo build con UpdateService (1.0.2+16) cuando haya más cambios acumulados
 
 ### Media prioridad
-- [ ] Completar requisitos prueba cerrada: 12 testers activos + 14 días
-- [ ] Verificación de desarrolladores Android (plazo: septiembre 2026)
-- [ ] Crear imagen promocional 1024x1024px para suscripciones
-- [ ] Show All — márgenes laterales
-- [ ] Migrar her_echoes.json a carga remota desde GitHub
 - [ ] Completar JSON julio → diciembre
+- [ ] Push notifications (Firebase Cloud Messaging) — postergado
+- [ ] Show All — agregar selector de meses
+- [ ] Show All — márgenes laterales
+- [ ] Migrar her_echoes.json a carga remota desde GitHub (evitar builds por contenido)
+- [ ] Verificación de desarrolladores Android (plazo: septiembre 2026)
