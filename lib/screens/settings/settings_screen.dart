@@ -14,6 +14,7 @@ import '../../widgets/settings/settings_divider.dart';
 import '../../widgets/system/app_button.dart';
 import 'legal_content_screen.dart';
 import 'preferences_screen.dart';
+import 'about_screen.dart';
 import '../payment/plan_detail_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -204,6 +205,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         label: isEnglish ? "Preferences" : "Preferencias",
                         onTap: () => Navigator.push(context,
                             MaterialPageRoute(builder: (_) => const PreferencesScreen())),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  SettingsSectionTitle(
+                    title: isEnglish ? "About the App" : "Sobre la App",
+                  ),
+                  SettingsListContainer(
+                    children: [
+                      SettingsListItem(
+                        icon: PhosphorIcons.heart,
+                        label: isEnglish ? "About Us" : "Acerca de Nosotros",
+                        onTap: () => Navigator.push(context,
+                            MaterialPageRoute(builder: (_) => const AboutScreen())),
                       ),
                     ],
                   ),

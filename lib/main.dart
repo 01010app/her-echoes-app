@@ -163,9 +163,15 @@ class _MyAppState extends State<MyApp> {
       theme: ThemeData(
         scaffoldBackgroundColor: const Color(0xFFF5F5F5),
       ),
-      home: FutureBuilder<bool>(
-        future: SharedPreferences.getInstance()
-            .then((p) => p.getBool('onboarding_done') ?? false),
+      home: FutureBuilder<Map<String, bool>>(
+        // FIX sesión 28: antes solo se leía 'onboarding_done', así que
+        // cualquier usuario (invitado o logueado) siempre caía en LoginScreen
+        // al reabrir la app, porque nunca se guardaba que ya había una sesión
+        // activa. Ahora se lee también 'session_active'.
+        future: SharedPreferences.getInstance().then((p) => {
+              'onboarding_done': p.getBool('onboarding_done') ?? false,
+              'session_active': p.getBool('session_active') ?? false,
+            }),
         builder: (_, snap) {
           if (!snap.hasData) {
             return const Scaffold(
@@ -177,10 +183,11 @@ class _MyAppState extends State<MyApp> {
             );
           }
 
-          final done = snap.data!;
+          final onboardingDone = snap.data!['onboarding_done']!;
+          final sessionActive = snap.data!['session_active']!;
 
-          if (done) {
-            return LoginScreen(
+          if (!onboardingDone) {
+            return OnboardingScreen(
               allWomen: allWomen,
               todaysWomen: todaysWomen,
               todaysFreeIds: todaysFreeIds,
@@ -189,7 +196,17 @@ class _MyAppState extends State<MyApp> {
             );
           }
 
-          return OnboardingScreen(
+          if (sessionActive) {
+            return HomeScreen(
+              allWomen: allWomen,
+              todaysWomen: todaysWomen,
+              todaysFreeIds: todaysFreeIds,
+              suggestions: suggestions,
+              wildcards: wildcards,
+            );
+          }
+
+          return LoginScreen(
             allWomen: allWomen,
             todaysWomen: todaysWomen,
             todaysFreeIds: todaysFreeIds,

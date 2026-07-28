@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:io' show Platform;
 import '../home/home_screen.dart';
@@ -53,7 +54,16 @@ class _LoginScreenState extends State<LoginScreen>
     super.dispose();
   }
 
-  void _goHome() {
+  // FIX sesión 28: antes esto solo navegaba a Home, sin guardar nada.
+  // Al cerrar la app se perdía la sesión y siempre volvía a Login.
+  // Ahora guarda 'session_active' = true antes de navegar, ya sea
+  // que el usuario entre como invitado o mediante login.
+  Future<void> _goHome() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('session_active', true);
+
+    if (!mounted) return;
+
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
@@ -91,7 +101,7 @@ class _LoginScreenState extends State<LoginScreen>
           AppleIDAuthorizationScopes.fullName,
         ],
       );
-      if (mounted) _goHome();
+      if (mounted) await _goHome(); // _goHome ya guarda session_active
     } catch (e) {
       print('Apple Sign In cancelado: $e');
     }
@@ -101,7 +111,7 @@ class _LoginScreenState extends State<LoginScreen>
     try {
       final account = await _googleSignIn.signIn();
       if (account != null && mounted) {
-        _goHome();
+        await _goHome(); // _goHome ya guarda session_active
       }
     } catch (e) {
       print('Google Sign In error: $e');
