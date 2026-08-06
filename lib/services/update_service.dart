@@ -7,8 +7,15 @@ import 'package:url_launcher/url_launcher.dart';
 import '../widgets/system/app_button.dart';
 
 class UpdateService {
-  static const _bundleId = 'cl.callmehector.herechoes';
   static const _appStoreId = '6760677188';
+
+  // FIX: iTunes Lookup API (itunes.apple.com/lookup) nunca indexó esta app
+  // (resultCount: 0 confirmado incluso con la app ya pública), así que el
+  // alert nunca se mostraba pese a que la app SÍ estaba live. Se reemplaza
+  // por un JSON remoto propio, mismo patrón que wildcard.json — control
+  // total, sin depender de un endpoint legacy no confiable de Apple.
+  static const _versionUrl =
+      'https://raw.githubusercontent.com/01010app/her-echoes-app/main/assets/data/app_version.json';
 
   static Future<void> checkAndPrompt(BuildContext context, {required bool isEnglish}) async {
     if (!Platform.isIOS) return;
@@ -18,16 +25,13 @@ class UpdateService {
       final installedVersion = info.version;
 
       final res = await http
-          .get(Uri.parse('https://itunes.apple.com/lookup?bundleId=$_bundleId'))
+          .get(Uri.parse(_versionUrl))
           .timeout(const Duration(seconds: 5));
 
       if (res.statusCode != 200) return;
 
       final data = json.decode(res.body);
-      final results = data['results'] as List?;
-      if (results == null || results.isEmpty) return;
-
-      final storeVersion = results[0]['version'] as String?;
+      final storeVersion = data['latest_version'] as String?;
       if (storeVersion == null) return;
 
       if (_isNewer(storeVersion, installedVersion)) {
@@ -116,7 +120,6 @@ class UpdateService {
   }
 
   static Future<void> _openAppStore() async {
-    // Reemplaza APP_STORE_ID con tu ID numérico de App Store
     final url = Uri.parse('https://apps.apple.com/app/id$_appStoreId');
     if (await canLaunchUrl(url)) {
       await launchUrl(url, mode: LaunchMode.externalApplication);
