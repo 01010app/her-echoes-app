@@ -16,6 +16,16 @@ class SubscriptionProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Escucha cambios de estado en tiempo real (compras, renovaciones,
+  /// canjes de offer codes) sin necesitar "Restaurar compras" manual.
+  /// Llamar UNA VEZ al iniciar la app (ej. en main.dart o initState de HomeScreen).
+  void startListening() {
+    Purchases.addCustomerInfoUpdateListener((info) {
+      final active = info.entitlements.active.containsKey('pro');
+      setIsPro(active);
+    });
+  }
+
   Future<void> checkStatus() async {
     try {
       final info = await Purchases.getCustomerInfo();

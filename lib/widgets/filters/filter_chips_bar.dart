@@ -84,7 +84,11 @@ class _FilterChip extends StatelessWidget {
       child: Container(
         // 5px arriba + 14px line-height + 5px abajo = 24px exactos
         padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 16),
-        color: isActive ? FilterChipsBar._activeBg : Colors.transparent,
+        decoration: BoxDecoration(
+          color: isActive ? FilterChipsBar._activeBg : Colors.transparent,
+          // radius = altura/2 (24px / 2 = 12px) → píldora perfecta
+          borderRadius: BorderRadius.circular(12),
+        ),
         alignment: Alignment.center,
         child: Text(
           label,

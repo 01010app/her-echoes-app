@@ -22,11 +22,20 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   await _initRevenueCat();
+
+  // FIX: sin esto, la app solo se enteraba de compras/canjes de offer codes
+  // al llamar checkStatus() manualmente (ej. "Restaurar compras"). El listener
+  // hace que cualquier cambio de RevenueCat (compra, renovación, canje de
+  // código promocional) desbloquee el contenido PRO en tiempo real.
+  final subscriptionProvider = SubscriptionProvider();
+  subscriptionProvider.startListening();
+  await subscriptionProvider.checkStatus();
+
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => LanguageProvider()),
-        ChangeNotifierProvider(create: (_) => SubscriptionProvider()),
+        ChangeNotifierProvider.value(value: subscriptionProvider),
         ChangeNotifierProvider(create: (_) => FavoritesProvider()),
         ChangeNotifierProvider(create: (_) => CurrencyProvider()),
       ],
