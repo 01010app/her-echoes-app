@@ -72,26 +72,70 @@ class _MyAppState extends State<MyApp> {
   static const _wildcardUrl =
       'https://raw.githubusercontent.com/01010app/her-echoes-app/main/assets/data/wildcard.json';
 
+  // MIGRACIÓN sesión 29: her_echoes.json ahora se descarga desde GitHub en
+  // vez de venir empaquetado en el build. Esto permite corregir/agregar
+  // contenido sin subir nueva versión a App Store. Se mantiene una copia en
+  // caché local (SharedPreferences) para que la app funcione offline, y el
+  // asset local sigue existiendo solo como último respaldo de emergencia.
+  static const _womenUrl =
+      'https://raw.githubusercontent.com/01010app/her-echoes-app/main/assets/data/her_echoes.json';
+  static const _womenCacheKey = 'her_echoes_cache_v1';
+
   @override
   void initState() {
     super.initState();
     loadJson();
   }
 
+  List<Map<String, dynamic>> _parseWomenList(dynamic decoded) {
+    final List<dynamic> data =
+        decoded is List ? decoded : decoded["data"] ?? [];
+    return data
+        .cast<Map<String, dynamic>>()
+        .where((w) => (w["woman_id"] ?? "").toString().isNotEmpty)
+        .toList();
+  }
+
   Future<void> loadJson() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    // 1) Intentar descargar la versión más reciente desde GitHub.
     try {
-      final response =
-          await rootBundle.loadString('assets/data/her_echoes.json');
-      final decoded = json.decode(response);
-      final List<dynamic> data =
-          decoded is List ? decoded : decoded["data"] ?? [];
-      allWomen = data
-          .cast<Map<String, dynamic>>()
-          .where((w) => (w["woman_id"] ?? "").toString().isNotEmpty)
-          .toList();
+      final res = await http
+          .get(Uri.parse(_womenUrl))
+          .timeout(const Duration(seconds: 8));
+      if (res.statusCode != 200) throw Exception('HTTP ${res.statusCode}');
+
+      final decoded = json.decode(utf8.decode(res.bodyBytes));
+      allWomen = _parseWomenList(decoded);
+
+      // Guardar en caché para uso offline futuro.
+      await prefs.setString(_womenCacheKey, res.body);
     } catch (e) {
-      print("her_echoes.json ERROR: $e");
-      allWomen = [];
+      print("her_echoes.json GitHub ERROR: $e — usando caché/asset local");
+
+      // 2) Sin internet o GitHub caído: usar la última copia cacheada.
+      final cached = prefs.getString(_womenCacheKey);
+      if (cached != null) {
+        try {
+          allWomen = _parseWomenList(json.decode(cached));
+        } catch (e2) {
+          allWomen = [];
+        }
+      }
+
+      // 3) Sin caché (primera apertura sin internet): usar asset local
+      // empaquetado como último respaldo de emergencia.
+      if (allWomen.isEmpty) {
+        try {
+          final response =
+              await rootBundle.loadString('assets/data/her_echoes.json');
+          allWomen = _parseWomenList(json.decode(response));
+        } catch (e3) {
+          print("her_echoes.json ASSET ERROR: $e3");
+          allWomen = [];
+        }
+      }
     }
 
     try {
