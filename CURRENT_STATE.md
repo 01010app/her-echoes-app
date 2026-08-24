@@ -1,5 +1,106 @@
 # HerEchoes — Estado Actual del Proyecto
-**Última actualización:** 2026-07-01 (sesión 27)
+**Última actualización:** 2026-08-17
+
+---
+
+## 🟢 SESIÓN 2026-08-17 — Migración a carga remota de her_echoes.json + fixes de contenido + build 1.0.5
+
+### 🎯 Cambio arquitectónico mayor: her_echoes.json ya NO requiere build para actualizarse
+
+**Motivación:** cada corrección de contenido (fechas, duplicados, nuevas mujeres) obligaba a subir un build nuevo y esperar revisión de Apple. Este era el pendiente marcado como "más urgente ahora" en sesión 27.
+
+**Solución implementada en `lib/main.dart`:**
+
+`loadJson()` ahora sigue este orden:
+1. **Descarga desde GitHub raw** (`https://raw.githubusercontent.com/01010app/her-echoes-app/main/assets/data/her_echoes.json`), timeout 8s
+2. Si tiene éxito → guarda copia en `SharedPreferences` (`her_echoes_cache_v1`) para uso offline futuro
+3. Si falla (sin internet, GitHub caído) → usa la última copia cacheada
+4. Si no hay caché (primera apertura sin internet) → usa el asset local empaquetado (`assets/data/her_echoes.json`) como último respaldo de emergencia
+
+Mismo patrón que ya se usaba para `wildcard.json`, ahora extendido al dataset principal.
+
+⚠️ **El asset local NO se eliminó** — sigue declarado en `pubspec.yaml` y sigue siendo necesario como fallback de emergencia. No es la fuente que ve el usuario en uso normal, pero debe mantenerse actualizado igual como red de seguridad (no crítico, pero recomendable sincronizarlo cuando se pueda).
+
+### Nuevo flujo de trabajo para contenido (a partir de ahora)
+
+```bash
+# Editar her_echoes.json normalmente
+cd ~/herechoes
+git add assets/data/her_echoes.json
+git commit -m "content: ..."
+git push origin main
+# NO requiere build. Los usuarios con la versión 1.0.5+ lo ven
+# la próxima vez que abran la app con internet.
+```
+
+⚠️ **Importante:** este flujo sin build solo aplica a usuarios que ya tengan instalada la versión **1.0.5 (build 20)** o superior. Usuarios en versiones anteriores siguen cargando el JSON viejo empaquetado en su build hasta que actualicen.
+
+### Validación realizada esta sesión
+- `flutter analyze` → 0 errores (solo 86 issues preexistentes de tipo info/warning, ninguno bloqueante)
+- Probado en simulador iPhone 16 con hot restart → carga correctamente desde GitHub, sin errores en consola
+- ⚠️ **Pendiente de próxima sesión:** no se alcanzó a probar el escenario 100% offline (modo avión) para confirmar que el fallback de caché funciona en la práctica. Probar antes de confiar completamente en el fallback.
+
+---
+
+### 🐛 Fix de contenido: Anne Frank — past_date incorrecto
+
+Auditoría de sesión anterior había detectado 3 copias de `anne_frank_01` con fechas inconsistentes. Verificado con fuentes reales (Anne Frank House, Britannica): recibió su diario el 12 de junio de 1942 (cumpleaños 13).
+
+- **Conservada:** entrada `event_date: 06/12`, corregido `past_date: 1929 → 1942` (antes tenía el año de nacimiento en vez del año del evento real)
+- **Eliminadas:** 2 copias fantasma en `03/12` y `03/13` (fechas sin base real)
+- **Reemplazos para no dejar días con <3 entradas:**
+    - `03/12` → agregada **Janja Garnbret** (nacida 12 marzo 1999)
+    - `03/13` → agregada **Donella Meadows** (nacida 13 marzo 1941)
+
+### Días con menos de 3 entradas — resueltos
+
+La auditoría de esta sesión encontró 9 días con menos de 3 entradas (incluyendo 09/13, día actual de trabajo). El usuario completó manualmente los registros faltantes. Verificación final confirmó:
+
+✅ **0 días con menos de 3 entradas** en el dataset completo (595 entradas totales, previamente 581).
+
+### Auditoría de woman_id duplicados — aclaración
+
+Se había marcado como alerta "18 duplicados" en sesiones previas. Revisión detallada confirmó que **la mayoría NO son duplicados fantasma**: son la misma mujer con múltiples hitos históricos reales en fechas distintas (ej. Amelia Earhart aparece 4 veces: vuelo transatlántico solo, cruce del Atlántico, aterrizaje en Gales, desaparición — todos eventos reales verificables). Esto es diseño válido, no error.
+
+Único caso real de duplicado fantasma detectado y corregido: **Anne Frank** (ver arriba).
+
+⚠️ Quedan 17 `woman_id` con múltiples entradas legítimas sin revisar una por una en detalle — si aparecen más síntomas raros (fechas o past_date inconsistentes), vale la pena revisar caso por caso como se hizo con Anne Frank.
+
+---
+
+### 📦 Build 1.0.5 (20) — enviado a revisión
+
+**⚠️ Bug detectado durante esta sesión (NO relacionado con el fix permanente de Xcode de sesión 27):** al correr `flutter build ipa`, la versión marketing quedó en `1.0.4` en vez de `1.0.5` porque `pubspec.yaml` no se había editado correctamente (se subió el build number pero no la versión marketing). El fix de Xcode de sesión 27 sigue funcionando bien — este fue un error humano al editar `pubspec.yaml`, no una regresión del bug de hardcodeo.
+
+**Corrección aplicada:**
+```yaml
+# pubspec.yaml
+version: 1.0.5+20   # antes: 1.0.4+20 (incorrecto)
+```
+
+**Validación final antes de subir:**
+```
+Version Number: 1.0.5
+Build Number: 20
+Bundle Identifier: cl.callmehector.herechoes
+```
+
+**Subido con Transporter** → confirmación "Enviado a App Store Connect" recibida.
+
+⚠️ Advertencia no bloqueante recibida en Transporter: `MinimumOSVersion too low (13.0)`. Apple exigirá iOS 15.0+ recién a partir de primavera 2027 — no bloquea este envío, pero considerar subir el mínimo en algún momento antes de esa fecha.
+
+### Contenido del build 1.0.5 (20)
+- **Migración arquitectónica:** her_echoes.json ahora se descarga desde GitHub con caché offline (ver arriba) — este es el motivo principal del build, y es el ÚLTIMO build necesario por razones de contenido
+- Fix Anne Frank (past_date correcto, duplicados fantasma eliminados)
+- 14 nuevas entradas agregadas al dataset (581 → 595), incluyendo relleno de días con <3 entradas
+- 42 imágenes nuevas subidas a `images/cards/`
+
+### Pendiente de próxima sesión
+- [ ] **Confirmar aprobación** del build 1.0.5 (20) en App Store Connect
+- [ ] **Probar escenario 100% offline** (modo avión) para confirmar que el fallback de caché de `her_echoes.json` funciona correctamente en producción
+- [ ] Considerar sincronizar el asset local empaquetado (`assets/data/her_echoes.json`) con la versión más reciente del remoto, aunque ya no sea la fuente primaria — sigue siendo el respaldo de emergencia
+- [ ] Actualizar `TUTORIAL.md` para reflejar que agregar/editar mujeres en el JSON **ya no requiere nuevo build** (una vez aprobada la 1.0.5) — el tutorial actual todavía dice lo contrario
+- [ ] Revisar caso por caso los 17 `woman_id` con múltiples entradas restantes por si hay más inconsistencias de `past_date` como la de Anne Frank
 
 ---
 
@@ -48,9 +149,6 @@ El proceso de auditoría destapó registros duplicados (mismo `woman_id`, mismo 
 - Fuentes: Britannica, White House Historical Association
 - Imagen ya subida a `images/cards/ford_betty_01.webp`
 
-### Pendiente de próxima sesión
-Solo se auditó formato de fecha con alta confianza (texto + posición). **No se revisó exhaustivamente el resto del dataset en busca de MÁS duplicados fantasma más allá de los 6 casos encontrados** (la auditoría de duplicados se hizo por `woman_id` + `past_date` repetido, cubre todo el archivo, pero vale la pena una segunda pasada si aparecen más síntomas raros).
-
 ---
 
 ## 🔴 SESIÓN 27 — Bug de versionado Xcode (CAUSA RAÍZ RESUELTA DE FORMA PERMANENTE)
@@ -84,6 +182,8 @@ xcodebuild -list -project ios/Runner.xcodeproj         # debe listar targets sin
 ✅ Con este fix, de ahora en adelante **solo se debe tocar `pubspec.yaml`** para cambiar de versión. Nunca más hay que editar Xcode manualmente para esto. Si en el futuro este bug reaparece (por ejemplo si alguien vuelve a hardcodear un valor en Xcode UI), repetir exactamente este mismo procedimiento.
 
 ⚠️ Si `sed` falla o corrompe `project.pbxproj` (formato JSON-like sensible a sintaxis), usar `git checkout ios/Runner.xcodeproj/project.pbxproj` para revertir antes de reintentar, y SIEMPRE usar comillas alrededor de `$(VARIABLE)` en reemplazos de pbxproj.
+
+⚠️ **Nota sesión 2026-08-17:** el fix sigue funcionando correctamente. El error de versión 1.0.4 vs 1.0.5 de esta sesión fue por editar mal `pubspec.yaml` directamente (error humano), no por hardcodeo en Xcode. Verificar siempre `grep "^version:" pubspec.yaml` antes de compilar.
 
 ---
 
@@ -119,6 +219,8 @@ git config --global user.email
 ### ⚠️ Regla aprendida sesión 27 — no dejar imágenes/commits sin subir
 En sesión 27 se encontraron ~100 imágenes locales (`images/cards/`) sin subir a GitHub desde hacía ~1 mes, causando cards rotas/borrosas en producción para todo el contenido nuevo. **Hacer `git push` con frecuencia, no acumular cambios locales por semanas.**
 
+⚠️ **Repetido en sesión 2026-08-17:** 42 imágenes nuevas encontradas sin subir junto con el JSON. Mismo patrón — revisar `git status` regularmente, no solo cuando se detecta un problema visual.
+
 ---
 
 ## Ubicación del proyecto
@@ -137,7 +239,7 @@ En sesión 27 se encontraron ~100 imágenes locales (`images/cards/`) sin subir 
 - **Background scaffolds:** SIEMPRE `Color(0xFFF5F5F5)` / `AppColors.background` — NUNCA blanco
 - **Accent:** `#F70F3D` / `Color(0xFFE1002D)`
 - **State management:** Provider
-- **Persistencia:** SharedPreferences — onboarding_done ✅, user_name ✅, favorites ✅, notifications_enabled ✅, settings_has_card_issue ✅, settings_has_new_terms ✅, currency_override ✅
+- **Persistencia:** SharedPreferences — onboarding_done ✅, user_name ✅, favorites ✅, notifications_enabled ✅, settings_has_card_issue ✅, settings_has_new_terms ✅, currency_override ✅, **her_echoes_cache_v1 ✅ (nuevo sesión 2026-08-17 — caché offline del dataset principal)**
 - **NUNCA refactorizar layouts que funcionan**
 - **Spinners:** SIEMPRE `CircularProgressIndicator(color: Color(0xFFE1002D))`
 - **Cursor en TextFields:** SIEMPRE `Color(0xFFF70F3D)`
@@ -152,7 +254,8 @@ En sesión 27 se encontraron ~100 imágenes locales (`images/cards/`) sin subir 
 - **Pantalla de suscripción:** NUNCA usar toggle para trial — el trial es una tarjeta separada independiente
 - **Links legales en TODOS los flujos de compra:** `upsell_modal_free`, `upsell_modal_pro` y `plan_selection_screen` SIEMPRE deben tener links visibles a Términos y Privacidad
 - **`event_date` en her_echoes.json:** SIEMPRE formato **MM/DD** (ej. "07/01" = 1 de julio). Confirmado y normalizado en sesión 27 tras auditoría completa. `main.dart` genera la clave del día en este mismo formato — si algún script o carga futura usa DD/MM, romperá el filtro diario.
-- **Versionado iOS:** SIEMPRE editar SOLO `pubspec.yaml` (`version: X.X.X+N`). NUNCA tocar `CURRENT_PROJECT_VERSION`, `MARKETING_VERSION` en Xcode ni `CFBundleVersion` en Info.plist a mano — deben quedar siempre como variables `$(FLUTTER_BUILD_NUMBER)` / `$(FLUTTER_BUILD_NAME)` (fix permanente aplicado sesión 27).
+- **Versionado iOS:** SIEMPRE editar SOLO `pubspec.yaml` (`version: X.X.X+N`). NUNCA tocar `CURRENT_PROJECT_VERSION`, `MARKETING_VERSION` en Xcode ni `CFBundleVersion` en Info.plist a mano — deben quedar siempre como variables `$(FLUTTER_BUILD_NUMBER)` / `$(FLUTTER_BUILD_NAME)` (fix permanente aplicado sesión 27). **Siempre verificar con `grep "^version:" pubspec.yaml` antes de compilar** — ambos números (marketing y build) deben subir juntos.
+- **her_echoes.json — carga (sesión 2026-08-17):** el dataset se descarga desde GitHub raw en cada apertura de la app, con caché local (`SharedPreferences`) para uso offline y el asset empaquetado como último respaldo de emergencia. **Ya no requiere build nuevo para actualizar contenido** (a partir de usuarios en build 1.0.5+20 o superior). Ver sección de sesión 2026-08-17 arriba para el flujo completo.
 
 ---
 
@@ -164,34 +267,35 @@ En sesión 27 se encontraron ~100 imágenes locales (`images/cards/`) sin subir 
 
 ---
 
-## Versiones ✅ sesión 27
+## Versiones
 
 | Versión | Build | Estado | Fecha |
 |---------|-------|--------|-------|
 | 1.0.0 | 13 | ✅ Live en App Store | mayo 2026 |
 | 1.0.1 | 14 | ✅ Aprobado y Live en App Store | mayo 2026 |
-| 1.0.2 | 16 | 🟡 Enviado a revisión | 1 julio 2026 |
+| 1.0.2 | 16 | ✅ Aprobado y Live en App Store | julio 2026 |
+| 1.0.4 | 19 | ✅ Aprobado y Live en App Store | (fecha no registrada en sesiones anteriores) |
+| **1.0.5** | **20** | 🟡 **Enviado a revisión** | **17 agosto 2026** |
 
-**pubspec.yaml actual:** `version: 1.0.2+16`
+**pubspec.yaml actual:** `version: 1.0.5+20`
 
-### Contenido del build 1.0.2 (16)
-- Fix crítico: filtro de fecha diario (MM/DD)
-- 108 correcciones de formato de fecha en el dataset
-- 6 duplicados fantasma eliminados/reemplazados
-- Nuevo registro: Betty Ford (04/08)
-- ~100 imágenes nuevas subidas a GitHub (`images/cards/`)
-- Botón del modal de actualización corregido (`AppButton` en vez de `ElevatedButton`)
-- Fix permanente de versionado Xcode (ver sección arriba)
+⚠️ Nota: no hay registro de la build 1.0.3/17-18 en la documentación del proyecto — si existió, no quedó documentada en sesiones anteriores. Verificar en App Store Connect si hace falta reconstruir el historial completo.
+
+### Contenido del build 1.0.5 (20)
+- **Migración a carga remota de her_echoes.json** (cambio principal — ver sección de sesión 2026-08-17)
+- Fix Anne Frank (past_date incorrecto)
+- 14 nuevas entradas al dataset (581 → 595 total)
+- 42 imágenes nuevas en `images/cards/`
 
 ### ⚠️ Regla crítica para nuevos builds
 Cuando una versión YA está aprobada en App Store, Apple NO acepta nuevos builds con el mismo número de versión marketing. Se debe incrementar AMBOS:
-- **Versión marketing:** ej. 1.0.1 → 1.0.2 (en pubspec.yaml: parte antes del +)
-- **Build number:** ej. +15 → +16 (en pubspec.yaml: parte después del +)
+- **Versión marketing:** ej. 1.0.4 → 1.0.5 (en pubspec.yaml: parte antes del +)
+- **Build number:** ej. +19 → +20 (en pubspec.yaml: parte después del +)
 
 Si solo subes el build number sin cambiar la versión marketing, Apple rechaza con:
 `"The train version X.X.X is closed for new build submissions"`
 
-**Verificar SIEMPRE antes de `flutter build ipa`** que el log final de "App Settings Validation" muestre el Version Number y Build Number correctos — si no coinciden con pubspec.yaml, hay un valor hardcodeado en Xcode (ver sección de fix permanente arriba).
+**Verificar SIEMPRE antes de `flutter build ipa`** que el log final de "App Settings Validation" muestre el Version Number y Build Number correctos — si no coinciden con pubspec.yaml, hay un valor hardcodeado en Xcode (ver sección de fix permanente arriba), **o revisar primero que `pubspec.yaml` esté bien editado** (error más común, confirmado en sesión 2026-08-17).
 
 ---
 
@@ -289,10 +393,14 @@ lib/
 ├── services/
 │   ├── daily_suggestions_engine.dart   ⚠️ NO filtra fecha — recibe todaysWomen ya filtrado
 │   └── update_service.dart
-└── main.dart                            ✅ AQUÍ vive el filtro real de event_date (sesión 27)
+└── main.dart                            ✅ Filtro de event_date (sesión 27) +
+                                             carga remota de her_echoes.json con
+                                             caché offline (sesión 2026-08-17)
 ```
 
-⚠️ **Nota de arquitectura descubierta en sesión 27:** el filtro por fecha del día NO está en `daily_suggestions_engine.dart` (que solo arma sugerencias a partir de una lista ya filtrada) ni en `content_service.dart` (que solo carga `legal_content.json`). Vive directo en `main.dart`, dentro de `_MyAppState.build()`, calculando `todayKey` y filtrando `allWomen`.
+⚠️ **Nota de arquitectura (sesión 27, sigue vigente):** el filtro por fecha del día NO está en `daily_suggestions_engine.dart` (que solo arma sugerencias a partir de una lista ya filtrada) ni en `content_service.dart` (que solo carga `legal_content.json`). Vive directo en `main.dart`, dentro de `_MyAppState.build()`, calculando `todayKey` y filtrando `allWomen`.
+
+⚠️ **Nota de arquitectura (sesión 2026-08-17):** la carga de datos (`loadJson()`) también vive en `main.dart`, dentro de `_MyAppState`. Contiene 2 flujos paralelos: uno para `allWomen` (GitHub → caché → asset) y otro para `wildcards` (GitHub → asset, sin caché intermedio). Considerar unificar el patrón en una futura refactorización si se agregan más datasets remotos.
 
 ---
 
@@ -335,13 +443,15 @@ android/app/src/main/kotlin/
 - App: `cl.callmehector.herechoes`
 - Prueba cerrada Alpha: build 13 ✅
 - Testers: 12 aceptados ✅ — contador: 11 días (necesita 14 días corridos)
-- Acceso producción: disponible ~21 mayo 2026 (verificar estado actual, no confirmado en sesión 27)
+- Acceso producción: disponible ~21 mayo 2026 (verificar estado actual, no confirmado desde sesión 27)
 
 ---
 
 ## Firebase — SHA registradas
 1. SHA-256 keystore subida: `ee:ed:33:...`
 2. SHA-256 firma Google Play: `62:db:13:...`
+
+⚠️ **Nota sesión 2026-08-17:** Firebase NO está configurado correctamente para el target **macOS** de Flutter (falta `GoogleService-Info.plist` para macOS o configuración equivalente) — al correr `flutter run -d macos` falla con `[core/not-initialized] Firebase has not been correctly initialized`. No afecta iOS ni Android. No es urgente ya que macOS no es plataforma de distribución del proyecto, pero documentado por si se vuelve a intentar correr en macOS para pruebas rápidas.
 
 ---
 
@@ -358,6 +468,7 @@ flutter run --device-id IP:PUERTO
 ## URLs
 ```
 Imágenes:    https://raw.githubusercontent.com/01010app/her-echoes-app/main/images/cards/${rawId}.webp
+her_echoes:  https://raw.githubusercontent.com/01010app/her-echoes-app/main/assets/data/her_echoes.json  ← carga remota desde sesión 2026-08-17
 Wildcard:    https://raw.githubusercontent.com/01010app/her-echoes-app/main/assets/data/wildcard.json
 Panel admin: https://callmehector.cl/apps/herechoes/wildcard.php
 Privacidad:  https://callmehector.cl/apps/herechoes/privacidad.html
@@ -389,39 +500,28 @@ v3.5-android-nav-fix             ✅ build 13 — versión App Store aprobada
 - Build 12: IAP unresponsive
 - Build 13: ✅ APROBADO — legal screen interno, links en modales
 - Build 14: ✅ APROBADO — en distribución
-- Build 16 (v1.0.2): 🟡 Enviado a revisión 1 julio 2026 — primer intento falló por versión marketing sin incrementar (error 409 "train version closed"), corregido y reenviado
+- Build 16 (v1.0.2): ✅ APROBADO — primer intento falló por versión marketing sin incrementar (error 409 "train version closed"), corregido y reenviado
+- Build 19 (v1.0.4): ✅ APROBADO (sin detalle documentado de sesiones intermedias)
+- **Build 20 (v1.0.5): 🟡 Enviado a revisión 17 agosto 2026** — migración a carga remota de her_echoes.json + fixes de contenido. Detectado y corregido en el momento: primer intento de compilación quedó con versión marketing 1.0.4 en vez de 1.0.5 por edición incompleta de `pubspec.yaml` (no relacionado al fix de Xcode de sesión 27, que sigue funcionando bien)
 
 ---
 
 ## Pendientes
 
 ### URGENTE
-- [ ] Confirmar aprobación del build 1.0.2 (16) en App Store Connect
+- [ ] Confirmar aprobación del build 1.0.5 (20) en App Store Connect
+- [ ] Probar escenario 100% offline (modo avión) para el fallback de caché de her_echoes.json
 - [ ] Verificar estado actual de prueba cerrada Google Play (última info de sesión 26 indicaba ~21 mayo 2026, no confirmado desde entonces)
 
 ### Media prioridad
 - [ ] Completar JSON julio → diciembre
-- [ ] Segunda pasada de auditoría de duplicados fantasma en todo el dataset (solo se encontraron 6 casos por síntoma, podría haber más)
+- [ ] Revisar caso por caso los 17 `woman_id` con múltiples entradas restantes (no urgente — la mayoría son eventos reales distintos, no duplicados fantasma, pero vale la pena una segunda mirada tipo Anne Frank)
 - [ ] UpdateService: agregar soporte Android (actualmente `if (!Platform.isIOS) return;` bloquea todo el flujo en Android)
 - [ ] Push notifications (Firebase Cloud Messaging) — postergado
 - [ ] Show All — agregar selector de meses
 - [ ] Show All — márgenes laterales
-- [ ] Migrar her_echoes.json a carga remota desde GitHub (evitar builds por contenido) — **más urgente ahora**, ya que cada corrección de dato (como la de hoy) requiere build + revisión de Apple
+- [ ] Actualizar `TUTORIAL.md` — la sección de "CARDS — Agregar nuevas mujeres al JSON" todavía dice que requiere nuevo build; ya no es así desde build 1.0.5
+- [ ] Reconstruir historial de builds 15/17/18 (v1.0.1→1.0.4) — no quedaron documentados en sesiones anteriores
 - [ ] Verificación de desarrolladores Android (plazo: septiembre 2026)
 - [ ] Launch image de iOS sigue en placeholder default (warning no bloqueante en cada build, pendiente de reemplazar)
-
-
----
-
-## 🃏 WILDCARD — Historial de personajes
-
-- **Activo hasta 2026-07-22:** Jewel — respaldado en `wildcard_archive/jewel_20260722.json`
-- **Activo desde 2026-07-22:** [pendiente — nombre nueva mujer]
-
-### Cómo restaurar un wildcard anterior
-```bash
-cp wildcard_archive/[archivo].json assets/data/wildcard.json
-git add assets/data/wildcard.json
-git commit -m "content: restore wildcard → [nombre]"
-git push origin main
-```
+- [ ] Considerar subir `MinimumOSVersion` de 13.0 a 15.0+ antes de primavera 2027 (fecha límite de Apple para aceptar builds nuevos)

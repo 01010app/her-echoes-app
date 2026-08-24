@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../core/language_provider.dart';
 import '../../core/subscription_provider.dart';
@@ -26,12 +27,22 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   String _userName = '';
+  String _versionLabel = '';
   static const bool _hasNewTerms = false;
 
   @override
   void initState() {
     super.initState();
     _loadUserName();
+    _loadVersion();
+  }
+
+  // FIX sesión 2026-08-18: antes el texto "Version 1.0.0" estaba hardcodeado
+  // y nunca se actualizaba entre builds. Ahora se lee dinámicamente desde
+  // pubspec.yaml usando package_info_plus (ya era dependencia del proyecto).
+  Future<void> _loadVersion() async {
+    final info = await PackageInfo.fromPlatform();
+    setState(() => _versionLabel = "Version ${info.version} (${info.buildNumber})");
   }
 
   Future<void> _loadUserName() async {
@@ -287,7 +298,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   const SizedBox(height: 24),
                   Center(
                     child: Text(
-                      "Version 1.0.0",
+                      _versionLabel,
                       style: GoogleFonts.inter(
                           fontSize: 11, fontWeight: FontWeight.w400,
                           height: 1.5, letterSpacing: -0.5,

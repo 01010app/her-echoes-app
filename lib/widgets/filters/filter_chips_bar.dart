@@ -40,6 +40,14 @@ class FilterChipsBar extends StatelessWidget {
           height: _containerHeight,
           color: _containerBg,
           alignment: Alignment.centerLeft,
+          // FIX sesión 2026-08-18: antes el margen de 4px arriba/abajo del
+          // chip activo dependía de que Align calculara el alto exacto del
+          // texto (padding 5+5 + line-height 14 = 24, centrado en 32).
+          // Las métricas reales de Inter no siempre coinciden con el
+          // line-height teórico, así que el margen calculado variaba y a
+          // veces desaparecía. Ahora se fuerza el margen con padding
+          // explícito: 32 - 4 - 4 = 24px exactos, siempre.
+          padding: const EdgeInsets.symmetric(vertical: 4),
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             physics: const BouncingScrollPhysics(),
