@@ -1,5 +1,57 @@
 # HerEchoes — Estado Actual del Proyecto
-**Última actualización:** 2026-08-17
+**Última actualización:** 2026-09-16
+
+---
+
+## 🟢 SESIÓN 2026-09-16 — Confirmación en vivo del pipeline sin build + nuevos registros + fix de JSON roto
+
+### 🎯 Confirmación en producción: el flujo sin build funciona de punta a punta
+
+Durante esta sesión se probó el flujo completo con la app real abierta en el dispositivo: se subió a GitHub un registro nuevo (Zendaya) junto con su imagen, y **la card cambió de la imagen default a la imagen real sin cerrar la app, sin build, sin reinstalar**. Confirma en producción lo que sesión 2026-08-17 dejó implementado.
+
+✅ **Regla permanente confirmada:** agregar o corregir mujeres en `her_echoes.json`, o agregar/reemplazar imágenes en `images/cards/`, solo requiere `git push`. NO requiere `flutter build ipa` ni revisión de Apple. El build solo es necesario para cambios de código Dart, lógica, UI o algo que Apple deba revisar (IAP, permisos, etc.).
+
+### Contenido agregado esta sesión
+
+Nuevos registros creados con investigación e IA, verificados contra fuentes reales (Wikipedia EN/ES, Britannica, Encyclopedia.com, sitios institucionales), en el formato exacto del dataset (bilingüe, bio/legacy extensos con estructura `[S]`/`[P]`):
+
+| Mujer | `woman_id` | `event_date` | Fuente principal |
+|---|---|---|---|
+| María Teresa Forero | `forero_01` | 09/14 | es.wikipedia.org |
+| Elena Văcărescu | `vacarescu_01` | 09/21 | en.wikipedia.org, Britannica |
+| Sarah Scott | `scott_01` | 09/21 | en.wikipedia.org, Encyclopedia.com |
+
+Más un lote adicional de registros e imágenes agregados directamente por el usuario en la misma sesión (ver conteo total abajo).
+
+**Imágenes subidas:**
+- `forero_01.webp`, `vacarescu_01.webp`, `scott_01.webp` — de los 3 registros de arriba
+- **32 imágenes de backlog** (`images/cards/`) que estaban en local sin subir desde hacía tiempo: `albert_01`, `alexandra_bavaria_01`, `andre_lona_01`, `anthony_01`, `besant_01`, `carr_charmian_01`, `escobedo_01`, `ganiyeva_01`, `garciarojo_01`, `ginsburg_ruth_bader_01`, `hunt_02`, `kaur_01`, `langevin_01`, `lobe_mira_01`, `loren_01`, `mama_cass_01`, `mendizabal_01`, `nguyen_01`, `pacini_01`, `perez_01`, `rosalia_01`, `sacerdote_01`, `sergievskaya_01`, `smiley_01`, `smith_mamie_01`, `sunita_williams_01`, `torres_01`, `twiggy_01`, `vigil_01`, `walters_01`, `wells_02`, `wurtzbach_01`
+- `zendaya_01.webp` — subida y confirmada en vivo (ver arriba)
+
+⚠️ **Patrón que se repite (3ra vez: sesión 27, sesión 2026-08-17, y ahora):** imágenes creadas en local que se acumulan sin subir. Revisar `git status` regularmente en vez de esperar a notar cards rotas/con imagen default.
+
+### 🐛 Bug encontrado y corregido: JSON roto por comillas sin escapar (Mamie Smith)
+
+Al intentar commitear el dataset, `python3 -m json.tool` falló con `Expecting ',' delimiter`. Causa: el registro `smith_mamie_01` (preexistente, no de esta sesión) tenía comillas rectas **sin escapar** dentro de varios campos de texto (`bio_en`, `bio_es`, `legacy_en`, `legacy_es`) alrededor de nombres de canciones como `"Crazy Blues"`, `"That Thing Called Love"`, etc. — JSON válido requiere `\"` para comillas dentro de un string.
+
+**Fix aplicado:** se escaparon todas las comillas internas del registro completo de Mamie Smith. Verificado con `python3 -m json.tool` → JSON OK antes de cualquier commit.
+
+⚠️ **Regla aprendida (agregar a checklist de todo registro nuevo o editado):** cualquier comilla recta `"` dentro de un valor de texto del JSON (bio, legacy, quote, on_this_date) **debe escaparse como `\"`**. Esto puede pasar con nombres de canciones, libros, obras de teatro, apodos, o citas dentro de una cita. **Validar SIEMPRE con `python3 -m json.tool assets/data/her_echoes.json > /dev/null && echo OK` antes de cada commit** — un JSON roto tumba la app para todos los usuarios en tiempo real, sin la barrera de revisión de Apple que existía cuando el contenido iba empaquetado en el build.
+
+### Verificación post-push
+
+Con el archivo final descargado y validado:
+- **619 registros totales** (antes 595 — sesión 2026-08-17)
+- **205 fechas distintas**, todas con mínimo 3 entradas ✅
+- Todas las fechas con al menos 1 mujer FREE (`is_free: "VERDADERO"`) ✅
+- 100% de `event_date` en formato MM/DD válido ✅
+- 100% de registros con `image_card_ID` presente ✅
+- Los 3 registros nuevos (Forero, Văcărescu, Scott) sin duplicados ni conflictos ✅
+- Confirmados los **17 `woman_id` con múltiples entradas** ya documentados en sesión 2026-08-17 como eventos reales distintos (no duplicados fantasma) — sin cambios, siguen pendientes de revisión caso por caso si se quiere una segunda pasada
+
+### ⚠️ Pendiente sin resolver: diff en `wildcard_archive/allende_20260803.json`
+
+Apareció como modificado en `git status` sin que el usuario recuerde haberlo tocado. **No se investigó ni se commiteó esta sesión.** Revisar el diff (`git diff wildcard_archive/allende_20260803.json`) en la próxima sesión antes de decidir si se commitea o se descarta con `git restore`.
 
 ---
 
@@ -21,24 +73,36 @@ Mismo patrón que ya se usaba para `wildcard.json`, ahora extendido al dataset p
 
 ⚠️ **El asset local NO se eliminó** — sigue declarado en `pubspec.yaml` y sigue siendo necesario como fallback de emergencia. No es la fuente que ve el usuario en uso normal, pero debe mantenerse actualizado igual como red de seguridad (no crítico, pero recomendable sincronizarlo cuando se pueda).
 
-### Nuevo flujo de trabajo para contenido (a partir de ahora)
+### Nuevo flujo de trabajo para contenido (confirmado en vivo sesión 2026-09-16)
 
 ```bash
-# Editar her_echoes.json normalmente
 cd ~/herechoes
+
+# 1. Editar/agregar registros en her_echoes.json
+
+# 2. Validar SIEMPRE antes de commitear (regla agregada sesión 2026-09-16)
+python3 -m json.tool assets/data/her_echoes.json > /dev/null && echo "JSON OK" || echo "JSON INVÁLIDO"
+
+# 3. Commit y push del JSON
 git add assets/data/her_echoes.json
 git commit -m "content: ..."
 git push origin main
+
+# 4. Commit y push de imágenes nuevas
+git add images/cards/
+git commit -m "content: add images for [nombres]"
+git push origin main
+
 # NO requiere build. Los usuarios con la versión 1.0.5+ lo ven
 # la próxima vez que abran la app con internet.
 ```
 
 ⚠️ **Importante:** este flujo sin build solo aplica a usuarios que ya tengan instalada la versión **1.0.5 (build 20)** o superior. Usuarios en versiones anteriores siguen cargando el JSON viejo empaquetado en su build hasta que actualicen.
 
-### Validación realizada esta sesión
+### Validación realizada esta sesión (2026-08-17)
 - `flutter analyze` → 0 errores (solo 86 issues preexistentes de tipo info/warning, ninguno bloqueante)
 - Probado en simulador iPhone 16 con hot restart → carga correctamente desde GitHub, sin errores en consola
-- ⚠️ **Pendiente de próxima sesión:** no se alcanzó a probar el escenario 100% offline (modo avión) para confirmar que el fallback de caché funciona en la práctica. Probar antes de confiar completamente en el fallback.
+- ⚠️ **Pendiente:** no se alcanzó a probar el escenario 100% offline (modo avión) para confirmar que el fallback de caché funciona en la práctica. **Sigue pendiente a la fecha (2026-09-16)** — lo que sí se confirmó en sesión 2026-09-16 fue el escenario "online, contenido nuevo en GitHub", que es un caso distinto.
 
 ---
 
@@ -49,14 +113,14 @@ Auditoría de sesión anterior había detectado 3 copias de `anne_frank_01` con 
 - **Conservada:** entrada `event_date: 06/12`, corregido `past_date: 1929 → 1942` (antes tenía el año de nacimiento en vez del año del evento real)
 - **Eliminadas:** 2 copias fantasma en `03/12` y `03/13` (fechas sin base real)
 - **Reemplazos para no dejar días con <3 entradas:**
-    - `03/12` → agregada **Janja Garnbret** (nacida 12 marzo 1999)
-    - `03/13` → agregada **Donella Meadows** (nacida 13 marzo 1941)
+  - `03/12` → agregada **Janja Garnbret** (nacida 12 marzo 1999)
+  - `03/13` → agregada **Donella Meadows** (nacida 13 marzo 1941)
 
 ### Días con menos de 3 entradas — resueltos
 
 La auditoría de esta sesión encontró 9 días con menos de 3 entradas (incluyendo 09/13, día actual de trabajo). El usuario completó manualmente los registros faltantes. Verificación final confirmó:
 
-✅ **0 días con menos de 3 entradas** en el dataset completo (595 entradas totales, previamente 581).
+✅ **0 días con menos de 3 entradas** en el dataset completo (595 entradas en ese momento; 619 a la fecha de sesión 2026-09-16).
 
 ### Auditoría de woman_id duplicados — aclaración
 
@@ -64,7 +128,7 @@ Se había marcado como alerta "18 duplicados" en sesiones previas. Revisión det
 
 Único caso real de duplicado fantasma detectado y corregido: **Anne Frank** (ver arriba).
 
-⚠️ Quedan 17 `woman_id` con múltiples entradas legítimas sin revisar una por una en detalle — si aparecen más síntomas raros (fechas o past_date inconsistentes), vale la pena revisar caso por caso como se hizo con Anne Frank.
+⚠️ Quedan 17 `woman_id` con múltiples entradas legítimas sin revisar una por una en detalle — si aparecen más síntomas raros (fechas o past_date inconsistentes), vale la pena revisar caso por caso como se hizo con Anne Frank. **Sin cambios a la fecha de sesión 2026-09-16.**
 
 ---
 
@@ -95,12 +159,13 @@ Bundle Identifier: cl.callmehector.herechoes
 - 14 nuevas entradas agregadas al dataset (581 → 595), incluyendo relleno de días con <3 entradas
 - 42 imágenes nuevas subidas a `images/cards/`
 
-### Pendiente de próxima sesión
-- [ ] **Confirmar aprobación** del build 1.0.5 (20) en App Store Connect
-- [ ] **Probar escenario 100% offline** (modo avión) para confirmar que el fallback de caché de `her_echoes.json` funciona correctamente en producción
+### Pendiente de próxima sesión (estado a 2026-09-16)
+- [ ] **Confirmar aprobación** del build 1.0.5 (20) en App Store Connect — sin novedades reportadas
+- [ ] **Probar escenario 100% offline** (modo avión) para confirmar que el fallback de caché de `her_echoes.json` funciona correctamente en producción — sigue sin probarse
 - [ ] Considerar sincronizar el asset local empaquetado (`assets/data/her_echoes.json`) con la versión más reciente del remoto, aunque ya no sea la fuente primaria — sigue siendo el respaldo de emergencia
-- [ ] Actualizar `TUTORIAL.md` para reflejar que agregar/editar mujeres en el JSON **ya no requiere nuevo build** (una vez aprobada la 1.0.5) — el tutorial actual todavía dice lo contrario
+- [ ] **Actualizar `TUTORIAL.md`** para reflejar que agregar/editar mujeres en el JSON **ya no requiere nuevo build** — el tutorial actual todavía dice lo contrario. **Sigue pendiente a 2026-09-16, no se tocó esta sesión.**
 - [ ] Revisar caso por caso los 17 `woman_id` con múltiples entradas restantes por si hay más inconsistencias de `past_date` como la de Anne Frank
+- [ ] Investigar diff pendiente en `wildcard_archive/allende_20260803.json` (ver sesión 2026-09-16)
 
 ---
 
@@ -183,7 +248,7 @@ xcodebuild -list -project ios/Runner.xcodeproj         # debe listar targets sin
 
 ⚠️ Si `sed` falla o corrompe `project.pbxproj` (formato JSON-like sensible a sintaxis), usar `git checkout ios/Runner.xcodeproj/project.pbxproj` para revertir antes de reintentar, y SIEMPRE usar comillas alrededor de `$(VARIABLE)` en reemplazos de pbxproj.
 
-⚠️ **Nota sesión 2026-08-17:** el fix sigue funcionando correctamente. El error de versión 1.0.4 vs 1.0.5 de esta sesión fue por editar mal `pubspec.yaml` directamente (error humano), no por hardcodeo en Xcode. Verificar siempre `grep "^version:" pubspec.yaml` antes de compilar.
+⚠️ **Nota sesión 2026-08-17:** el fix sigue funcionando correctamente. El error de versión 1.0.4 vs 1.0.5 de esa sesión fue por editar mal `pubspec.yaml` directamente (error humano), no por hardcodeo en Xcode. Verificar siempre `grep "^version:" pubspec.yaml` antes de compilar.
 
 ---
 
@@ -221,6 +286,8 @@ En sesión 27 se encontraron ~100 imágenes locales (`images/cards/`) sin subir 
 
 ⚠️ **Repetido en sesión 2026-08-17:** 42 imágenes nuevas encontradas sin subir junto con el JSON. Mismo patrón — revisar `git status` regularmente, no solo cuando se detecta un problema visual.
 
+⚠️ **Repetido otra vez en sesión 2026-09-16:** 32 imágenes más de backlog encontradas sin subir. Este es ya el 3er caso documentado del mismo patrón. **Recomendación firme: correr `git status` al inicio y al final de cada sesión de trabajo con contenido, sin excepción.**
+
 ---
 
 ## Ubicación del proyecto
@@ -239,7 +306,7 @@ En sesión 27 se encontraron ~100 imágenes locales (`images/cards/`) sin subir 
 - **Background scaffolds:** SIEMPRE `Color(0xFFF5F5F5)` / `AppColors.background` — NUNCA blanco
 - **Accent:** `#F70F3D` / `Color(0xFFE1002D)`
 - **State management:** Provider
-- **Persistencia:** SharedPreferences — onboarding_done ✅, user_name ✅, favorites ✅, notifications_enabled ✅, settings_has_card_issue ✅, settings_has_new_terms ✅, currency_override ✅, **her_echoes_cache_v1 ✅ (nuevo sesión 2026-08-17 — caché offline del dataset principal)**
+- **Persistencia:** SharedPreferences — onboarding_done ✅, user_name ✅, favorites ✅, notifications_enabled ✅, settings_has_card_issue ✅, settings_has_new_terms ✅, currency_override ✅, her_echoes_cache_v1 ✅ (caché offline del dataset principal, sesión 2026-08-17)
 - **NUNCA refactorizar layouts que funcionan**
 - **Spinners:** SIEMPRE `CircularProgressIndicator(color: Color(0xFFE1002D))`
 - **Cursor en TextFields:** SIEMPRE `Color(0xFFF70F3D)`
@@ -255,7 +322,8 @@ En sesión 27 se encontraron ~100 imágenes locales (`images/cards/`) sin subir 
 - **Links legales en TODOS los flujos de compra:** `upsell_modal_free`, `upsell_modal_pro` y `plan_selection_screen` SIEMPRE deben tener links visibles a Términos y Privacidad
 - **`event_date` en her_echoes.json:** SIEMPRE formato **MM/DD** (ej. "07/01" = 1 de julio). Confirmado y normalizado en sesión 27 tras auditoría completa. `main.dart` genera la clave del día en este mismo formato — si algún script o carga futura usa DD/MM, romperá el filtro diario.
 - **Versionado iOS:** SIEMPRE editar SOLO `pubspec.yaml` (`version: X.X.X+N`). NUNCA tocar `CURRENT_PROJECT_VERSION`, `MARKETING_VERSION` en Xcode ni `CFBundleVersion` en Info.plist a mano — deben quedar siempre como variables `$(FLUTTER_BUILD_NUMBER)` / `$(FLUTTER_BUILD_NAME)` (fix permanente aplicado sesión 27). **Siempre verificar con `grep "^version:" pubspec.yaml` antes de compilar** — ambos números (marketing y build) deben subir juntos.
-- **her_echoes.json — carga (sesión 2026-08-17):** el dataset se descarga desde GitHub raw en cada apertura de la app, con caché local (`SharedPreferences`) para uso offline y el asset empaquetado como último respaldo de emergencia. **Ya no requiere build nuevo para actualizar contenido** (a partir de usuarios en build 1.0.5+20 o superior). Ver sección de sesión 2026-08-17 arriba para el flujo completo.
+- **her_echoes.json — carga (sesión 2026-08-17, confirmado en vivo sesión 2026-09-16):** el dataset se descarga desde GitHub raw en cada apertura de la app, con caché local (`SharedPreferences`) para uso offline y el asset empaquetado como último respaldo de emergencia. **Ya no requiere build nuevo para actualizar contenido** (a partir de usuarios en build 1.0.5+20 o superior). Confirmado funcionando en producción: push de un registro nuevo + imagen se reflejó en la app abierta sin reiniciarla.
+- **her_echoes.json — validación obligatoria antes de commit (sesión 2026-09-16):** correr SIEMPRE `python3 -m json.tool assets/data/her_echoes.json > /dev/null && echo OK` antes de cualquier `git push`. Prestar especial atención a comillas rectas `"` dentro de campos de texto (nombres de obras, canciones, citas dentro de citas) — deben escaparse como `\"` o rompen el archivo completo.
 
 ---
 
@@ -275,9 +343,9 @@ En sesión 27 se encontraron ~100 imágenes locales (`images/cards/`) sin subir 
 | 1.0.1 | 14 | ✅ Aprobado y Live en App Store | mayo 2026 |
 | 1.0.2 | 16 | ✅ Aprobado y Live en App Store | julio 2026 |
 | 1.0.4 | 19 | ✅ Aprobado y Live en App Store | (fecha no registrada en sesiones anteriores) |
-| **1.0.5** | **20** | 🟡 **Enviado a revisión** | **17 agosto 2026** |
+| 1.0.5 | 20 | 🟡 Enviado a revisión (sin confirmación de aprobación aún) | 17 agosto 2026 |
 
-**pubspec.yaml actual:** `version: 1.0.5+20`
+**pubspec.yaml actual:** `version: 1.0.5+20` (sin cambios desde sesión 2026-08-17 — todo el contenido de sesión 2026-09-16 se subió vía GitHub, sin nuevo build)
 
 ⚠️ Nota: no hay registro de la build 1.0.3/17-18 en la documentación del proyecto — si existió, no quedó documentada en sesiones anteriores. Verificar en App Store Connect si hace falta reconstruir el historial completo.
 
@@ -395,7 +463,8 @@ lib/
 │   └── update_service.dart
 └── main.dart                            ✅ Filtro de event_date (sesión 27) +
                                              carga remota de her_echoes.json con
-                                             caché offline (sesión 2026-08-17)
+                                             caché offline (sesión 2026-08-17) —
+                                             confirmado funcionando en vivo (sesión 2026-09-16)
 ```
 
 ⚠️ **Nota de arquitectura (sesión 27, sigue vigente):** el filtro por fecha del día NO está en `daily_suggestions_engine.dart` (que solo arma sugerencias a partir de una lista ya filtrada) ni en `content_service.dart` (que solo carga `legal_content.json`). Vive directo en `main.dart`, dentro de `_MyAppState.build()`, calculando `todayKey` y filtrando `allWomen`.
@@ -468,7 +537,7 @@ flutter run --device-id IP:PUERTO
 ## URLs
 ```
 Imágenes:    https://raw.githubusercontent.com/01010app/her-echoes-app/main/images/cards/${rawId}.webp
-her_echoes:  https://raw.githubusercontent.com/01010app/her-echoes-app/main/assets/data/her_echoes.json  ← carga remota desde sesión 2026-08-17
+her_echoes:  https://raw.githubusercontent.com/01010app/her-echoes-app/main/assets/data/her_echoes.json  ← carga remota desde sesión 2026-08-17, confirmada en vivo sesión 2026-09-16
 Wildcard:    https://raw.githubusercontent.com/01010app/her-echoes-app/main/assets/data/wildcard.json
 Panel admin: https://callmehector.cl/apps/herechoes/wildcard.php
 Privacidad:  https://callmehector.cl/apps/herechoes/privacidad.html
@@ -502,7 +571,7 @@ v3.5-android-nav-fix             ✅ build 13 — versión App Store aprobada
 - Build 14: ✅ APROBADO — en distribución
 - Build 16 (v1.0.2): ✅ APROBADO — primer intento falló por versión marketing sin incrementar (error 409 "train version closed"), corregido y reenviado
 - Build 19 (v1.0.4): ✅ APROBADO (sin detalle documentado de sesiones intermedias)
-- **Build 20 (v1.0.5): 🟡 Enviado a revisión 17 agosto 2026** — migración a carga remota de her_echoes.json + fixes de contenido. Detectado y corregido en el momento: primer intento de compilación quedó con versión marketing 1.0.4 en vez de 1.0.5 por edición incompleta de `pubspec.yaml` (no relacionado al fix de Xcode de sesión 27, que sigue funcionando bien)
+- Build 20 (v1.0.5): 🟡 Enviado a revisión 17 agosto 2026 — migración a carga remota de her_echoes.json + fixes de contenido. Detectado y corregido en el momento: primer intento de compilación quedó con versión marketing 1.0.4 en vez de 1.0.5 por edición incompleta de `pubspec.yaml` (no relacionado al fix de Xcode de sesión 27, que sigue funcionando bien). **Sin confirmación de aprobación a la fecha (2026-09-16).**
 
 ---
 
@@ -512,6 +581,7 @@ v3.5-android-nav-fix             ✅ build 13 — versión App Store aprobada
 - [ ] Confirmar aprobación del build 1.0.5 (20) en App Store Connect
 - [ ] Probar escenario 100% offline (modo avión) para el fallback de caché de her_echoes.json
 - [ ] Verificar estado actual de prueba cerrada Google Play (última info de sesión 26 indicaba ~21 mayo 2026, no confirmado desde entonces)
+- [ ] Revisar el diff pendiente en `wildcard_archive/allende_20260803.json` (apareció modificado en sesión 2026-09-16, sin investigar ni commitear)
 
 ### Media prioridad
 - [ ] Completar JSON julio → diciembre
@@ -520,7 +590,7 @@ v3.5-android-nav-fix             ✅ build 13 — versión App Store aprobada
 - [ ] Push notifications (Firebase Cloud Messaging) — postergado
 - [ ] Show All — agregar selector de meses
 - [ ] Show All — márgenes laterales
-- [ ] Actualizar `TUTORIAL.md` — la sección de "CARDS — Agregar nuevas mujeres al JSON" todavía dice que requiere nuevo build; ya no es así desde build 1.0.5
+- [ ] **Actualizar `TUTORIAL.md`** — la sección de "CARDS — Agregar nuevas mujeres al JSON" todavía dice que requiere nuevo build; ya no es así desde build 1.0.5. **Sigue sin actualizarse a la fecha (2026-09-16), 2 sesiones después de detectado.**
 - [ ] Reconstruir historial de builds 15/17/18 (v1.0.1→1.0.4) — no quedaron documentados en sesiones anteriores
 - [ ] Verificación de desarrolladores Android (plazo: septiembre 2026)
 - [ ] Launch image de iOS sigue en placeholder default (warning no bloqueante en cada build, pendiente de reemplazar)
