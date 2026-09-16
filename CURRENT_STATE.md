@@ -49,9 +49,21 @@ Con el archivo final descargado y validado:
 - Los 3 registros nuevos (Forero, Văcărescu, Scott) sin duplicados ni conflictos ✅
 - Confirmados los **17 `woman_id` con múltiples entradas** ya documentados en sesión 2026-08-17 como eventos reales distintos (no duplicados fantasma) — sin cambios, siguen pendientes de revisión caso por caso si se quiere una segunda pasada
 
-### ⚠️ Pendiente sin resolver: diff en `wildcard_archive/allende_20260803.json`
+### ✅ Resuelto: diff en `wildcard_archive/allende_20260803.json`
 
-Apareció como modificado en `git status` sin que el usuario recuerde haberlo tocado. **No se investigó ni se commiteó esta sesión.** Revisar el diff (`git diff wildcard_archive/allende_20260803.json`) en la próxima sesión antes de decidir si se commitea o se descarta con `git restore`.
+Investigado y cerrado en la misma sesión. El diff mostró **30 inserciones, 0 eliminaciones** — el archivo pasó de estar vacío/incompleto a tener el registro completo de la wildcard de Isabel Allende (agosto 2026), incluyendo `source_01`/`source_02` ya limpios de un formato markdown embebido que tenían antes. No hubo pérdida de datos. Commiteado y pusheado (`04eb981`).
+
+### ✅ Resuelto: `TUTORIAL.md` actualizado
+
+Corregido en la misma sesión (commit `6132476`):
+- Formato de fecha `event_date` corregido de DD/MM (incorrecto) a **MM/DD** (real) en todos los ejemplos
+- Sección "CARDS — Agregar nuevas mujeres al JSON" reescrita: ya no dice que requiere build
+- Agregado paso obligatorio de validación (`python3 -m json.tool`) antes de cada commit del JSON
+- Agregada sección de diagnóstico para JSON roto
+- Agregada regla sobre escapar comillas internas en campos de texto
+- Checklists separados: uno para contenido (sin build), otro para builds de código
+
+**Ya no queda ningún pendiente de esta sesión sin resolver.**
 
 ---
 
@@ -581,7 +593,6 @@ v3.5-android-nav-fix             ✅ build 13 — versión App Store aprobada
 - [ ] Confirmar aprobación del build 1.0.5 (20) en App Store Connect
 - [ ] Probar escenario 100% offline (modo avión) para el fallback de caché de her_echoes.json
 - [ ] Verificar estado actual de prueba cerrada Google Play (última info de sesión 26 indicaba ~21 mayo 2026, no confirmado desde entonces)
-- [ ] Revisar el diff pendiente en `wildcard_archive/allende_20260803.json` (apareció modificado en sesión 2026-09-16, sin investigar ni commitear)
 
 ### Media prioridad
 - [ ] Completar JSON julio → diciembre
@@ -590,7 +601,7 @@ v3.5-android-nav-fix             ✅ build 13 — versión App Store aprobada
 - [ ] Push notifications (Firebase Cloud Messaging) — postergado
 - [ ] Show All — agregar selector de meses
 - [ ] Show All — márgenes laterales
-- [ ] **Actualizar `TUTORIAL.md`** — la sección de "CARDS — Agregar nuevas mujeres al JSON" todavía dice que requiere nuevo build; ya no es así desde build 1.0.5. **Sigue sin actualizarse a la fecha (2026-09-16), 2 sesiones después de detectado.**
+- [x] ~~Actualizar `TUTORIAL.md`~~ — resuelto en sesión 2026-09-16 (commit `6132476`)
 - [ ] Reconstruir historial de builds 15/17/18 (v1.0.1→1.0.4) — no quedaron documentados en sesiones anteriores
 - [ ] Verificación de desarrolladores Android (plazo: septiembre 2026)
 - [ ] Launch image de iOS sigue en placeholder default (warning no bloqueante en cada build, pendiente de reemplazar)
